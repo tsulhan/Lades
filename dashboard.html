@@ -31,7 +31,6 @@
         .tab-content { display:none; }
         .tab-content.active { display:block; animation:fadeIn 0.4s ease; }
 
-        /* Lades Kartları Yapısı */
         .market-grid { display:flex; flex-direction:column; gap:20px; }
         .market-card { background:#0b132b; border:1px solid #1c2541; border-radius:20px; padding:25px; display:flex; justify-content:space-between; align-items:center; transition:0.3s; }
         .market-card:hover { border-color:#334155; }
@@ -45,7 +44,6 @@
         .btn-no { background:rgba(239, 68, 68, 0.1); color:#ef4444; border:1px solid rgba(239, 68, 68, 0.4); }
         .btn-no:hover { background:#ef4444; color:#fff; box-shadow:0 0 15px rgba(239, 68, 68, 0.4); }
 
-        /* Gelişmiş Yarat Formu Stilleri */
         .create-container { background:#0b132b; border:1px solid #1c2541; padding:35px; border-radius:24px; }
         .create-container h2 { margin-bottom:10px; font-weight:800; }
         .create-container .subtitle { color:#64748b; margin-bottom:25px; font-size:14px; }
@@ -54,9 +52,15 @@
         .form-group label { display:block; margin-bottom:8px; color:#94a3b8; font-size:14px; font-weight:600; }
         .form-group input, .form-group select { width:100%; padding:15px; border-radius:12px; border:1px solid #1c2541; background:#030814; color:white; font-size:16px; }
         .form-group input:focus, .form-group select:focus { border-color:#24ffff; outline:none; }
+        
+        /* Takvim ikonunun renk şemasını dark moda uydurmak ve imleci el işareti yapmak için */
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            filter: invert(1);
+            cursor: pointer;
+        }
+
         .btn-submit { width:100%; padding:18px; border-radius:50px; border:none; background:#ff4aa2; color:white; font-weight:800; font-size:18px; cursor:pointer; box-shadow:0 0 15px #ff4aa2; transition:0.3s; }
 
-        /* Modal */
         .modal-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(3, 8, 20, 0.8); backdrop-filter:blur(5px); justify-content:center; align-items:center; z-index:999; }
         .modal { background:#0b132b; border:1px solid #1c2541; padding:30px; border-radius:24px; width:100%; max-width:400px; text-align:center; }
         .modal h3 { margin-bottom:15px; font-size:22px; }
@@ -67,104 +71,4 @@
         .btn-confirm { background:#24ffff; color:#030814; }
         .btn-cancel { background:#1e293b; color:#94a3b8; }
 
-        @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
-    </style>
-</head>
-<body>
-
-    <header>
-        <div class="logo">⚡ LADES</div>
-        <div class="header-center">
-            <div class="token-bag">💰 <span id="token-balance">1000</span> TOKEN</div>
-            
-            <button class="icon-btn" onclick="alert('Yönetici Paneline Yetkiniz Yoktur.')" title="Yönetici Paneli">
-                <i class="fa-solid fa-user-shield"></i>
-            </button>
-            <button class="icon-btn" onclick="alert('Profil Sayfası Yakında eklenecek. E-posta: tsulhan@gmail.com')" title="Profilim">
-                <i class="fa-solid fa-user"></i>
-            </button>
-            <button class="icon-btn btn-logout" onclick="logout()" title="Çıkış Yap">
-                <i class="fa-solid fa-right-from-bracket"></i>
-            </button>
-        </div>
-    </header>
-
-    <div class="tabs-container">
-        <button class="tab-button active" onclick="switchTab('mevcut-ladesler')">Mevcut Ladesler</button>
-        <button class="tab-button" onclick="switchTab('lades-yarat')">Yarat</button>
-    </div>
-
-    <main>
-        
-        <div id="mevcut-ladesler" class="tab-content active">
-            <div class="market-grid" id="market-grid"></div>
-        </div>
-
-        <div id="lades-yarat" class="tab-content">
-            <div class="create-container">
-                <h2>Yeni Bir Tahmin Pazarı Oluştur</h2>
-                <p class="subtitle">Bahsinizi ve yönünüzü belirleyerek canlıya yeni bir iddia pazarı sürün.</p>
-                
-                <div class="form-group" style="margin-bottom: 24px;">
-                    <label>Lades Başlığı / Tahmin Sorusu</label>
-                    <input type="text" id="market-question" placeholder="Örn: Bu akşam maçı Real Madrid kazanır mı?">
-                </div>
-                
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Pazar Kapanış Tarihi</label>
-                        <input type="date" id="market-date">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Sizin Tercihiniz</label>
-                        <select id="market-choice">
-                            <option value="YES">EVET</option>
-                            <option value="NO">HAYIR</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="form-group" style="margin-bottom: 30px;">
-                    <label>Yatırmak İstediğiniz Token Miktarı</label>
-                    <input type="number" id="market-initial-bet" placeholder="Örn: 150" min="1">
-                </div>
-                
-                <button class="btn-submit" onclick="createNewMarket()">PAZARI YAYINA AL ⚡</button>
-            </div>
-        </div>
-        
-    </main>
-
-    <div id="bet-modal" class="modal-overlay">
-        <div class="modal">
-            <h3 id="modal-market-title">Pazar Adı</h3>
-            <p>Seçiminiz: <span id="modal-bet-choice" style="font-weight:800;"></span></p>
-            <input type="number" id="bet-amount" placeholder="Kaç Token Yatıracaksınız?" min="1">
-            <div class="modal-buttons">
-                <button class="btn-modal btn-cancel" onclick="closeModal()">İptal</button>
-                <button class="btn-modal btn-confirm" onclick="confirmBet()">Yatır ve Kilitle ⚡</button>
-            </div>
-        </div>
-    </div>
-
-    <script src="src/js/app.js"></script>
-    <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            if(typeof updateUI === "function") updateUI();
-        });
-
-        function switchTab(tabId) {
-            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-            document.querySelectorAll('.tab-button').forEach(button => button.classList.remove('active'));
-            
-            document.getElementById(tabId).classList.add('active');
-            event.currentTarget.classList.add('active');
-        }
-
-        function logout() {
-            window.location.href = 'login.html';
-        }
-    </script>
-</body>
-</html>
+        @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1;
