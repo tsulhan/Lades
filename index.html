@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lades Paneli</title>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+    
+    <style>
+        :root {
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --primary: #bb86fc;
+            --primary-variant: #3700b3;
+            --text-color: #e0e0e0;
+            --accent: #cf6679;
+            --success: #03dac6;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+
+        h2, h3 {
+            margin-top: 0;
+            color: var(--primary);
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #333;
+            background-color: #252525;
+            color: white;
+            box-sizing: border-box;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            border-radius: 6px;
+            border: none;
+            background-color: var(--primary);
+            color: #121212;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background-color: #a370db;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .lades-card {
+            background: #252525;
+            border-left: 5px solid var(--primary);
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            position: relative;
+        }
+
+        .lades-card.bitti {
+            border-left-color: #555;
+            opacity: 0.7;
+        }
+
+        .lades-title {
+            font-weight: bold;
+            font-size: 18px;
+            margin-bottom: 5px;
+        }
+
+        .lades-meta {
+            font-size: 13px;
+            color: #aaa;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+
+        .status-aktif { background-color: rgba(3, 218, 198, 0.2); color: var(--success); }
+        .status-bitti { background-color: rgba(255, 255, 255, 0.1); color: #aaa; }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+        .btn-success { background-color: var(--success); color: #121212; }
+        .btn-danger { background-color: var(--accent); color: white; }
+
+        .user-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            font-size: 14px;
+            color: #aaa;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div id="login-screen" class="card">
+            <h2>Lades Paneline Giriş</h2>
+            <div class="input-group">
+                <label for="username">Adınız Soyadınız</label>
+                <input type="text" id="username" placeholder="Örn: Ahmet Yılmaz">
+            </div>
+            <button onclick="login()">Giriş Yap</button>
+        </div>
+
+        <div id="app-screen" class="hidden">
+            <div class="user-bar">
+                <span id="welcome-text">Hoş geldin, </span>
+                <a href="#" onclick="logout()" style="color: var(--accent); text-decoration: none;">Çıkış Yap</a>
+            </div>
+
+            <div class="card">
+                <h3>Yeni Lades İddiası Başlat</h3>
+                <div class="input-group">
+                    <label for="rakip">Rakip Seçin</label>
+                    <input type="text" id="rakip" placeholder="Kiminle iddiaya giriyorsunuz?">
+                </div>
+                <div class="input-group">
+                    <label for="odul">İddia Ödülü / Nesnesi</label>
+                    <input type="text" id="odul" placeholder="Örn: Yemek, Kahve, Çikolata">
+                </div>
+                <button onclick="yeniLadesEkle()">Lades Başlat 🔥</button>
+            </div>
+
+            <h3>Aktif ve Biten Ladesler (Grubun Durumu)</h3>
+            <div id="lades-listesi">
+                <p style="color: #aaa; text-align: center;">Yükleniyor...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // TODO: KENDİ FIREBASE PROJE BİLGİLERİNİ BURAYA YAPIŞTIR
+        const firebaseConfig = {
+            apiKey: "BURAYA_API_KEY_GELECEK",
+            authDomain: "BURAYA_PROJECT_ID.firebaseapp.com",
+            databaseURL: "https://BURAYA_PROJECT_ID-default-rtdb.firebaseio.com",
+            projectId: "BURAYA_PROJECT_ID",
+            storageBucket: "BURAYA_PROJECT_ID.appspot.com",
+            messagingSenderId: "BURAYA_SENDER_ID",
+            appId: "BURAYA_APP_ID"
+        };
+
+        // Firebase Başlatma
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        let currentUser = localStorage.getItem('lades_user') || '';
+
+        // Sayfa ilk açıldığında oturum kontrolü
+        window.onload = function() {
+            if (currentUser) {
+                showApp();
+            }
+        };
+
+        function login() {
+            const name = document.getElementById('username').value.trim();
+            if (!name) {
+                alert('Lütfen adınızı yazın.');
+                return;
+            }
+            localStorage.setItem('lades_user', name);
+            currentUser = name;
+            showApp();
+        }
+
+        function logout() {
+            localStorage.removeItem('lades_user');
+            location.reload();
+        }
+
+        function showApp() {
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('app-screen').classList.remove('hidden');
+            document.getElementById('welcome-text').innerText = `Kullanıcı: ${currentUser}`;
+            verileriDinle();
+        }
+
+        function yeniLadesEkle() {
+            const rakip = document.getElementById('rakip').value.trim();
+            const odul = document.getElementById('odul').value.trim();
+
+            if (!rakip || !odul) {
+                alert('Lütfen rakip ve ödül alanlarını doldurun.');
+                return;
+            }
+
+            const yeniLadesRef = database.ref('ladesler').push();
+            yeniLadesRef.set({
+                id: yeniLadesRef.key,
+                olusturan: currentUser,
+                rakip: rakip,
+                odul: odul,
+                durum: "Aktif",
+                kazanan: "",
+                tarih: new Date().toLocaleDateString('tr-TR')
+            }).then(() => {
+                document.getElementById('rakip').value = '';
+                document.getElementById('odul').value = '';
+            }).catch(err => alert("Hata: " + err.message));
+        }
+
+        function verileriDinle() {
+            database.ref('ladesler').on('value', (snapshot) => {
+                const listeDiv = document.getElementById('lades-listesi');
+                listeDiv.innerHTML = '';
+                
+                const data = snapshot.val();
+                if (!data) {
+                    listeDiv.innerHTML = '<p style="color: #aaa; text-align: center;">Henüz hiç lades iddiası yok. İlkini sen başlat!</p>';
+                    return;
+                }
+
+                // Ters kronolojik sıra (en yeni en üstte) için array'e çevirip ters çevirelim
+                const ladeslerArray = Object.values(data).reverse();
+
+                ladeslerArray.forEach(lades => {
+                    const isBitti = lades.durum !== "Aktif";
+                    
+                    let cardHtml = `
+                        <div class="lades-card ${isBitti ? 'bitti' : ''}">
+                            <div class="lades-title">🤝 ${lades.olusturan}  vs  ${lades.rakip}</div>
+                            <div style="margin-top: 5px;">🏆 <b>Ödül:</b> ${lades.odul}</div>
+                            <div class="lades-meta" style="margin-top: 5px;">📅 Başlangıç: ${lades.tarih}</div>
+                    `;
+
+                    if (!isBitti) {
+                        cardHtml += `
+                            <div><span class="status-badge status-aktif">🔥 Devam Ediyor</span></div>
+                            <div class="action-buttons">
+                                <button class="btn-sm btn-success" onclick="ladesBitir('${lades.id}', '${lades.olusturan}')">🏆 ${document.shortenName(lades.olusturan)} Kazandı</button>
+                                <button class="btn-sm btn-success" onclick="ladesBitir('${lades.id}', '${lades.rakip}')">🏆 ${document.shortenName(lades.rakip)} Kazandı</button>
+                            </div>
+                        `;
+                    } else {
+                        cardHtml += `
+                            <div><span class="status-badge status-bitti">🔒 Bitti</span></div>
+                            <div style="margin-top: 8px; font-weight: bold; color: var(--success)">🎉 Kazanan: ${lades.kazanan}</div>
+                        `;
+                    }
+
+                    cardHtml += `</div>`;
+                    listeDiv.innerHTML += cardHtml;
+                });
+            });
+        }
+
+        function ladesBitir(id, kazananIsim) {
+            if(confirm(`${kazananIsim} ladesi kazandı olarak işaretlensin mi?`)) {
+                database.ref(`ladesler/${id}`).update({
+                    durum: "Bitti",
+                    kazanan: kazananIsim
+                });
+            }
+        }
+
+        // İsimleri butonlara sığdırmak için yardımcı fonksiyon
+        document.shortenName = function(name) {
+            return name.split(' ')[0];
+        }
+    </script>
+</body>
+</html>
