@@ -1,6 +1,6 @@
 // --- VERİ TABANI SİMÜLASYONU (LocalStorage) ---
 
-// Kullanıcılar Listesi (Şifre alanları eklendi)
+// Kullanıcılar Listesi
 if (!localStorage.getItem('ladesUsers')) {
     const defaultUsers = [
         { email: "tsulhan@gmail.com", password: "1234", balance: 10000, isAdmin: true },
@@ -25,51 +25,48 @@ if (!localStorage.getItem('adminRequests')) {
     localStorage.setItem('adminRequests', JSON.stringify([]));
 }
 
-// Sabit/Başlangıç Pazarları
+// ARTIK BAŞLANGIÇTA OTOMATİK LADES OLUŞTURULMUYOR (Boş Liste)
 if (!localStorage.getItem('customMarkets')) {
-    const defaultMarkets = [
-        { id: 'bitcoin', title: "Bitcoin bu ay 100.000$'ı geçer mi?", date: "2026-06-30", yesPool: 2000, noPool: 8000, category: "Ekonomi", status: "Aktif" },
-        { id: 'yagmur', title: "Yarın İstanbul'da yağmur yağar mı?", date: "2026-06-10", yesPool: 1000, noPool: 1000, category: "Eğlence", status: "Aktif" }
-    ];
-    localStorage.setItem('customMarkets', JSON.stringify(defaultMarkets));
+    localStorage.setItem('customMarkets', JSON.stringify([]));
 }
 
-// ESKİ VERİLERİ OTOMATİK DÜZELTME (Eğer tarayıcıda eski yapı kalmışsa senkronize eder)
+// ARTIK BAŞLANGIÇTA OTOMATİK BAHİS GEÇMİŞİ OLUŞTURULMUYOR (Boş Liste)
+if (!localStorage.getItem('betHistory')) {
+    localStorage.setItem('betHistory', JSON.stringify([]));
+}
+
+// ESKİ VERİLERİ OTOMATİK DÜZELTME VE OTOMATİK LADESLERİ TEMİZLEME
+// (Farklı cihazlarda kalmış olan otomatik ladesleri de temizler)
 (function repairLocalStorage() {
     // 1. Kullanıcılarda şifre eksikse tamamla
     let users = JSON.parse(localStorage.getItem('ladesUsers')) || [];
     let stateChanged = false;
     users.forEach(u => {
         if (!u.password) { u.password = "1234"; stateChanged = true; }
-        // Görseldeki test@lades.com bakiyesini başlangıç değerine senkronize et
         if (u.email === "test@lades.com" && u.balance === 0) { u.balance = 1000; stateChanged = true; }
     });
     if (stateChanged) localStorage.setItem('ladesUsers', JSON.stringify(users));
 
-    // 2. Pazarlarda status alanı eksikse "Aktif" yap
+    // 2. Eğer içeride 'bitcoin' veya 'yagmur' id'sine sahip otomatik ladesler varsa onları listeden uçur
     let markets = JSON.parse(localStorage.getItem('customMarkets')) || [];
-    let marketChanged = false;
-    if (markets.length === 0) {
-        markets = [
-            { id: 'bitcoin', title: "Bitcoin bu ay 100.000$'ı geçer mi?", date: "2026-06-30", yesPool: 2000, noPool: 8000, category: "Ekonomi", status: "Aktif" },
-            { id: 'yagmur', title: "Yarın İstanbul'da yağmur yağar mı?", date: "2026-06-10", yesPool: 1000, noPool: 1000, category: "Eğlence", status: "Aktif" }
-        ];
-        marketChanged = true;
-    } else {
-        markets.forEach(m => { if (!m.status) { m.status = "Aktif"; marketChanged = true; } });
-    }
-    if (marketChanged) localStorage.setItem('customMarkets', JSON.stringify(markets));
-})();
+    let originalLength = markets.length;
+    markets = markets.filter(m => m.id !== 'bitcoin' && m.id !== 'yagmur');
+    
+    // Pazarlarda status alanı eksik olanlar varsa "Aktif" yap
+    markets.forEach(m => { if (!m.status) m.status = "Aktif"; });
 
-// HİSSE/BAHİS TAKİP SİSTEMİ
-if (!localStorage.getItem('betHistory')) {
-    const defaultHistory = [
-        { marketId: 'bitcoin', email: 'tsulhan@gmail.com', choice: 'YES', amount: 1500 },
-        { marketId: 'bitcoin', email: 'test@lades.com', choice: 'YES', amount: 500 },
-        { marketId: 'bitcoin', email: 'nehir@lades.com', choice: 'NO', amount: 8000 }
-    ];
-    localStorage.setItem('betHistory', JSON.stringify(defaultHistory));
-}
+    if (markets.length !== originalLength || originalLength === 0) {
+        localStorage.setItem('customMarkets', JSON.stringify(markets));
+    }
+
+    // 3. Bahis geçmişinden de otomatik ladeslerin kayıtlarını temizle
+    let history = JSON.parse(localStorage.getItem('betHistory')) || [];
+    let historyLength = history.length;
+    history = history.filter(h => h.marketId !== 'bitcoin' && h.marketId !== 'yagmur');
+    if (history.length !== historyLength) {
+        localStorage.setItem('betHistory', JSON.stringify(history));
+    }
+})();
 
 // Global Durum Değişkenleri
 let activeMarketId = ""; 
@@ -138,7 +135,6 @@ function updateUI() {
     const users = JSON.parse(localStorage.getItem('ladesUsers'));
     const user = users.find(u => u.email === currentUserEmail) || { email: currentUserEmail, balance: 0, isAdmin: false };
 
-    // Üst barda mail adresini gösteren alan
     const userEmailBadge = document.getElementById('user-email-badge');
     if (userEmailBadge) userEmailBadge.innerText = user.email;
 
@@ -161,7 +157,7 @@ function updateUI() {
 
     marketGrid.innerHTML = "";
     if (markets.length === 0) {
-        marketGrid.innerHTML = `<div style="text-align:center; color:#64748b; padding:40px; width:100%;">Bu kategoride aktif bir lades bulunmuyor.</div>`;
+        marketGrid.innerHTML = `<div style="text-align:center; color:#64748b; padding:40px; width:100%;">Şu an bu kategoride aktif bir lades bulunmuyor. "Yarat" sekmesinden ilk ladesi sen başlatabilirsin!</div>`;
         return;
     }
 
@@ -386,7 +382,7 @@ function renderAdminPanel() {
     const codes = JSON.parse(localStorage.getItem('inviteCodes'));
     codesList.innerHTML = codes.map(c => `<span style="background:rgba(36,255,255,0.1); border:1px solid #24ffff; padding:4px 8px; border-radius:6px; font-size:12px; color:#24ffff;">${c}</span>`).join(" ");
 
-    // 4. Kullanıcı Listesi (Şifre sütunu eklendi)
+    // 4. Kullanıcı Listesi
     const usersTable = document.getElementById('admin-users-list');
     const users = JSON.parse(localStorage.getItem('ladesUsers'));
     usersTable.innerHTML = "";
@@ -432,7 +428,6 @@ function addTokensManual(email) {
     alert("Yüklendi!"); renderAdminPanel(); updateUI();
 }
 
-// Veritabanını tamamen sıfırlayıp temiz bir başlangıç yapmak için admin fonksiyonu
 function hardResetDatabase() {
     if (confirm("Tüm yerel verileri sıfırlamak ve temiz veritabanı yüklemek istiyor musunuz?")) {
         localStorage.clear();
