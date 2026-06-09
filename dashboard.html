@@ -21,21 +21,22 @@
         .btn-logout { color:#ff4aa2; margin-left:10px; }
         .btn-logout:hover { color:white; background:rgba(255, 74, 162, 0.2); }
 
+        /* Sıfır Bakiyeliler İçin Hızlı İstek Alonı */
+        .token-request-banner { background:linear-gradient(90deg, #ff4aa2, #24ffff); color:#030814; text-align:center; padding:10px; font-weight:800; font-size:14px; display:none; }
+        .token-request-banner button { background:#030814; color:white; border:none; padding:4px 14px; border-radius:20px; font-weight:700; margin-left:15px; cursor:pointer; }
+
         .tabs-container { display:flex; justify-content:center; background:#0b132b; border-bottom:1px solid #1c2541; }
         .tab-button { background:transparent; border:none; color:#888; padding:15px 30px; font-size:16px; font-weight:700; cursor:pointer; position:relative; transition:0.3s; }
         .tab-button:hover { color:white; }
         .tab-button.active { color:#24ffff; }
         .tab-button.active::after { content:''; position:absolute; bottom:0; left:0; width:100%; height:3px; background:#24ffff; box-shadow:0 0 10px #24ffff; }
 
-        /* Ana Ekran Düzeni */
         main { flex:1; padding:40px; max-width:1100px; width:100%; margin:0 auto; }
         .tab-content { display:none; }
         .tab-content.active { display:block; animation:fadeIn 0.4s ease; }
 
-        /* Mevcut Ladesler için Yan Yana Flex Yapısı */
         .content-layout { display:flex; gap:30px; align-items: flex-start; }
         
-        /* Sol Kategori Seçim Paneli */
         .sidebar-categories { width:240px; background:#0b132b; border:1px solid #1c2541; border-radius:20px; padding:20px; flex-shrink: 0; }
         .sidebar-categories h4 { font-size:14px; color:#64748b; font-weight:700; text-transform: uppercase; margin-bottom:15px; letter-spacing: 1px; }
         .sidebar-menu { display:flex; flex-direction:column; gap:8px; }
@@ -43,14 +44,12 @@
         .sidebar-menu button:hover { background:rgba(36, 255, 255, 0.05); color:white; }
         .sidebar-menu button.active { background:rgba(36, 255, 255, 0.1); color:#24ffff; border:1px solid rgba(36, 255, 255, 0.2); }
 
-        /* Sağ Lades Listesi */
         .market-grid { flex:1; display:flex; flex-direction:column; gap:20px; width: 100%; }
-        
         .market-card { background:#0b132b; border:1px solid #1c2541; border-radius:20px; padding:25px; display:flex; justify-content:space-between; align-items:center; transition:0.3s; }
         .market-card:hover { border-color:#334155; }
         
         .market-info { display: flex; flex-direction: column; gap: 4px; }
-        .market-info h3 { font-size:19px; color:#fff; margin-top:4px; margin-bottom:4px; font-weight:700; }
+        .market-info h3 { font-size:19px; color:#fff; font-weight:700; }
         .market-info p { font-size:14px; color:#64748b; }
         
         .category-badge { display:inline-block; align-self: flex-start; background:rgba(255, 74, 162, 0.1); color:#ff4aa2; font-size:11px; font-weight:700; padding:4px 10px; border-radius:20px; border:1px solid rgba(255, 74, 162, 0.2); text-transform: uppercase; }
@@ -62,7 +61,6 @@
         .btn-no { background:rgba(239, 68, 68, 0.1); color:#ef4444; border:1px solid rgba(239, 68, 68, 0.4); }
         .btn-no:hover { background:#ef4444; color:#fff; box-shadow:0 0 15px rgba(239, 68, 68, 0.4); }
 
-        /* Yarat Formu Tasarımı */
         .create-container { background:#0b132b; border:1px solid #1c2541; padding:35px; border-radius:24px; max-width: 850px; margin: 0 auto; }
         .create-container h2 { margin-bottom:10px; font-weight:800; }
         .create-container .subtitle { color:#64748b; margin-bottom:25px; font-size:14px; }
@@ -70,42 +68,42 @@
         .form-group { flex:1; }
         .form-group label { display:block; margin-bottom:8px; color:#94a3b8; font-size:14px; font-weight:600; }
         .form-group input, .form-group select { width:100%; padding:15px; border-radius:12px; border:1px solid #1c2541; background:#030814; color:white; font-size:16px; }
-        .form-group input:focus, .form-group select:focus { border-color:#24ffff; outline:none; }
         
-        input[type="date"]::-webkit-calendar-picker-indicator {
-            filter: invert(1);
-            cursor: pointer;
-        }
-
         .btn-submit { width:100%; padding:18px; border-radius:50px; border:none; background:#ff4aa2; color:white; font-weight:800; font-size:18px; cursor:pointer; box-shadow:0 0 15px #ff4aa2; transition:0.3s; }
+
+        /* Genişletilmiş Yönetici Paneli Modalı */
+        .admin-modal-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(3, 8, 20, 0.9); backdrop-filter:blur(8px); justify-content:center; align-items:center; z-index:9999; padding:20px; }
+        .admin-box { background:#0b132b; border:1px solid #24ffff; box-shadow: 0 0 20px rgba(36,255,255,0.2); padding:30px; border-radius:24px; width:100%; max-width:750px; max-height:85vh; overflow-y:auto; }
+        .admin-section { border-top: 1px solid #1c2541; padding-top:20px; margin-top:20px; }
+        .admin-section h4 { font-size:16px; color:#24ffff; margin-bottom:12px; font-weight:700; }
 
         .modal-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(3, 8, 20, 0.8); backdrop-filter:blur(5px); justify-content:center; align-items:center; z-index:999; }
         .modal { background:#0b132b; border:1px solid #1c2541; padding:30px; border-radius:24px; width:100%; max-width:400px; text-align:center; }
-        .modal h3 { margin-bottom:15px; font-size:22px; }
-        .modal p { color:#64748b; font-size:14px; margin-bottom:20px; }
-        .modal input { width:100%; padding:15px; border-radius:12px; border:1px solid #1c2541; background:#030814; color:white; font-size:18px; text-align:center; margin-bottom:20px; font-weight:700; }
+        .modal input { width:100%; padding:15px; border-radius:12px; border:1px solid #1c2541; background:#030814; color:white; font-size:18px; text-align:center; margin-bottom:20px; }
         .modal-buttons { display:flex; gap:10px; }
-        .btn-modal { flex:1; padding:15px; border-radius:12px; border:none; font-weight:700; cursor:pointer; font-size:16px; }
+        .btn-modal { flex:1; padding:15px; border-radius:12px; border:none; font-weight:700; cursor:pointer; }
         .btn-confirm { background:#24ffff; color:#030814; }
         .btn-cancel { background:#1e293b; color:#94a3b8; }
 
-        @keyframes fadeIn { 
-            from { opacity:0; transform:translateY(8px); } 
-            to { opacity:1; transform:translateY(0); } 
-        }
+        @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
     </style>
 </head>
 <body>
 
+    <div id="token-request-area" class="token-request-banner">
+        Bakiyenizde hiç Token bulunmuyor. Ladeslere katılmak için hemen talep oluşturun!
+        <button onclick="openTokenRequestModal()">💰 TOKEN İSTE</button>
+    </div>
+
     <header>
         <div class="logo">⚡ LADES</div>
         <div class="header-center">
-            <div class="token-bag">💰 <span id="token-balance">10000</span> TOKEN</div>
+            <div class="token-bag">💰 <span id="token-balance">0</span> TOKEN</div>
             
-            <button class="icon-btn" onclick="alert('Yönetici Paneline Yetkiniz Yoktur.')" title="Yönetici Paneli">
+            <button id="admin-panel-btn" class="icon-btn" onclick="openAdminPanel()" title="Yönetici Paneli" style="display:none; color:#24ffff;">
                 <i class="fa-solid fa-user-shield"></i>
             </button>
-            <button class="icon-btn" onclick="alert('Profil Sayfası Yakında eklenecek. E-posta: tsulhan@gmail.com')" title="Profilim">
+            <button class="icon-btn" onclick="alert('Profil Sayfası Yakında Eklenecek.')" title="Profilim">
                 <i class="fa-solid fa-user"></i>
             </button>
             <button class="icon-btn btn-logout" onclick="logout()" title="Çıkış Yap">
@@ -120,10 +118,8 @@
     </div>
 
     <main>
-        
         <div id="mevcut-ladesler" class="tab-content active">
             <div class="content-layout">
-                
                 <div class="sidebar-categories">
                     <h4>Kategoriler</h4>
                     <div class="sidebar-menu">
@@ -134,10 +130,11 @@
                         <button onclick="filterCategory('Eğlence')"><i class="fa-solid fa-gamepad"></i> Eğlence</button>
                     </div>
                 </div>
-
                 <div class="market-grid" id="market-grid"></div>
+            </div>
+        </div>
 
-            </div> </div> <div id="lades-yarat" class="tab-content">
+        <div id="lades-yarat" class="tab-content">
             <div class="create-container">
                 <h2>Yeni Bir Tahmin Pazarı Oluştur</h2>
                 <p class="subtitle">Bahsinizi ve yönünüzü belirleyerek canlıya yeni bir iddia pazarı sürün.</p>
@@ -179,11 +176,46 @@
                     <input type="number" id="market-initial-bet" placeholder="Örn: 150" min="1">
                 </div>
                 
-                <button class="btn-submit" onclick="createNewMarket()">PAZARI YAYINA AL ⚡</button>
+                <button class="btn-submit" onclick="createNewMarket()">LADES YARAT ⚡</button>
             </div>
         </div>
-        
     </main>
+
+    <div id="admin-modal" class="admin-modal-overlay">
+        <div class="admin-box">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                <h2 style="color:#24ffff;"><i class="fa-solid fa-user-shield"></i> Lades Yönetim Paneli</h2>
+                <button onclick="closeAdminPanel()" style="background:transparent; border:none; color:#888; font-size:24px; cursor:pointer;">&times;</button>
+            </div>
+
+            <div class="admin-section" style="border-top:none; margin-top:0; padding-top:0;">
+                <h4>📥 Bekleyen İstekler (Davet & Token)</h4>
+                <div id="admin-requests-list"></div>
+            </div>
+
+            <div class="admin-section">
+                <h4>🔑 Davet Kodu Yönetimi</h4>
+                <button onclick="generateInviteCode()" style="background:#24ffff; color:#030814; border:none; padding:10px 18px; border-radius:8px; font-weight:800; cursor:pointer; margin-bottom:12px;">+ Yeni Davet Kodu Üret</button>
+                <div id="admin-codes-list" style="display:flex; flex-wrap:wrap; gap:8px; background:#030814; padding:12px; border-radius:12px;"></div>
+            </div>
+
+            <div class="admin-section">
+                <h4>👥 Kayıtlı Kullanıcılar ve Token Tanımlama</h4>
+                <div style="overflow-x:auto;">
+                    <table style="width:100%; border-collapse:collapse; text-align:left;">
+                        <thead>
+                            <tr style="border-bottom:2px solid #1c2541; color:#64748b; font-size:12px;">
+                                <th style="padding-bottom:8px;">Kullanıcı E-posta</th>
+                                <th style="padding-bottom:8px;">Mevcut Bakiye</th>
+                                <th style="padding-bottom:8px; text-align:right;">İşlem</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-users-list"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <div id="bet-modal" class="modal-overlay">
         <div class="modal">
@@ -199,21 +231,14 @@
 
     <script src="src/js/app.js"></script>
     <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            if(typeof updateUI === "function") updateUI();
-        });
-
+        document.addEventListener("DOMContentLoaded", () => { if(typeof updateUI === "function") updateUI(); });
         function switchTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
             document.querySelectorAll('.tab-button').forEach(button => button.classList.remove('active'));
-            
             document.getElementById(tabId).classList.add('active');
-            event.currentTarget.classList.add('active');
+            if(event && event.currentTarget) event.currentTarget.classList.add('active');
         }
-
-        function logout() {
-            window.location.href = 'login.html';
-        }
+        function logout() { window.location.href = 'login.html'; }
     </script>
 </body>
 </html>
