@@ -4,48 +4,71 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Giriş Yap - LADES</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght=300;400;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
     <style>
-        * { margin:0; padding:0; box-sizing:border-box; font-family:'Inter', sans-serif; }
-        body { background:#030814; color:white; display:flex; justify-content:center; align-items:center; min-height:100vh; padding:20px; }
-        .auth-container { width:100%; max-width:350px; text-align:center; }
-        
-        /* Logo Stili */
-        .logo-bolt { font-size:60px; color:#24ffff; margin-bottom:15px; text-shadow:0 0 20px #24ffff; }
-        
-        h2 { margin-bottom:25px; letter-spacing:1px; }
-        
-        input { width:100%; padding:18px; margin:8px 0; border-radius:12px; border:1px solid #333; background:#111; color:white; font-size:16px; }
-        input::placeholder { color:#555; }
-        
-        .btn-login { width:100%; padding:20px; border-radius:50px; border:none; background:#24ffff; color:#05111b; font-weight:800; font-size:18px; cursor:pointer; margin-top:20px; box-shadow:0 0 15px #24ffff; }
-        
-        /* Yeşil Kayıt Ol Linki */
-        .register-link { color:#2dd4bf; text-decoration:underline; font-weight:700; cursor:pointer; }
-        .back-link { color:#888; margin-top:25px; display:block; text-decoration:none; font-size:14px; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background: #030814; color: white; min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px; }
+        .login-container { background: #0b132b; border: 1px solid #1c2541; padding: 40px; border-radius: 24px; width: 100%; max-width: 420px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .logo-icon { font-size: 45px; color: #24ffff; text-shadow: 0 0 15px #24ffff; margin-bottom: 15px; }
+        h2 { font-size: 26px; font-weight: 800; letter-spacing: 1px; margin-bottom: 30px; }
+        .form-group { margin-bottom: 20px; text-align: left; }
+        .form-group label { display: block; margin-bottom: 8px; color: #94a3b8; font-size: 13px; font-weight: 600; }
+        input { width: 100%; padding: 16px; border-radius: 12px; border: 1px solid #1c2541; background: #030814; color: white; font-size: 15px; transition: 0.3s; }
+        input:focus { border-color: #24ffff; outline: none; }
+        .btn-login { width: 100%; padding: 16px; border-radius: 50px; border: none; background: #24ffff; color: #030814; font-weight: 800; font-size: 16px; cursor: pointer; margin-top: 15px; box-shadow: 0 0 15px rgba(36, 255, 255, 0.4); transition: 0.3s; }
+        .btn-login:hover { background: #1de6e6; transform: translateY(-1px); }
+        .footer-links { margin-top: 25px; font-size: 14px; color: #64748b; }
+        .footer-links a { color: #ff4aa2; text-decoration: none; font-weight: 600; }
+        .footer-links a:hover { text-decoration: underline; }
     </style>
 </head>
 <body>
 
-<div class="auth-container">
-    <div class="logo-bolt">⚡</div>
-    
-    <h2>GİRİŞ YAP</h2>
-    
-    <input type="email" id="email" placeholder="E-posta Adresi">
-    <input type="password" id="password" placeholder="Şifre">
-    
-    <!-- app.js içindeki handleLogin fonksiyonunu tetikleyen buton -->
-    <button class="btn-login" onclick="handleLogin()">GİRİŞ YAP</button>
-    
-    <p style="color:#888; margin-top:20px; font-size:14px;">
-        Hesabın yok mu? <a href="kayit_ol.html" class="register-link">Kayıt Ol</a>
-    </p>
-    
-    <a href="index.html" class="back-link">← Geri Dön</a>
-</div>
+    <div class="login-container">
+        <div class="logo-icon">⚡</div>
+        <h2>GİRİŞ YAP</h2>
+        
+        <div class="form-group">
+            <label>E-posta Adresi</label>
+            <input type="email" id="login-email" placeholder="ornek@domain.com">
+        </div>
+        
+        <div class="form-group">
+            <label>Şifre</label>
+            <input type="password" id="login-password" placeholder="••••••••">
+        </div>
+        
+        <button class="btn-login" onclick="executeLogin()">GİRİŞ YAP ⚡</button>
+        
+        <div class="footer-links">
+            Hesabınız yok mu? <a href="kayit_ol.html">Yeni Hesap Oluşturun</a>
+        </div>
+    </div>
 
-<!-- JavaScript dosyamızın doğru çalışması için eklenen bağlantı -->
-<script src="src/js/app.js"></script>
+    <script src="src/js/app.js"></script>
+    <script>
+        // Login ekranındaki ID karmaşasını önlemek ve tamamen dinamik kontrol etmek için lokal fonksiyon:
+        function executeLogin() {
+            const emailValue = document.getElementById('login-email').value.trim();
+            const passwordValue = document.getElementById('login-password').value;
+
+            if (emailValue === "" || passwordValue === "") {
+                alert("Lütfen tüm alanları doldurun!");
+                return;
+            }
+
+            // localStorage'daki güncel kullanıcı listesini çekiyoruz
+            const users = JSON.parse(localStorage.getItem('ladesUsers')) || [];
+            const user = users.find(u => u.email === emailValue);
+
+            // Yeni kayıt olanlar dahil herkes şifre olarak şimdilik test aşamasında "1234" kullanıyor
+            if (user && passwordValue === "1234") { 
+                localStorage.setItem('currentUser', user.email);
+                window.location.href = 'dashboard.html';
+            } else {
+                alert("Hatalı e-posta veya şifre! (Sistem testi için tüm şifreler: 1234)");
+            }
+        }
+    </script>
 </body>
 </html>
