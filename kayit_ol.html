@@ -2,33 +2,24 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kayıt Ol - LADES</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700&display=swap" rel="stylesheet">
     <style>
         * { margin:0; padding:0; box-sizing:border-box; font-family:'Inter', sans-serif; }
         body { background:#030814; color:white; display:flex; justify-content:center; align-items:center; min-height:100vh; }
         .auth-container { width:90%; max-width:350px; text-align:center; }
-        .logo-bolt { font-size:60px; color:#ff4aa2; margin-bottom:20px; text-shadow:0 0 20px #ff4aa2; }
-        input { width:100%; padding:18px; margin:10px 0; border-radius:12px; border:1px solid #333; background:#111; color:white; font-size:16px; }
-        .btn-register { width:100%; padding:20px; border-radius:50px; border:none; background:#ff4aa2; color:white; font-weight:800; font-size:18px; cursor:pointer; margin-top:20px; box-shadow:0 0 15px #ff4aa2; }
-        .back-link { color:#888; margin-top:20px; display:block; text-decoration:none; font-size:14px; }
+        input { width:100%; padding:18px; margin:10px 0; border-radius:12px; border:1px solid #333; background:#111; color:white; }
+        .btn-register { width:100%; padding:20px; border-radius:50px; border:none; background:#ff4aa2; color:white; font-weight:800; cursor:pointer; margin-top:20px; }
+        .back-link { color:#888; margin-top:20px; display:block; text-decoration:none; }
     </style>
 </head>
 <body>
-
-<div class="auth-container">
-    <div class="logo-bolt">⚡</div>
-    <h2 style="margin-bottom:30px; letter-spacing:1px;">KAYIT OL</h2>
-    
-    <input type="email" id="email" placeholder="E-posta Adresi">
-    <input type="password" id="password" placeholder="Şifre">
-    <input type="password" id="confirm-password" placeholder="Şifreyi Doğrula">
-    
-    <button class="btn-register" onclick="alert('Kayıt olma özelliği Firebase ile aktif edilecek!')">KAYIT OL</button>
-    
-    <a href="login.html" class="back-link">← Giriş Sayfasına Dön</a>
-</div>
-
+    <div class="auth-container">
+        <h2 style="margin-bottom:30px;">KAYIT OL</h2>
+        <input type="email" id="email" placeholder="E-posta Adresi">
+        <input type="password" id="password" placeholder="Şifre">
+        <button class="btn-register" onclick="alert('Firebase ile bağlanacak!')">KAYIT OL</button>
+        <a href="login.html" class="back-link">← Giriş Sayfasına Dön</a>
+    </div>
 </body>
 </html>
