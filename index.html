@@ -4,335 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lades Realtime Paneli</title>
+    
+    <!-- Neon Tasarım Temamız Dışarıdan Alınıyor -->
+    <link rel="stylesheet" href="assets/css/style.css">
+    
+    <!-- Firebase SDK Kütüphaneleri -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
-    
-    <style>
-        :root {
-            --bg-dark: #0a0a0c;
-            --card-bg: rgba(30, 30, 38, 0.7);
-            --neon-purple: #9d4edd;
-            --neon-cyan: #00f5d4;
-            --neon-pink: #ff007f;
-            --text-main: #f8f9fa;
-            --text-muted: #a0a0ab;
-            --border-glow: rgba(157, 78, 221, 0.2);
-        }
-
-        body {
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg-dark);
-            color: var(--text-main);
-            margin: 0;
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
-            background-image: radial-gradient(circle at 50% 10%, #1e1233 0%, #0a0a0c 70%);
-        }
-
-        /* Giriş Ekranı Tasarımı */
-        .login-container {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            width: 100%;
-            max-width: 400px;
-            padding: 20px;
-            box-sizing: border-box;
-        }
-
-        .login-card {
-            background: var(--card-bg);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 24px;
-            padding: 40px 30px;
-            width: 100%;
-            text-align: center;
-            box-shadow: 0 0 30px rgba(157, 78, 221, 0.15);
-        }
-
-        .login-card h2 {
-            font-size: 28px;
-            font-weight: 800;
-            margin-bottom: 10px;
-            background: linear-gradient(45deg, var(--neon-purple), var(--neon-cyan));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            text-shadow: 0 0 15px rgba(157, 78, 221, 0.3);
-        }
-
-        /* Ana Uygulama Düzeni */
-        .app-container {
-            width: 100%;
-            max-width: 480px;
-            padding: 20px;
-            padding-bottom: 100px; /* Alttaki menü için boşluk */
-            box-sizing: border-box;
-        }
-
-        .header-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 25px;
-            padding: 10px 5px;
-        }
-
-        .header-bar h1 {
-            font-size: 22px;
-            font-weight: 800;
-            letter-spacing: 1px;
-            margin: 0;
-            color: #fff;
-            text-shadow: 0 0 10px var(--neon-purple);
-        }
-
-        .card {
-            background: var(--card-bg);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            border-radius: 18px;
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-        }
-
-        .card h3 {
-            margin-top: 0;
-            margin-bottom: 15px;
-            font-size: 18px;
-            color: var(--neon-cyan);
-            text-shadow: 0 0 8px rgba(0, 245, 212, 0.3);
-        }
-
-        /* Form Elemanları */
-        .input-group {
-            margin-bottom: 18px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-size: 13px;
-            color: var(--text-muted);
-            font-weight: 500;
-        }
-
-        input, select {
-            width: 100%;
-            padding: 14px;
-            border-radius: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            background-color: rgba(20, 20, 25, 0.6);
-            color: white;
-            font-size: 15px;
-            box-sizing: border-box;
-            transition: all 0.3s ease;
-        }
-
-        input:focus {
-            outline: none;
-            border-color: var(--neon-purple);
-            box-shadow: 0 0 10px rgba(157, 78, 221, 0.4);
-        }
-
-        /* Premium Butonlar */
-        .btn-neon {
-            width: 100%;
-            padding: 15px;
-            border-radius: 12px;
-            border: none;
-            background: linear-gradient(135deg, var(--neon-purple), var(--neon-pink));
-            color: white;
-            font-weight: 700;
-            font-size: 16px;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(157, 78, 221, 0.4);
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-
-        .btn-neon:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(157, 78, 221, 0.6);
-        }
-
-        /* Lades Listesi Kart Tasarımı */
-        .lades-card {
-            background: rgba(25, 25, 35, 0.5);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            border-left: 4px solid var(--neon-purple);
-            padding: 18px;
-            border-radius: 14px;
-            margin-bottom: 15px;
-            position: relative;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            transition: all 0.3s ease;
-        }
-
-        .lades-card.bitti {
-            border-left-color: #4a4a5a;
-            opacity: 0.65;
-            background: rgba(15, 15, 20, 0.4);
-        }
-
-        .lades-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 10px;
-        }
-
-        .lades-versus {
-            font-weight: 700;
-            font-size: 16px;
-            color: #fff;
-        }
-
-        .lades-reward {
-            font-size: 14px;
-            color: var(--text-muted);
-            margin-bottom: 12px;
-        }
-
-        .lades-reward b {
-            color: var(--neon-cyan);
-        }
-
-        .badge {
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 11px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .badge-aktif {
-            background: rgba(0, 245, 212, 0.15);
-            color: var(--neon-cyan);
-            border: 1px solid rgba(0, 245, 212, 0.3);
-            box-shadow: 0 0 8px rgba(0, 245, 212, 0.2);
-        }
-
-        .badge-bitti {
-            background: rgba(255, 255, 255, 0.05);
-            color: var(--text-muted);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .action-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-top: 12px;
-        }
-
-        .btn-action {
-            padding: 8px;
-            border-radius: 8px;
-            border: 1px solid rgba(255,255,255,0.1);
-            background: rgba(255,255,255,0.05);
-            color: white;
-            font-size: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-
-        .btn-action:hover {
-            background: var(--neon-purple);
-            border-color: var(--neon-purple);
-        }
-
-        .btn-delete {
-            grid-column: span 2;
-            background: rgba(255, 0, 127, 0.1);
-            border: 1px solid rgba(255, 0, 127, 0.3);
-            color: var(--neon-pink);
-            margin-top: 5px;
-        }
-
-        .btn-delete:hover {
-            background: var(--neon-pink);
-            color: white;
-        }
-
-        /* Alt Sabit Menü (Bottom Navigation) */
-        .bottom-nav {
-            position: fixed;
-            bottom: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 100%;
-            max-width: 480px;
-            background: rgba(15, 15, 22, 0.85);
-            backdrop-filter: blur(20px);
-            border-top: 1px solid rgba(255, 255, 255, 0.08);
-            display: flex;
-            justify-content: space-around;
-            padding: 12px 0;
-            box-sizing: border-box;
-            z-index: 1000;
-            border-radius: 20px 20px 0 0;
-            box-shadow: 0 -5px 25px rgba(0,0,0,0.5);
-        }
-
-        .nav-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            color: var(--text-muted);
-            text-decoration: none;
-            font-size: 11px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: color 0.2s;
-        }
-
-        .nav-item.active {
-            color: var(--neon-cyan);
-            text-shadow: 0 0 8px rgba(0, 245, 212, 0.4);
-        }
-
-        .nav-item svg {
-            width: 22px;
-            height: 22px;
-            margin-bottom: 4px;
-            fill: currentColor;
-        }
-
-        /* İstatistik Yapısı */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-
-        .stat-box {
-            background: rgba(255,255,255,0.02);
-            border: 1px solid rgba(255,255,255,0.05);
-            border-radius: 14px;
-            padding: 15px;
-            text-align: center;
-        }
-
-        .stat-value {
-            font-size: 24px;
-            font-weight: 800;
-            color: var(--neon-purple);
-        }
-
-        .hidden { display: none !important; }
-    </style>
 </head>
 <body>
 
+    <!-- 1. GİRİŞ EKRANI -->
     <div id="login-screen" class="login-container">
         <div class="login-card">
             <h2>LADES PANEL</h2>
@@ -344,6 +26,7 @@
         </div>
     </div>
 
+    <!-- MAIN UYGULAMA ALANI -->
     <div id="app-screen" class="app-container hidden">
         
         <div class="header-bar">
@@ -351,12 +34,14 @@
             <span id="user-badge" class="badge" style="background: rgba(157,78,221,0.2); color: var(--neon-purple);">...</span>
         </div>
 
+        <!-- SEKME 1: LADESLER LİSTESİ -->
         <div id="tab-listesi">
             <div id="lades-listesi">
                 <p style="text-align: center; color: var(--text-muted);">Yükleniyor...</p>
             </div>
         </div>
 
+        <!-- SEKME 2: YENİ EKLE -->
         <div id="tab-ekle" class="hidden">
             <div class="card">
                 <h3>Yeni İddia Meydan Okuması</h3>
@@ -372,6 +57,7 @@
             </div>
         </div>
 
+        <!-- SEKME 3: PROFİL EKRANI -->
         <div id="tab-profil" class="hidden">
             <div class="card" style="text-align: center;">
                 <div style="width: 70px; height: 70px; background: linear-gradient(45deg, var(--neon-purple), var(--neon-pink)); border-radius: 50%; margin: 0 auto 15px; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold;">👤</div>
@@ -393,15 +79,16 @@
             </div>
         </div>
 
+        <!-- SEKME 4: YÖNETİCİ EKRANI -->
         <div id="tab-admin" class="hidden">
             <div class="card">
                 <h3>Yönetici Kontrol Paneli</h3>
                 <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 15px;">Bu ekrandan gruptaki tüm iddiaları izleyebilir ve hatalı durumları tamamen silebilirsiniz.</p>
-                <div id="admin-listesi">
-                    </div>
+                <div id="admin-listesi"></div>
             </div>
         </div>
 
+        <!-- PREMIUM BOTTOM NAVIGATION BAR -->
         <div class="bottom-nav">
             <div class="nav-item active" onclick="switchTab('listesi', 'LADESLER', this)">
                 <svg viewBox="0 0 24 24"><path d="M4 14h6v-10h-6v10zm0 6h6v-4h-6v4zm8 0h6v-10h-6v10zm0-16v4h6v-4h-6z"/></svg>
@@ -416,202 +103,15 @@
                 Profil
             </div>
             <div class="nav-item" onclick="switchTab('admin', 'YÖNETİM', this)">
-                <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22l-1.92 3.32c-.12 21-.07.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h-3.84c-.24 0-.43-.17-.47-.41l-.36-2.54c-.59-.24-1.13-.56-1.62-.94l-2.39.96c-.22.08-.47 0-.59-.22l-1.92-3.32c-.12-.21-.07-.47.12-.61l2.03-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+                <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22l-1.92 3.32c-.12.21-.07.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h-3.84c-.24 0-.43-.17-.47-.41l-.36-2.54c-.59-.24-1.13-.56-1.62-.94l-2.39.96c-.22.08-.47 0-.59.22l-1.92-3.32c-.12-.21-.07-.47.12-.61l2.03-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
                 Yönetici
             </div>
         </div>
 
     </div>
 
-    <script>
-        // Sizin Firebase Proje Bilgileriniz Entegre Edildi
-        const firebaseConfig = {
-            apiKey: "AIzaSyD2ijuUFDlYd2L5G84V0qxV6cRbGZZZ4zQ",
-            authDomain: "lades-f33dd.firebaseapp.com",
-            databaseURL: "https://lades-f33dd-default-rtdb.firebaseio.com",
-            projectId: "lades-f33dd",
-            storageBucket: "lades-f33dd.firebasestorage.app",
-            messagingSenderId: "483364824467",
-            appId: "1:483364824467:web:f30ca9ddd7e279b0057466",
-            measurementId: "G-HXX48CWRLB"
-        };
-
-        // Firebase Başlatma
-        firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
-
-        let currentUser = localStorage.getItem('lades_user') || '';
-
-        window.onload = function() {
-            if (currentUser) {
-                showApp();
-            }
-        };
-
-        function login() {
-            const name = document.getElementById('username').value.trim();
-            if (!name) {
-                alert('Lütfen adınızı yazın.');
-                return;
-            }
-            localStorage.setItem('lades_user', name);
-            currentUser = name;
-            showApp();
-        }
-
-        function logout() {
-            localStorage.removeItem('lades_user');
-            location.reload();
-        }
-
-        function showApp() {
-            document.getElementById('login-screen').classList.add('hidden');
-            document.getElementById('app-screen').classList.remove('hidden');
-            document.getElementById('user-badge').innerText = currentUser.split(' ')[0];
-            document.getElementById('profile-name').innerText = currentUser;
-            verileriDinle();
-        }
-
-        // Sekme Değiştirici Fonksiyon (Akıcı Flutter Tarzı)
-        function switchTab(tabId, title, element) {
-            document.getElementById('page-title').innerText = title;
-            
-            // Tüm sekmeleri gizle
-            document.getElementById('tab-listesi').classList.add('hidden');
-            document.getElementById('tab-ekle').classList.add('hidden');
-            document.getElementById('tab-profil').classList.add('hidden');
-            document.getElementById('tab-admin').classList.add('hidden');
-            
-            // Seçili sekmeyi aç
-            document.getElementById('tab-' + tabId).classList.remove('hidden');
-            
-            // Menü buton aktifliğini değiştir
-            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
-            element.classList.add('active');
-        }
-
-        function yeniLadesEkle() {
-            const rakip = document.getElementById('rakip').value.trim();
-            const odul = document.getElementById('odul').value.trim();
-
-            if (!rakip || !odul) {
-                alert('Lütfen boş alan bırakmayın.');
-                return;
-            }
-
-            const yeniLadesRef = database.ref('ladesler').push();
-            yeniLadesRef.set({
-                id: yeniLadesRef.key,
-                olusturan: currentUser,
-                rakip: rakip,
-                odul: odul,
-                durum: "Aktif",
-                kazanan: "",
-                tarih: new Date().toLocaleDateString('tr-TR')
-            }).then(() => {
-                document.getElementById('rakip').value = '';
-                document.getElementById('odul').value = '';
-                // Başarıyla eklendikten sonra listeye geri dön
-                switchTab('listesi', 'LADESLER', document.querySelectorAll('.nav-item')[0]);
-            }).catch(err => alert("Hata: " + err.message));
-        }
-
-        function verileriDinle() {
-            database.ref('ladesler').on('value', (snapshot) => {
-                const listeDiv = document.getElementById('lades-listesi');
-                const adminDiv = document.getElementById('admin-listesi');
-                listeDiv.innerHTML = '';
-                adminDiv.innerHTML = '';
-                
-                const data = snapshot.val();
-                
-                // İstatistik Sayaçları
-                let toplamIddia = 0;
-                let kazanilanIddia = 0;
-
-                if (!data) {
-                    listeDiv.innerHTML = '<p style="color: var(--text-muted); text-align: center; margin-top: 40px;">Henüz aktif iddia yok.</p>';
-                    adminDiv.innerHTML = '<p style="color: var(--text-muted); font-size: 13px;">İddia bulunamadı.</p>';
-                    guncelleIstatistikler(0, 0);
-                    return;
-                }
-
-                const ladeslerArray = Object.values(data).reverse();
-
-                ladeslerArray.forEach(lades => {
-                    const isBitti = lades.durum !== "Aktif";
-                    
-                    // İstatistik Hesaplama
-                    if (lades.olusturan === currentUser || lades.rakip === currentUser) {
-                        toplamIddia++;
-                        if (isBitti && lades.kazanan === currentUser) {
-                            kazanilanIddia++;
-                        }
-                    }
-
-                    // --- KULLANICI LİSTESİ TASARIMI ---
-                    let cardHtml = `
-                        <div class="lades-card ${isBitti ? 'bitti' : ''}">
-                            <div class="lades-header">
-                                <div class="lades-versus">🤝 ${lades.olusturan} vs ${lades.rakip}</div>
-                                <span class="badge ${isBitti ? 'badge-bitti' : 'badge-aktif'}">${isBitti ? 'BİTTİ' : 'AKTİF'}</span>
-                            </div>
-                            <div class="lades-reward">🏆 <b>Ödül:</b> ${lades.odul}</div>
-                            <div style="font-size: 11px; color: var(--text-muted)">📅 ${lades.tarih}</div>
-                    `;
-
-                    if (!isBitti) {
-                        cardHtml += `
-                            <div class="action-grid">
-                                <button class="btn-action" onclick="ladesBitir('${lades.id}', '${lades.olusturan}')">🏆 ${lades.olusturan.split(' ')[0]} Kazandı</button>
-                                <button class="btn-action" onclick="ladesBitir('${lades.id}', '${lades.rakip}')">🏆 ${lades.rakip.split(' ')[0]} Kazandı</button>
-                            </div>
-                        `;
-                    } else {
-                        cardHtml += `
-                            <div style="margin-top: 10px; font-weight: bold; color: var(--neon-cyan); font-size: 14px;">🎉 Kazanan: ${lades.kazanan}</div>
-                        `;
-                    }
-                    cardHtml += `</div>`;
-                    listeDiv.innerHTML += cardHtml;
-
-
-                    // --- ADMIN LİSTESİ TASARIMI (SİLME BUTONLU) ---
-                    let adminCardHtml = `
-                        <div class="lades-card ${isBitti ? 'bitti' : ''}" style="padding: 12px;">
-                            <div style="font-size: 13px; font-weight: bold;">${lades.olusturan} vs ${lades.rakip}</div>
-                            <div style="font-size: 11px; color: var(--text-muted)">Ödül: ${lades.odul} | Durum: ${lades.durum}</div>
-                            <button class="btn-action btn-delete" onclick="ladesSil('${lades.id}')">Bu İddiayı Sistemden Sil</button>
-                        </div>
-                    `;
-                    adminDiv.innerHTML += adminCardHtml;
-                });
-
-                guncelleIstatistikler(toplamIddia, kazanilanIddia);
-            });
-        }
-
-        function ladesBitir(id, kazananIsim) {
-            if(confirm(`${kazananIsim} kazandı olarak onaylıyor musunuz?`)) {
-                database.ref(`ladesler/${id}`).update({
-                    durum: "Bitti",
-                    kazanan: kazananIsim
-                });
-            }
-        }
-
-        function ladesSil(id) {
-            if(confirm("DİKKAT! Bu iddia kaydını Firebase'den kalıcı olarak silmek istediğinize emin misiniz?")) {
-                database.ref(`ladesler/${id}`).remove()
-                    .then(() => alert("Kayıt başarıyla silindi."))
-                    .catch(err => alert("Hata: " + err.message));
-            }
-        }
-
-        function guncelleIstatistikler(toplam, kazanilan) {
-            document.getElementById('stat-toplam').innerText = toplam;
-            document.getElementById('stat-kazanilan').innerText = kazanilan;
-        }
-    </script>
+    <!-- Modüler Script Dosyalarımız Sırayla Çağrılıyor -->
+    <script src="src/js/firebase-config.js"></script>
+    <script src="src/js/app.js"></script>
 </body>
 </html>
