@@ -1,8 +1,0 @@
-{
-  "version": 2,
-  "framework": "flutter",
-  "routes": [
-    { "handle": "filesystem" },
-    { "src": "/.*", "dest": "/index.html" }
-  ]
-}
