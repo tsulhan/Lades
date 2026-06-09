@@ -10,39 +10,34 @@
         * { margin:0; padding:0; box-sizing:border-box; font-family:'Inter', sans-serif; }
         body { background:#030814; color:white; min-height:100vh; display:flex; flex-direction:column; }
         
-        /* Üst Bar (Header) */
         header { display:flex; justify-content:space-between; align-items:center; padding:20px 40px; background:#0b132b; border-bottom:1px solid #1c2541; }
         .logo { font-size:24px; font-weight:800; color:#24ffff; text-shadow:0 0 10px #24ffff; text-decoration:none; }
         
         .header-center { display:flex; align-items:center; gap:25px; }
         .token-bag { background:rgba(36, 255, 255, 0.1); border:1px solid #24ffff; padding:10px 20px; border-radius:30px; font-weight:700; color:#24ffff; box-shadow:0 0 10px rgba(36, 255, 255, 0.2); }
         
-        /* Flutter Tarzı Profil ve Yönetici İkonları */
         .icon-btn { background:transparent; border:none; color:#888; font-size:20px; cursor:pointer; transition:0.3s; padding:8px; border-radius:50px; }
         .icon-btn:hover { color:#24ffff; background:rgba(36, 255, 255, 0.05); }
         .btn-logout { color:#ff4aa2; margin-left:10px; }
         .btn-logout:hover { color:white; background:rgba(255, 74, 162, 0.2); }
 
-        /* Sekme Menüsü (Tabs Navigation) */
         .tabs-container { display:flex; justify-content:center; background:#0b132b; border-bottom:1px solid #1c2541; }
         .tab-button { background:transparent; border:none; color:#888; padding:15px 30px; font-size:16px; font-weight:700; cursor:pointer; position:relative; transition:0.3s; }
         .tab-button:hover { color:white; }
         .tab-button.active { color:#24ffff; }
         .tab-button.active::after { content:''; position:absolute; bottom:0; left:0; width:100%; height:3px; background:#24ffff; box-shadow:0 0 10px #24ffff; }
 
-        /* Ana İçerik Alanı */
         main { flex:1; padding:40px; max-width:850px; width:100%; margin:0 auto; }
         .tab-content { display:none; }
         .tab-content.active { display:block; animation:fadeIn 0.4s ease; }
 
-        /* TAB 1: Polymarket Tarzı Lades Kartları */
+        /* Lades Kartları Görünümü */
         .market-grid { display:flex; flex-direction:column; gap:20px; }
         .market-card { background:#0b132b; border:1px solid #1c2541; border-radius:20px; padding:25px; display:flex; justify-content:space-between; align-items:center; transition:0.3s; }
         .market-card:hover { border-color:#334155; }
         .market-info h3 { font-size:19px; color:#fff; margin-bottom:8px; font-weight:700; }
         .market-info p { font-size:14px; color:#64748b; }
         
-        /* Evet / Hayır Butonları */
         .market-actions { display:flex; gap:12px; }
         .btn-bet { padding:14px 28px; border-radius:12px; border:none; font-weight:700; font-size:16px; cursor:pointer; transition:0.2s; min-width:110px; }
         .btn-yes { background:rgba(34, 197, 94, 0.15); color:#22c55e; border:1px solid #22c55e; }
@@ -50,7 +45,7 @@
         .btn-no { background:rgba(239, 68, 68, 0.15); color:#ef4444; border:1px solid #ef4444; }
         .btn-no:hover { background:#ef4444; color:#fff; }
 
-        /* TAB 2: YARAT Sekmesi Form Tasarımı */
+        /* Yarat Sekmesi Tasarımı */
         .create-container { background:#0b132b; border:1px solid #1c2541; padding:35px; border-radius:24px; }
         .create-container h2 { margin-bottom:10px; font-weight:800; }
         .create-container .subtitle { color:#64748b; margin-bottom:25px; font-size:14px; }
@@ -59,9 +54,8 @@
         .form-group input { width:100%; padding:15px; border-radius:12px; border:1px solid #1c2541; background:#030814; color:white; font-size:16px; }
         .form-group input:focus { border-color:#24ffff; outline:none; }
         .btn-submit { width:100%; padding:18px; border-radius:50px; border:none; background:#ff4aa2; color:white; font-weight:800; font-size:18px; cursor:pointer; box-shadow:0 0 15px #ff4aa2; transition:0.3s; }
-        .btn-submit:hover { box-shadow:0 0 25px #ff4aa2; transform:translateY(-1px); }
 
-        /* Token Yatırma Kutusu (Modal Pop-up) */
+        /* Modal Pop-up */
         .modal-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(3, 8, 20, 0.8); backdrop-filter:blur(5px); justify-content:center; align-items:center; z-index:999; }
         .modal { background:#0b132b; border:1px solid #1c2541; padding:30px; border-radius:24px; width:100%; max-width:400px; text-align:center; box-shadow:0 10px 30px rgba(0,0,0,0.5); }
         .modal h3 { margin-bottom:15px; font-size:22px; }
@@ -103,27 +97,29 @@
         
         <div id="mevcut-ladesler" class="tab-content active">
             <div class="market-grid">
+                
                 <div class="market-card">
                     <div class="market-info">
                         <h3>Bitcoin bu ay 100.000$'ı geçer mi?</h3>
-                        <p>Bitiş: 30 Haz 2026 • Toplam Hacim: 14,250 Token</p>
+                        <p>Bitiş: 30 Haz 2026 • Toplam Hacim: <span id="vol-display-bitcoin" style="font-weight:700; color:#24ffff;">14.250</span> Token</p>
                     </div>
                     <div class="market-actions">
-                        <button class="btn-bet btn-yes" onclick="openBetModal('Bitcoin 100k', 'EVET')">EVET</button>
-                        <button class="btn-bet btn-no" onclick="openBetModal('Bitcoin 100k', 'HAYIR')">HAYIR</button>
+                        <button class="btn-bet btn-yes" onclick="openBetModal('bitcoin', 'Bitcoin 100k', 'EVET')">EVET</button>
+                        <button class="btn-bet btn-no" onclick="openBetModal('bitcoin', 'Bitcoin 100k', 'HAYIR')">HAYIR</button>
                     </div>
                 </div>
                 
                 <div class="market-card">
                     <div class="market-info">
                         <h3>Yarın İstanbul'da yağmur yağar mı?</h3>
-                        <p>Bitiş: 10 Haz 2026 • Toplam Hacim: 3,400 Token</p>
+                        <p>Bitiş: 10 Haz 2026 • Toplam Hacim: <span id="vol-display-yagmur" style="font-weight:700; color:#24ffff;">3.400</span> Token</p>
                     </div>
                     <div class="market-actions">
-                        <button class="btn-bet btn-yes" onclick="openBetModal('İstanbul Yağmur', 'EVET')">EVET</button>
-                        <button class="btn-bet btn-no" onclick="openBetModal('İstanbul Yağmur', 'HAYIR')">HAYIR</button>
+                        <button class="btn-bet btn-yes" onclick="openBetModal('yagmur', 'İstanbul Yağmur', 'EVET')">EVET</button>
+                        <button class="btn-bet btn-no" onclick="openBetModal('yagmur', 'İstanbul Yağmur', 'HAYIR')">HAYIR</button>
                     </div>
                 </div>
+                
             </div>
         </div>
 
@@ -162,12 +158,10 @@
 
     <script src="src/js/app.js"></script>
     <script>
-        // Sayfa ilk yüklendiğinde cüzdanı hafızadan çek ve göster
         document.addEventListener("DOMContentLoaded", () => {
             if(typeof updateUI === "function") updateUI();
         });
 
-        // Flutter tarzı sekme geçiş mantığı
         function switchTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
             document.querySelectorAll('.tab-button').forEach(button => button.classList.remove('active'));
@@ -180,5 +174,15 @@
             const q = document.getElementById('market-question').value;
             if(!q) return alert("Lütfen bir soru yazın!");
             alert("Harika! Yeni lades pazarınız oluşturuldu. (Firebase entegrasyonuyla listeye eklenecek)");
-            // Başarıyla oluşturduktan sonra ilk sekmeye otomatik geri fırlat
-            switchTab('mevcut-
+            switchTab('mevcut-ladesler');
+            document.querySelectorAll('.tab-button')[0].classList.add('active');
+            document.querySelectorAll('.tab-button')[1].classList.remove('active');
+            document.getElementById('market-question').value = "";
+        }
+
+        function logout() {
+            window.location.href = 'login.html';
+        }
+    </script>
+</body>
+</html>
