@@ -1,39 +1,33 @@
-// Cüzdan Kurulumu (İlk kez giriyorsa 1000 Token tanımla)
+// Cüzdan Kurulumu
 if (!localStorage.getItem('tokenBalance')) {
     localStorage.setItem('tokenBalance', '1000');
 }
 
-// Lades Pazarlarının Başlangıç Hacimleri (Hafızada yoksa tanımla)
-if (!localStorage.getItem('vol_bitcoin')) {
-    localStorage.setItem('vol_bitcoin', '14250');
-}
-if (!localStorage.getItem('vol_yagmur')) {
-    localStorage.setItem('vol_yagmur', '3400');
-}
+// 1. PAZAR (Bitcoin) İÇİN BAŞLANGIÇ HAVUZLARI (Hafızada yoksa oluştur)
+if (!localStorage.getItem('pool_bitcoin_YES')) localStorage.setItem('pool_bitcoin_YES', '9260');
+if (!localStorage.getItem('pool_bitcoin_NO')) localStorage.setItem('pool_bitcoin_NO', '4990');
 
-// Global Durum Yönetimi (Modal takibi için)
-let activeMarketId = ""; // Hangi pazarın hacmini artıracağımızı bilmek için ID tutuyoruz
+// 2. PAZAR (Yağmur) İÇİN BAŞLANGIÇ HAVUZLARI
+if (!localStorage.getItem('pool_yagmur_YES')) localStorage.setItem('pool_yagmur_YES', '1020');
+if (!localStorage.getItem('pool_yagmur_NO')) localStorage.setItem('pool_yagmur_NO', '2380');
+
+// Global Durum Yönetimi
+let activeMarketId = ""; 
 let activeMarketTitle = "";
 let activeChoice = "";
 
-// Giriş Kontrol Fonksiyonu
+// Giriş Kontrolü
 function handleLogin() {
     const emailInput = document.getElementById('email').value.trim();
     const passwordInput = document.getElementById('password').value;
-
-    const adminEmail = "tsulhan@gmail.com";
-    const adminPassword = "1234";
-
-    if (emailInput === adminEmail && passwordInput === adminPassword) {
+    if (emailInput === "tsulhan@gmail.com" && passwordInput === "1234") {
         window.location.href = 'dashboard.html';
-    } else if (emailInput === "" || passwordInput === "") {
-        alert("Lütfen tüm alanları doldurun!");
     } else {
-        alert("Hatalı giriş! Bilgiler: tsulhan@gmail.com / 1234");
+        alert("Hatalı giriş!");
     }
 }
 
-// Arayüzü Güncel Tutma Fonksiyonu (Cüzdan + Tüm Pazar Hacimleri)
+// ORAN VE ARAYÜZ HESAPLAMA ALGORİTMASI
 function updateUI() {
     // Cüzdanı Güncelle
     const balanceElement = document.getElementById('token-balance');
@@ -41,25 +35,38 @@ function updateUI() {
         balanceElement.innerText = localStorage.getItem('tokenBalance');
     }
 
-    // Pazar 1 (Bitcoin) Hacmini Güncelle
-    const volBitcoinElement = document.getElementById('vol-display-bitcoin');
-    if (volBitcoinElement) {
-        // Sayıları binlik ayracı ile şık göstermek için (Örn: 14,250)
-        const vol = parseInt(localStorage.getItem('vol_bitcoin'));
-        volBitcoinElement.innerText = vol.toLocaleString('tr-TR');
-    }
+    // Pazarları döngüyle veya tek tek güncelleyebiliriz. İki pazarımız için de oranları hesaplayalım:
+    const markets = ['bitcoin', 'yagmur'];
 
-    // Pazar 2 (Yağmur) Hacmini Güncelle
-    const volYagmurElement = document.getElementById('vol-display-yagmur');
-    if (volYagmurElement) {
-        const vol = parseInt(localStorage.getItem('vol_yagmur'));
-        volYagmurElement.innerText = vol.toLocaleString('tr-TR');
-    }
+    markets.forEach(mId => {
+        const yesPool = parseInt(localStorage.getItem(`pool_${mId}_YES`));
+        const noPool = parseInt(localStorage.getItem(`pool_${mId}_NO`));
+        const totalVolume = yesPool + noPool;
+
+        // Yüzde Hesaplama Algoritması
+        let yesPercent = Math.round((yesPool / totalVolume) * 100);
+        let noPercent = 100 - yesPercent; // Toplamın tam 100 çıkması için
+
+        // Ekranda Toplam Hacmi Güncelle (Örn: 14.250)
+        const volElement = document.getElementById(`vol-display-${mId}`);
+        if (volElement) {
+            volElement.innerText = totalVolume.toLocaleString('tr-TR');
+        }
+
+        // Butonların İçindeki Metni ve Yüzdeleri Güncelle
+        const yesBtn = document.getElementById(`btn-${mId}-YES`);
+        const noBtn = document.getElementById(`btn-${mId}-NO`);
+
+        if (yesBtn && noBtn) {
+            yesBtn.innerText = `EVET %${yesPercent}`;
+            noBtn.innerText = `HAYIR %${noPercent}`;
+        }
+    });
 }
 
 // Token Yatırma Kutusunu Açma (Modal)
 function openBetModal(marketId, marketTitle, choice) {
-    activeMarketId = marketId; // Hangi pazara tıklandığını kaydet ('bitcoin' veya 'yagmur')
+    activeMarketId = marketId;
     activeMarketTitle = marketTitle;
     activeChoice = choice;
     
@@ -67,11 +74,7 @@ function openBetModal(marketId, marketTitle, choice) {
     document.getElementById('modal-bet-choice').innerText = choice;
     
     const choiceSpan = document.getElementById('modal-bet-choice');
-    if(choice === 'EVET') {
-        choiceSpan.style.color = '#22c55e';
-    } else {
-        choiceSpan.style.color = '#ef4444';
-    }
+    choiceSpan.style.color = (choice === 'EVET') ? '#22c55e' : '#ef4444';
     
     document.getElementById('bet-modal').style.display = 'flex';
 }
@@ -82,34 +85,33 @@ function closeModal() {
     document.getElementById('bet-amount').value = "";
 }
 
-// Bahsi ve Toplam Hacmi Onaylama Mantığı
+// Havuzları ve Oranları Değiştiren Onaylama Fonksiyonu
 function confirmBet() {
     const amountInput = document.getElementById('bet-amount');
     const amount = parseInt(amountInput.value);
     let currentBalance = parseInt(localStorage.getItem('tokenBalance'));
     
     if (isNaN(amount) || amount <= 0) {
-        alert("Lütfen geçerli bir token miktararı girin!");
+        alert("Lütfen geçerli bir miktar girin!");
         return;
     }
-    
     if (amount > currentBalance) {
-        alert(`Yetersiz bakiye! Maksimum ${currentBalance} token yatırabilirsiniz.`);
+        alert(`Yetersiz bakiye! En fazla ${currentBalance} token yatırabilirsiniz.`);
         return;
     }
     
-    // 1. Kullanıcı Bakiyesinden Düş ve Kaydet
+    // 1. Kullanıcı cüzdanından düş
     currentBalance -= amount;
     localStorage.setItem('tokenBalance', currentBalance.toString());
     
-    // 2. Tıklanan Pazarın Toplam Hacmini Artır ve Kaydet
-    const storageKey = `vol_${activeMarketId}`; // 'vol_bitcoin' veya 'vol_yagmur' oluşturur
-    let currentMarketVolume = parseInt(localStorage.getItem(storageKey));
-    currentMarketVolume += amount;
-    localStorage.setItem(storageKey, currentMarketVolume.toString());
+    // 2. İlgili pazarın seçilen havuzuna ekle (Algoritmanın kalbi)
+    const storageKey = `pool_${activeMarketId}_${activeChoice}`; // Örn: pool_bitcoin_YES
+    let targetPool = parseInt(localStorage.getItem(storageKey));
+    targetPool += amount;
+    localStorage.setItem(storageKey, targetPool.toString());
     
-    alert(`Başarılı! "${activeMarketTitle}" pazarında [${activeChoice}] seçeneğine ${amount} TOKEN kilitlendi. Toplam pazar hacmi büyüdü! ⚡`);
+    alert(`Başarılı! Oranlar ve toplam pazar hacmi yeniden hesaplanıyor... ⚡`);
     
     closeModal();
-    updateUI(); // Ekrandaki tüm sayıları (Cüzdan ve Toplam Yatırılan) anlık tazele
+    updateUI(); // Algoritmayı tetikle, yeni yüzdeler ekrana yansısın
 }
