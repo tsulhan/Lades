@@ -5,31 +5,33 @@
     <title>LADES</title>
     <link rel="stylesheet" href="assets/css/style.css">
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
 </head>
 <body>
-    <div id="login-screen" class="login-container">
-        <div class="login-card">
-            <h2>LADES</h2>
-            <p style="color:var(--neon-cyan); font-size:12px;">TAHMİN ET. HİSSE AL. LADESİ KAZAN.</p>
-            <input type="text" id="username" placeholder="Adınız Soyadınız">
-            <button class="btn-neon" onclick="login()">GİRİŞ YAP ></button>
+
+    <div id="welcome-screen" class="screen">
+        <div class="logo-box">
+            <h1>LADES</h1>
+            <p>Tahmin et. Meydan oku. <span style="color:#ff007f">Kazan.</span></p>
         </div>
+        <button class="btn-neon" onclick="showAuth()">GİRİŞ YAP ></button>
+        <p style="margin-top:20px; font-size:12px; color:var(--text-muted)">Arkadaşlarınla tahmin yap, liderlikte yüksel!</p>
     </div>
 
-    <div id="app-screen" class="app-container hidden">
-        <h1 id="page-title">LADESLER</h1>
-        <div id="tab-listesi"><div id="lades-listesi"></div></div>
-        <div id="tab-ekle" class="hidden card">
-            <input type="text" id="rakip" placeholder="Rakip">
-            <input type="text" id="odul" placeholder="Ödül">
-            <button class="btn-neon" onclick="yeniLadesEkle()">EKLE</button>
-        </div>
-        <div class="bottom-nav">
-            <div class="nav-item active" onclick="switchTab('listesi','LADESLER', this)">LİSTE</div>
-            <div class="nav-item" onclick="switchTab('ekle','YENİ EKLE', this)">EKLE</div>
-        </div>
+    <div id="auth-screen" class="screen hidden">
+        <h2 id="auth-title">Giriş Yap</h2>
+        <input type="email" id="email" placeholder="E-posta">
+        <input type="password" id="pass" placeholder="Şifre">
+        <button class="btn-neon" onclick="handleAuth()">GİRİŞ YAP</button>
+        <p onclick="toggleMode()" style="cursor:pointer; color:var(--neon-cyan); margin-top:15px;">Hesabın yok mu? Kayıt Ol</p>
     </div>
+
+    <div id="app-screen" class="screen hidden">
+        <h1>Ana Sayfa</h1>
+        <button onclick="logout()">Çıkış Yap</button>
+    </div>
+
     <script src="src/js/firebase-config.js"></script>
     <script src="src/js/app.js"></script>
 </body>
