@@ -3,117 +3,106 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - LADES</title>
+    <title>Pazar - LADES</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght=300;400;600;700;800&display=swap" rel="stylesheet">
     <style>
         * { margin:0; padding:0; box-sizing:border-box; font-family:'Inter', sans-serif; }
         body { background:#030814; color:white; min-height:100vh; display:flex; flex-direction:column; }
         
-        /* Üst Bar (Header) */
+        /* Header & Cüzdan */
         header { display:flex; justify-content:space-between; align-items:center; padding:20px 40px; background:#0b132b; border-bottom:1px solid #1c2541; }
-        .logo { font-size:24px; font-weight:800; color:#24ffff; text-shadow:0 0 10px #24ffff; display:flex; align-items:center; gap:10px; }
-        .user-info { display:flex; align-items:center; gap:15px; }
-        .user-mail { color:#888; font-size:14px; }
-        .btn-logout { background:transparent; color:#ff4aa2; border:1px solid #ff4aa2; padding:8px 16px; border-radius:20px; cursor:pointer; font-weight:600; font-size:14px; transition:0.3s; }
-        .btn-logout:hover { background:#ff4aa2; color:white; box-shadow:0 0 10px #ff4aa2; }
+        .logo { font-size:24px; font-weight:800; color:#24ffff; text-shadow:0 0 10px #24ffff; cursor:pointer; text-decoration:none; }
+        .nav-right { display:flex; align-items:center; gap:20px; }
+        .token-bag { background:rgba(36, 255, 255, 0.1); border:1px solid #24ffff; padding:10px 20px; border-radius:30px; font-weight:700; color:#24ffff; box-shadow:0 0 10px rgba(36, 255, 255, 0.2); }
+        .btn-nav { background:#ff4aa2; color:white; border:none; padding:10px 20px; border-radius:20px; cursor:pointer; font-weight:700; text-decoration:none; font-size:14px; }
 
-        /* Sekme Menüsü (Tabs Navigation) */
-        .tabs-container { display:flex; justify-content:center; background:#0b132b; border-bottom:1px solid #1c2541; }
-        .tab-button { background:transparent; border:none; color:#888; padding:15px 30px; font-size:16px; font-weight:700; cursor:pointer; position:relative; transition:0.3s; }
-        .tab-button:hover { color:white; }
-        .tab-button.active { color:#24ffff; }
-        .tab-button.active::after { content:''; position:absolute; bottom:0; left:0; width:100%; height:3px; background:#24ffff; box-shadow:0 0 10px #24ffff; }
+        /* Ana İçerik */
+        main { flex:1; padding:40px; max-width:900px; width:100%; margin:0 auto; }
+        h2 { margin-bottom:30px; font-weight:800; letter-spacing:0.5px; color:#f8fafc; }
 
-        /* Ana İçerik Alanı */
-        main { flex:1; padding:40px; max-width:800px; width:100%; margin:0 auto; }
-        .tab-content { display:none; }
-        .tab-content.active { display:block; animation:fadeIn 0.5s ease; }
+        /* Polymarket Tarzı Lades Kartları */
+        .market-grid { display:flex; flex-direction:column; gap:20px; }
+        .market-card { background:#0b132b; border:1px solid #1c2541; border-radius:20px; padding:25px; display:flex; justify-content:space-between; align-items:center; transition:0.3s; }
+        .market-card:hover { border-color:#334155; }
+        .market-info h3 { font-size:20px; color:#fff; margin-bottom:8px; font-weight:700; }
+        .market-info p { font-size:14px; color:#64748b; }
+        
+        /* Evet/Hayır Buton Alanı */
+        .market-actions { display:flex; gap:12px; }
+        .btn-bet { padding:14px 28px; border-radius:12px; border:none; font-weight:700; font-size:16px; cursor:pointer; transition:0.2s; min-width:110px; }
+        .btn-yes { background:rgba(34, 197, 94, 0.15); color:#22c55e; border:1px solid #22c55e; }
+        .btn-yes:hover { background:#22c55e; color:#000; }
+        .btn-no { background:rgba(239, 68, 68, 0.15); color:#ef4444; border:1px solid #ef4444; }
+        .btn-no:hover { background:#ef4444; color:#fff; }
 
-        /* Mevcut Ladesler Sekmesi Stilleri */
-        .lades-card { background:#0b132b; border:1px solid #1c2541; border-radius:15px; padding:20px; margin-bottom:15px; display:flex; justify-content:space-between; align-items:center; }
-        .lades-info h3 { font-size:18px; color:white; margin-bottom:5px; }
-        .lades-info p { font-size:14px; color:#888; }
-        .lades-status { padding:6px 12px; border-radius:20px; font-size:12px; font-weight:700; }
-        .status-devam { background:rgba(36, 255, 255, 0.1); color:#24ffff; border:1px solid #24ffff; }
-        .status-bitti { background:rgba(255, 74, 162, 0.1); color:#ff4aa2; border:1px solid #ff4aa2; }
-
-        /* Yarat Sekmesi Stilleri (Form) */
-        .form-group { margin-bottom:20px; }
-        .form-group label { display:block; margin-bottom:8px; color:#888; font-size:14px; font-weight:600; }
-        .form-group input, .form-group select { width:100%; padding:15px; border-radius:10px; border:1px solid #1c2541; background:#0b132b; color:white; font-size:16px; }
-        .btn-create { width:100%; padding:18px; border-radius:50px; border:none; background:#ff4aa2; color:white; font-weight:800; font-size:18px; cursor:pointer; margin-top:10px; box-shadow:0 0 15px #ff4aa2; }
-
-        @keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+        /* Token Yatırma Kutusu (Modal Pop-up) */
+        .modal-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(3, 8, 20, 0.8); backdrop-filter:blur(5px); justify-content:center; align-items:center; z-index:999; }
+        .modal { background:#0b132b; border:1px solid #1c2541; padding:30px; border-radius:24px; width:100%; max-width:400px; text-align:center; box-shadow:0 10px 30px rgba(0,0,0,0.5); }
+        .modal h3 { margin-bottom:15px; font-size:22px; }
+        .modal p { color:#64748b; font-size:14px; margin-bottom:20px; }
+        .modal input { width:100%; padding:15px; border-radius:12px; border:1px solid #1c2541; background:#030814; color:white; font-size:18px; text-align:center; margin-bottom:20px; font-weight:700; }
+        .modal-buttons { display:flex; gap:10px; }
+        .btn-modal { flex:1; padding:15px; border-radius:12px; border:none; font-weight:700; cursor:pointer; font-size:16px; }
+        .btn-confirm { background:#24ffff; color:#030814; }
+        .btn-cancel { background:#1e293b; color:#94a3b8; }
     </style>
 </head>
 <body>
 
-    <!-- Üst Navigasyon -->
     <header>
-        <div class="logo">⚡ LADES</div>
-        <div class="user-info">
-            <span class="user-mail" id="current-user">tsulhan@gmail.com</span>
-            <button class="btn-logout" onclick="logout()">Çıkış Yap</button>
+        <a href="dashboard.html" class="logo">⚡ LADES</a>
+        <div class="nav-right">
+            <div class="token-bag">💰 <span id="token-balance">1000</span> TOKEN</div>
+            <a href="lades_yarat.html" class="btn-nav">+ Yeni Pazar Aç</a>
         </div>
     </header>
 
-    <!-- Flutter Tarzı Sekme Menüsü -->
-    <div class="tabs-container">
-        <button class="tab-button active" onclick="switchTab('mevcut-ladesler')">Mevcut Ladesler</button>
-        <button class="tab-button" onclick="switchTab('lades-yarat')">Lades Yarat</button>
-    </div>
-
-    <!-- Ana İçerik -->
     <main>
-        <!-- TAB 1: MEVCUT LADESLER -->
-        <div id="mevcut-ladesler" class="tab-content active">
-            <div class="lades-card">
-                <div class="lades-info">
-                    <h3>Akşam Yemeği İddiası</h3>
-                    <p>Rakip: Ahmet | Başlangıç: 09.06.2026</p>
+        <h2>Aktif Tahmin Pazarları</h2>
+        
+        <div class="market-grid">
+            <div class="market-card">
+                <div class="market-info">
+                    <h3>Bitcoin bu ay 100.000$'ı geçer mi?</h3>
+                    <p>Bitiş: 30 Haz 2026 • Hacim: 14,250 Token</p>
                 </div>
-                <span class="lades-status status-devam">Devam Ediyor</span>
+                <div class="market-actions">
+                    <button class="btn-bet btn-yes" onclick="openBetModal('Bitcoin 100k', 'EVET')">EVET</button>
+                    <button class="btn-bet btn-no" onclick="openBetModal('Bitcoin 100k', 'HAYIR')">HAYIR</button>
+                </div>
             </div>
             
-            <div class="lades-card">
-                <div class="lades-info">
-                    <h3>Konsol Oyunu Ladesi</h3>
-                    <p>Rakip: Mehmet | Bitiş: 05.06.2026</p>
+            <div class="market-card">
+                <div class="market-info">
+                    <h3>Yarın İstanbul'da yağmur yağar mı?</h3>
+                    <p>Bitiş: 10 Haz 2026 • Hacim: 3,400 Token</p>
                 </div>
-                <span class="lades-status status-bitti">Sen Kazandın</span>
+                <div class="market-actions">
+                    <button class="btn-bet btn-yes" onclick="openBetModal('İstanbul Yağmur', 'EVET')">EVET</button>
+                    <button class="btn-bet btn-no" onclick="openBetModal('İstanbul Yağmur', 'HAYIR')">HAYIR</button>
+                </div>
             </div>
-        </div>
-
-        <!-- TAB 2: LADES YARAT -->
-        <div id="lades-yarat" class="tab-content">
-            <div class="form-group">
-                <label>Lades Konusu / İddia Nedir?</label>
-                <input type="text" placeholder="Örn: Hafta sonu maçı, akşam yemeği...">
-            </div>
-            <div class="form-group">
-                <label>Rakip Seç (E-posta veya Kullanıcı Adı)</label>
-                <input type="text" placeholder="Rakibinizin adresini yazın">
-            </div>
-            <button class="btn-create" onclick="alert('Lades başarıyla oluşturuldu ve rakibe davet gönderildi!')">LADES BAŞLAT ⚡</button>
         </div>
     </main>
 
-    <script>
-        // Flutter tarzı sekme geçiş mantığı
-        function switchTab(tabId) {
-            // Tüm içerikleri gizle
-            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-            // Tüm butonların aktifliğini kaldır
-            document.querySelectorAll('.tab-button').forEach(button => button.classList.remove('active'));
-            
-            // Seçileni göster ve butonu aktif yap
-            document.getElementById(tabId).classList.add('active');
-            event.currentTarget.classList.add('active');
-        }
+    <div id="bet-modal" class="modal-overlay">
+        <div class="modal">
+            <h3 id="modal-market-title">Pazar Adı</h3>
+            <p>Seçiminiz: <span id="modal-bet-choice" style="font-weight:800;"></span></p>
+            <input type="number" id="bet-amount" placeholder="Kaç Token Yatıracaksınız?" min="1">
+            <div class="modal-buttons">
+                <button class="btn-modal btn-cancel" onclick="closeModal()">İptal</button>
+                <button class="btn-modal btn-confirm" onclick="confirmBet()">Yatır ve Kilitle ⚡</button>
+            </div>
+        </div>
+    </div>
 
-        function logout() {
-            window.location.href = 'login.html';
-        }
+    <script src="src/js/app.js"></script>
+    <script>
+        // Sayfa yüklendiğinde hafızadaki cüzdanı güncelle
+        document.addEventListener("DOMContentLoaded", () => {
+            if(typeof updateUI === "function") updateUI();
+        });
     </script>
 </body>
 </html>
