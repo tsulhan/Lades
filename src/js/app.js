@@ -1,4 +1,4 @@
-// Cüzdan Kurulumu
+// Cüzdan Kurulumu (İlk kez giriyorsa 1000 Token tanımla)
 if (!localStorage.getItem('tokenBalance')) {
     localStorage.setItem('tokenBalance', '1000');
 }
@@ -12,10 +12,37 @@ if (!localStorage.getItem('customMarkets')) {
     localStorage.setItem('customMarkets', JSON.stringify(defaultMarkets));
 }
 
-// Global Durum Yönetimi
+// Global Durum Yönetimi (Modal takibi için)
 let activeMarketId = ""; 
 let activeMarketTitle = "";
 let activeChoice = "";
+
+// GİRİŞ KONTROL FONKSİYONU (Takılmayı çözen güvenli hali)
+function handleLogin() {
+    // login.html sayfasındaki input elementlerini yakala
+    const emailInput = document.getElementById('email');
+    const passwordInput = document.getElementById('password');
+
+    if (!emailInput || !passwordInput) {
+        alert("Giriş form elemanları bulunamadı!");
+        return;
+    }
+
+    const emailValue = emailInput.value.trim();
+    const passwordValue = passwordInput.value;
+
+    const adminEmail = "tsulhan@gmail.com";
+    const adminPassword = "1234";
+
+    if (emailValue === adminEmail && passwordValue === adminPassword) {
+        // Doğru bilgiyse doğrudan yönlendir, updateUI çağırma!
+        window.location.href = 'dashboard.html';
+    } else if (emailValue === "" || passwordValue === "") {
+        alert("Lütfen tüm alanları doldurun!");
+    } else {
+        alert("Hatalı giriş! Bilgiler: tsulhan@gmail.com / 1234");
+    }
+}
 
 // ARAYÜZÜ VE TÜM PAZARLARI DİNAMİK YENİLEME ALGORİTMASI
 function updateUI() {
@@ -27,7 +54,7 @@ function updateUI() {
 
     // 2. Pazarları Hafızadan Oku ve Listeyi Dinamik Oluştur
     const marketGrid = document.getElementById('market-grid');
-    if (!marketGrid) return; // Eğer element o sayfada yoksa dur
+    if (!marketGrid) return; // Eğer element o sayfada (login.html gibi) yoksa fonksiyonu güvenle kır
 
     const markets = JSON.parse(localStorage.getItem('customMarkets'));
     marketGrid.innerHTML = ""; // Eski listeyi temizle
@@ -68,7 +95,6 @@ function createNewMarket() {
     const choice = document.getElementById('market-choice').value;
     let currentBalance = parseInt(localStorage.getItem('tokenBalance'));
 
-    // Form Kontrolleri
     if (!title || !date || isNaN(initialBet) || initialBet <= 0) {
         alert("Lütfen tüm alanları eksiksiz ve doğru doldurun!");
         return;
@@ -90,7 +116,7 @@ function createNewMarket() {
 
     // 3. Yeni Pazar Objesini Oluştur
     const newMarket = {
-        id: 'custom_' + Date.now(), // Benzersiz ID üretme
+        id: 'custom_' + Date.now(),
         title: title,
         date: date,
         yesPool: yesPool,
@@ -104,14 +130,12 @@ function createNewMarket() {
 
     alert(`⚡ Lades Pazarı Başarıyla Açıldı! ${initialBet} Token ${choice === 'YES' ? 'EVET' : 'HAYIR'} seçeneğine yatırıldı.`);
 
-    // Formu temizle ve Mevcut Ladesler sekmesine geçiş yap
+    // Formu temizle
     document.getElementById('market-question').value = "";
     document.getElementById('market-initial-bet').value = "";
     
-    // dashboard.html içindeki switchTab fonksiyonunu tetikle
     if (typeof switchTab === 'function') {
         switchTab('mevcut-ladesler');
-        // Aktif tab buton stillerini güncelle
         document.querySelectorAll('.tab-button')[0].classList.add('active');
         document.querySelectorAll('.tab-button')[1].classList.remove('active');
     }
@@ -133,11 +157,9 @@ function confirmBet() {
         return;
     }
     
-    // Cüzdandan düş
     currentBalance -= amount;
     localStorage.setItem('tokenBalance', currentBalance.toString());
     
-    // Hafızadaki ilgili pazarın havuzunu bulup artır
     const markets = JSON.parse(localStorage.getItem('customMarkets'));
     const targetMarket = markets.find(m => m.id === activeMarketId);
     
