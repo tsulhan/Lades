@@ -1,6 +1,6 @@
-// Cüzdan Kurulumu (İlk kez giriyorsa 1000 Token tanımla)
+// Cüzdan Kurulumu (İlk giriş için varsayılan)
 if (!localStorage.getItem('tokenBalance')) {
-    localStorage.setItem('tokenBalance', '1000');
+    localStorage.setItem('tokenBalance', '10000');
 }
 
 // Sabit/Başlangıç Pazarları (Hafızada yoksa dizi olarak oluştur)
@@ -12,14 +12,13 @@ if (!localStorage.getItem('customMarkets')) {
     localStorage.setItem('customMarkets', JSON.stringify(defaultMarkets));
 }
 
-// Global Durum Yönetimi (Modal takibi için)
+// Global Durum Yönetimi
 let activeMarketId = ""; 
 let activeMarketTitle = "";
 let activeChoice = "";
 
-// GİRİŞ KONTROL FONKSİYONU (Takılmayı çözen güvenli hali)
+// GİRİŞ KONTROLÜ - HER GİRİŞTE 10.000 TOKEN VEREN TEST MODU
 function handleLogin() {
-    // login.html sayfasındaki input elementlerini yakala
     const emailInput = document.getElementById('email');
     const passwordInput = document.getElementById('password');
 
@@ -35,7 +34,9 @@ function handleLogin() {
     const adminPassword = "1234";
 
     if (emailValue === adminEmail && passwordValue === adminPassword) {
-        // Doğru bilgiyse doğrudan yönlendir, updateUI çağırma!
+        // [TEST MODU ÖZELLİĞİ]: Giriş yapıldığı an hafızadaki tokenı 10.000'e set et!
+        localStorage.setItem('tokenBalance', '10000');
+        
         window.location.href = 'dashboard.html';
     } else if (emailValue === "" || passwordValue === "") {
         alert("Lütfen tüm alanları doldurun!");
@@ -46,23 +47,20 @@ function handleLogin() {
 
 // ARAYÜZÜ VE TÜM PAZARLARI DİNAMİK YENİLEME ALGORİTMASI
 function updateUI() {
-    // 1. Cüzdanı Güncelle
     const balanceElement = document.getElementById('token-balance');
     if (balanceElement) {
         balanceElement.innerText = localStorage.getItem('tokenBalance');
     }
 
-    // 2. Pazarları Hafızadan Oku ve Listeyi Dinamik Oluştur
     const marketGrid = document.getElementById('market-grid');
-    if (!marketGrid) return; // Eğer element o sayfada (login.html gibi) yoksa fonksiyonu güvenle kır
+    if (!marketGrid) return; 
 
     const markets = JSON.parse(localStorage.getItem('customMarkets'));
-    marketGrid.innerHTML = ""; // Eski listeyi temizle
+    marketGrid.innerHTML = ""; 
 
     markets.forEach(market => {
         const totalVolume = market.yesPool + market.noPool;
         
-        // Yüzde Hesaplama (0'a bölünmeyi engellemek için korumalı)
         let yesPercent = 50;
         let noPercent = 50;
         if (totalVolume > 0) {
@@ -70,7 +68,6 @@ function updateUI() {
             noPercent = 100 - yesPercent;
         }
 
-        // Dinamik HTML Kartı Oluşturma
         const cardHTML = `
             <div class="market-card">
                 <div class="market-info">
@@ -104,17 +101,14 @@ function createNewMarket() {
         return;
     }
 
-    // 1. Kullanıcı Bakiyesinden İlk Bahsi Düş
     currentBalance -= initialBet;
     localStorage.setItem('tokenBalance', currentBalance.toString());
 
-    // 2. Havuz Miktarlarını Ayarla
     let yesPool = 0;
     let noPool = 0;
     if (choice === 'YES') yesPool = initialBet;
     else noPool = initialBet;
 
-    // 3. Yeni Pazar Objesini Oluştur
     const newMarket = {
         id: 'custom_' + Date.now(),
         title: title,
@@ -123,14 +117,12 @@ function createNewMarket() {
         noPool: noPool
     };
 
-    // 4. Hafızadaki Listeye Ekle
     const markets = JSON.parse(localStorage.getItem('customMarkets'));
     markets.push(newMarket);
     localStorage.setItem('customMarkets', JSON.stringify(markets));
 
     alert(`⚡ Lades Pazarı Başarıyla Açıldı! ${initialBet} Token ${choice === 'YES' ? 'EVET' : 'HAYIR'} seçeneğine yatırıldı.`);
 
-    // Formu temizle
     document.getElementById('market-question').value = "";
     document.getElementById('market-initial-bet').value = "";
     
@@ -174,7 +166,7 @@ function confirmBet() {
     updateUI();
 }
 
-// Modal Açma / Kapatma Yardımcıları
+// Modal Yardımcıları
 function openBetModal(marketId, marketTitle, choice) {
     activeMarketId = marketId;
     activeMarketTitle = marketTitle;
