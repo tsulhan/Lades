@@ -1,11 +1,11 @@
 // --- VERİ TABANI SİMÜLASYONU (LocalStorage) ---
 
-// Kullanıcılar Listesi
+// Kullanıcılar Listesi (Şifre alanları eklendi)
 if (!localStorage.getItem('ladesUsers')) {
     const defaultUsers = [
-        { email: "tsulhan@gmail.com", balance: 10000, isAdmin: true },
-        { email: "test@lades.com", balance: 1000, isAdmin: false },
-        { email: "nehir@lades.com", balance: 500, isAdmin: false }
+        { email: "tsulhan@gmail.com", password: "1234", balance: 10000, isAdmin: true },
+        { email: "test@lades.com", password: "1234", balance: 1000, isAdmin: false },
+        { email: "nehir@lades.com", password: "1234", balance: 500, isAdmin: false }
     ];
     localStorage.setItem('ladesUsers', JSON.stringify(defaultUsers));
 }
@@ -25,7 +25,7 @@ if (!localStorage.getItem('adminRequests')) {
     localStorage.setItem('adminRequests', JSON.stringify([]));
 }
 
-// Sabit/Başlangıç Pazarları (status: "Aktif" veya "Sonuçlandı")
+// Sabit/Başlangıç Pazarları
 if (!localStorage.getItem('customMarkets')) {
     const defaultMarkets = [
         { id: 'bitcoin', title: "Bitcoin bu ay 100.000$'ı geçer mi?", date: "2026-06-30", yesPool: 2000, noPool: 8000, category: "Ekonomi", status: "Aktif" },
@@ -34,7 +34,34 @@ if (!localStorage.getItem('customMarkets')) {
     localStorage.setItem('customMarkets', JSON.stringify(defaultMarkets));
 }
 
-// HİSSE/BAHİS TAKİP SİSTEMİ (Kimin hangi lades'e ne kadar yatırdığını tutar)
+// ESKİ VERİLERİ OTOMATİK DÜZELTME (Eğer tarayıcıda eski yapı kalmışsa senkronize eder)
+(function repairLocalStorage() {
+    // 1. Kullanıcılarda şifre eksikse tamamla
+    let users = JSON.parse(localStorage.getItem('ladesUsers')) || [];
+    let stateChanged = false;
+    users.forEach(u => {
+        if (!u.password) { u.password = "1234"; stateChanged = true; }
+        // Görseldeki test@lades.com bakiyesini başlangıç değerine senkronize et
+        if (u.email === "test@lades.com" && u.balance === 0) { u.balance = 1000; stateChanged = true; }
+    });
+    if (stateChanged) localStorage.setItem('ladesUsers', JSON.stringify(users));
+
+    // 2. Pazarlarda status alanı eksikse "Aktif" yap
+    let markets = JSON.parse(localStorage.getItem('customMarkets')) || [];
+    let marketChanged = false;
+    if (markets.length === 0) {
+        markets = [
+            { id: 'bitcoin', title: "Bitcoin bu ay 100.000$'ı geçer mi?", date: "2026-06-30", yesPool: 2000, noPool: 8000, category: "Ekonomi", status: "Aktif" },
+            { id: 'yagmur', title: "Yarın İstanbul'da yağmur yağar mı?", date: "2026-06-10", yesPool: 1000, noPool: 1000, category: "Eğlence", status: "Aktif" }
+        ];
+        marketChanged = true;
+    } else {
+        markets.forEach(m => { if (!m.status) { m.status = "Aktif"; marketChanged = true; } });
+    }
+    if (marketChanged) localStorage.setItem('customMarkets', JSON.stringify(markets));
+})();
+
+// HİSSE/BAHİS TAKİP SİSTEMİ
 if (!localStorage.getItem('betHistory')) {
     const defaultHistory = [
         { marketId: 'bitcoin', email: 'tsulhan@gmail.com', choice: 'YES', amount: 1500 },
@@ -57,7 +84,7 @@ function handleLogin() {
     if (emailValue === "" || passwordValue === "") { alert("Lütfen tüm alanları doldurun!"); return; }
     const users = JSON.parse(localStorage.getItem('ladesUsers'));
     const user = users.find(u => u.email === emailValue);
-    if (user && passwordValue === "1234") { localStorage.setItem('currentUser', user.email); window.location.href = 'dashboard.html'; } 
+    if (user && user.password === passwordValue) { localStorage.setItem('currentUser', user.email); window.location.href = 'dashboard.html'; } 
     else { alert("Hatalı e-posta veya şifre!"); }
 }
 
@@ -76,7 +103,7 @@ function handleRegister() {
     const users = JSON.parse(localStorage.getItem('ladesUsers'));
     if (users.some(u => u.email === email)) { alert("Bu kullanıcı zaten mevcut!"); return; }
 
-    users.push({ email: email, balance: 0, isAdmin: false });
+    users.push({ email: email, password: password, balance: 0, isAdmin: false });
     localStorage.setItem('ladesUsers', JSON.stringify(users));
 
     const updatedCodes = validCodes.filter(c => c !== inviteCode);
@@ -111,6 +138,10 @@ function updateUI() {
     const users = JSON.parse(localStorage.getItem('ladesUsers'));
     const user = users.find(u => u.email === currentUserEmail) || { email: currentUserEmail, balance: 0, isAdmin: false };
 
+    // Üst barda mail adresini gösteren alan
+    const userEmailBadge = document.getElementById('user-email-badge');
+    if (userEmailBadge) userEmailBadge.innerText = user.email;
+
     const balanceElement = document.getElementById('token-balance');
     if (balanceElement) balanceElement.innerText = user.balance;
 
@@ -123,7 +154,6 @@ function updateUI() {
     const marketGrid = document.getElementById('market-grid');
     if (!marketGrid) return;
 
-    // Sadece "Aktif" olan Ladesleri listele
     let markets = JSON.parse(localStorage.getItem('customMarkets')).filter(m => m.status === "Aktif");
     if (selectedCategoryFilter !== "Tümü") {
         markets = markets.filter(m => m.category === selectedCategoryFilter);
@@ -169,7 +199,6 @@ function openTokenRequestModal() {
     alert(`Token talebiniz onay bekliyor.`);
 }
 
-// LADES YARAT fonksiyonu
 function createNewMarket() {
     const title = document.getElementById('market-question').value.trim();
     const date = document.getElementById('market-date').value;
@@ -184,7 +213,6 @@ function createNewMarket() {
     if (!title || !date || isNaN(initialBet) || initialBet <= 0) { alert("Lütfen alanları doğru doldurun!"); return; }
     if (initialBet > users[userIndex].balance) { alert("Yetersiz bakiye!"); return; }
 
-    // Bakiyeden düş
     users[userIndex].balance -= initialBet;
     localStorage.setItem('ladesUsers', JSON.stringify(users));
 
@@ -196,14 +224,13 @@ function createNewMarket() {
         yesPool: choice === 'YES' ? initialBet : 0,
         noPool: choice === 'NO' ? initialBet : 0,
         category: category,
-        status: "Aktif" // Yeni eklenen lades aktif başlar
+        status: "Aktif"
     };
 
     const markets = JSON.parse(localStorage.getItem('customMarkets'));
     markets.push(newMarket);
     localStorage.setItem('customMarkets', JSON.stringify(markets));
 
-    // İlk bahsi geçmişe de kaydet (Böylece hissesi oluşur)
     const history = JSON.parse(localStorage.getItem('betHistory')) || [];
     history.push({ marketId: marketId, email: currentUserEmail, choice: choice, amount: initialBet });
     localStorage.setItem('betHistory', JSON.stringify(history));
@@ -215,7 +242,6 @@ function createNewMarket() {
     updateUI();
 }
 
-// Mevcut Lades'e Sonradan Katılma / Bahis Yapma
 function confirmBet() {
     const amount = parseInt(document.getElementById('bet-amount').value);
     const currentUserEmail = localStorage.getItem('currentUser');
@@ -227,11 +253,9 @@ function confirmBet() {
         return;
     }
 
-    // Bakiyeyi düş ve kaydet
     users[userIndex].balance -= amount;
     localStorage.setItem('ladesUsers', JSON.stringify(users));
 
-    // Havuzu güncelle
     const markets = JSON.parse(localStorage.getItem('customMarkets'));
     const target = markets.find(m => m.id === activeMarketId);
     if (target) {
@@ -240,7 +264,6 @@ function confirmBet() {
     }
     localStorage.setItem('customMarkets', JSON.stringify(markets));
 
-    // Hisse geçmişine ekle (Eğer daha önce bu ladese aynı seçeneği yatırdıysa üstüne ekle, yoksa yeni kayıt aç)
     const history = JSON.parse(localStorage.getItem('betHistory')) || [];
     const existingBet = history.find(h => h.marketId === activeMarketId && h.email === currentUserEmail && h.choice === activeChoice);
     if (existingBet) {
@@ -255,7 +278,6 @@ function confirmBet() {
 }
 
 // --- YÖNETİCİ PANELİ KONTROLLERİ VE HAVUZ DAĞITIM ALGORİTMASI ---
-
 function openAdminPanel() {
     document.getElementById('admin-modal').style.display = 'flex';
     renderAdminPanel();
@@ -268,11 +290,9 @@ function generateInviteCode() {
     renderAdminPanel();
 }
 
-// KAZANANLARA TOKEN DAĞITIM ALGORİTMASI (EN KRİTİK KISIM)
 function finalizeLades(marketId, winningChoice) {
     const markets = JSON.parse(localStorage.getItem('customMarkets'));
     const market = markets.find(m => m.id === marketId);
-    
     if (!market) return;
 
     const totalPool = market.yesPool + market.noPool;
@@ -282,48 +302,32 @@ function finalizeLades(marketId, winningChoice) {
         alert("Bu lades pazarında hiç token birikmemiş.");
         market.status = "Sonuçlandı";
         localStorage.setItem('customMarkets', JSON.stringify(markets));
-        renderAdminPanel();
-        updateUI();
-        return;
+        renderAdminPanel(); updateUI(); return;
     }
 
-    // Eğer kazanan tarafta hiç kimse yoksa tokenlar sistemde kalmasın diye iade mantığı veya uyarı:
     if (winningPool === 0) {
-        alert("Kazanan seçeneğe hiç bahis yapılmamış! Lades kapatıldı, tokenlar kasada kaldı.");
+        alert("Kazanan seçeneğe hiç bahis yapılmamış! Lades kapatıldı.");
         market.status = "Sonuçlandı";
         localStorage.setItem('customMarkets', JSON.stringify(markets));
-        renderAdminPanel();
-        updateUI();
-        return;
+        renderAdminPanel(); updateUI(); return;
     }
 
     const history = JSON.parse(localStorage.getItem('betHistory')) || [];
     const users = JSON.parse(localStorage.getItem('ladesUsers'));
 
-    // Sadece bu lades pazarında doğru tahmini (winningChoice) yapan kişileri bul
     const winners = history.filter(h => h.marketId === marketId && h.choice === winningChoice);
-
     winners.forEach(winner => {
-        // Formül: (Kullanıcının Yatardığı Miktar / Kazanan Havuzun Toplamı) * Toplam Havuz
         const userShareRatio = winner.amount / winningPool;
         const rewardAmount = Math.round(userShareRatio * totalPool);
-
-        // Kullanıcının bakiyesine ödülü ekle
         const userObj = users.find(u => u.email === winner.email);
-        if (userObj) {
-            userObj.balance += rewardAmount;
-        }
+        if (userObj) userObj.balance += rewardAmount;
     });
 
-    // Lades'in durumunu "Sonuçlandı" yap ki ana sayfadan kalksın
     market.status = "Sonuçlandı";
-    
-    // Verileri lokal hafızaya kilitle
     localStorage.setItem('ladesUsers', JSON.stringify(users));
     localStorage.setItem('customMarkets', JSON.stringify(markets));
 
-    alert(`🎉 LADES Başarıyla Sonuçlandırıldı!\nKazanan Seçenek: ${winningChoice === 'YES' ? 'EVET' : 'HAYIR'}\nToplam ${totalPool} Token kazanan hisse sahiplerine dağıtıldı.`);
-    
+    alert(`🎉 LADES Başarıyla Sonuçlandırıldı!\nKazanan Seçenek: ${winningChoice === 'YES' ? 'EVET' : 'HAYIR'}\nToplam ${totalPool} Token dağıtıldı.`);
     renderAdminPanel();
     updateUI();
 }
@@ -353,7 +357,7 @@ function renderAdminPanel() {
         });
     }
 
-    // 2. AKTİF LADESLERİ SONUÇLANDIRMA BÖLÜMÜ (Yeni Eklenen Panel)
+    // 2. Aktif Ladesleri Listele
     const adminActiveMarkets = document.getElementById('admin-active-markets');
     const activeMarkets = JSON.parse(localStorage.getItem('customMarkets')).filter(m => m.status === "Aktif");
     adminActiveMarkets.innerHTML = "";
@@ -382,7 +386,7 @@ function renderAdminPanel() {
     const codes = JSON.parse(localStorage.getItem('inviteCodes'));
     codesList.innerHTML = codes.map(c => `<span style="background:rgba(36,255,255,0.1); border:1px solid #24ffff; padding:4px 8px; border-radius:6px; font-size:12px; color:#24ffff;">${c}</span>`).join(" ");
 
-    // 4. Kullanıcı Listesi
+    // 4. Kullanıcı Listesi (Şifre sütunu eklendi)
     const usersTable = document.getElementById('admin-users-list');
     const users = JSON.parse(localStorage.getItem('ladesUsers'));
     usersTable.innerHTML = "";
@@ -390,6 +394,7 @@ function renderAdminPanel() {
         usersTable.innerHTML += `
             <tr style="border-bottom:1px solid #1c2541;">
                 <td style="padding:8px 0; font-size:13px;">${u.email} ${u.isAdmin ? '👑' : ''}</td>
+                <td style="padding:8px 0; font-size:13px; color:#ff4aa2; font-family:monospace;">${u.password || '1234'}</td>
                 <td style="padding:8px 0; font-size:13px; color:#24ffff; font-weight:bold;">${u.balance}</td>
                 <td style="padding:8px 0; text-align:right;">
                     <button onclick="addTokensManual('${u.email}')" style="background:#ff4aa2; color:white; border:none; padding:3px 8px; border-radius:4px; font-size:11px; cursor:pointer;">+ Token Yükle</button>
@@ -425,6 +430,15 @@ function addTokensManual(email) {
     if (idx !== -1) users[idx].balance += amount;
     localStorage.setItem('ladesUsers', JSON.stringify(users));
     alert("Yüklendi!"); renderAdminPanel(); updateUI();
+}
+
+// Veritabanını tamamen sıfırlayıp temiz bir başlangıç yapmak için admin fonksiyonu
+function hardResetDatabase() {
+    if (confirm("Tüm yerel verileri sıfırlamak ve temiz veritabanı yüklemek istiyor musunuz?")) {
+        localStorage.clear();
+        alert("Hafıza başarıyla temizlendi! Sayfa yeniden başlatılıyor.");
+        window.location.reload();
+    }
 }
 
 function openBetModal(marketId, marketTitle, choice) {

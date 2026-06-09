@@ -13,7 +13,8 @@
         header { display:flex; justify-content:space-between; align-items:center; padding:20px 40px; background:#0b132b; border-bottom:1px solid #1c2541; }
         .logo { font-size:24px; font-weight:800; color:#24ffff; text-shadow:0 0 10px #24ffff; text-decoration:none; }
         
-        .header-center { display:flex; align-items:center; gap:25px; }
+        .header-center { display:flex; align-items:center; gap:20px; }
+        .user-email-badge { background: rgba(255,255,255,0.05); border: 1px solid #1c2541; padding: 10px 18px; border-radius: 30px; font-size: 13px; font-weight: 600; color: #94a3b8; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .token-bag { background:rgba(36, 255, 255, 0.1); border:1px solid #24ffff; padding:10px 20px; border-radius:30px; font-weight:700; color:#24ffff; box-shadow:0 0 10px rgba(36, 255, 255, 0.2); }
         
         .icon-btn { background:transparent; border:none; color:#888; font-size:20px; cursor:pointer; transition:0.3s; padding:8px; border-radius:50px; }
@@ -97,6 +98,8 @@
     <header>
         <div class="logo">⚡ LADES</div>
         <div class="header-center">
+            <!-- YENİ: Giriş Yapan Kullanıcının Mail Göstergesi -->
+            <div id="user-email-badge" class="user-email-badge">yükleniyor...</div>
             <div class="token-bag">💰 <span id="token-balance">0</span> TOKEN</div>
             
             <button id="admin-panel-btn" class="icon-btn" onclick="openAdminPanel()" title="Yönetici Paneli" style="display:none; color:#24ffff;">
@@ -180,6 +183,7 @@
         </div>
     </main>
 
+    <!-- YÖNETİCİ PANELİ MODALI -->
     <div id="admin-modal" class="admin-modal-overlay">
         <div class="admin-box">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
@@ -187,6 +191,7 @@
                 <button onclick="closeAdminPanel()" style="background:transparent; border:none; color:#888; font-size:24px; cursor:pointer;">&times;</button>
             </div>
 
+            <!-- AKTİF LADESLERİ SONUÇLANDIRMA -->
             <div class="admin-section" style="border-top:none; margin-top:0; padding-top:0;">
                 <h4>🎯 Aktif Ladesleri Sonuçlandır (Havuz Dağıtımı)</h4>
                 <div id="admin-active-markets" style="background: rgba(36,255,255,0.02); border:1px dashed #1c2541; padding:15px; border-radius:12px;"></div>
@@ -204,12 +209,13 @@
             </div>
 
             <div class="admin-section">
-                <h4>👥 Kayıtlı Kullanıcılar ve Token Tanımlama</h4>
+                <h4>👥 Kayıtlı Kullanıcılar ve Şifre Tanımlama</h4>
                 <div style="overflow-x:auto;">
                     <table style="width:100%; border-collapse:collapse; text-align:left;">
                         <thead>
                             <tr style="border-bottom:2px solid #1c2541; color:#64748b; font-size:12px;">
                                 <th style="padding-bottom:8px;">Kullanıcı E-posta</th>
+                                <th style="padding-bottom:8px;">Şifre</th>
                                 <th style="padding-bottom:8px;">Mevcut Bakiye</th>
                                 <th style="padding-bottom:8px; text-align:right;">İşlem</th>
                             </tr>
@@ -217,10 +223,13 @@
                         <tbody id="admin-users-list"></tbody>
                     </table>
                 </div>
+                <!-- SIFIRLAMA BUTONU -->
+                <button onclick="hardResetDatabase()" style="background:transparent; border:1px solid #ef4444; color:#ef4444; width:100%; padding:10px; margin-top:20px; border-radius:8px; font-weight:600; cursor:pointer;">⚠️ ESKİ HAFIZAYI (LOCALSTORAGE) TAMAMEN TEMİZLE</button>
             </div>
         </div>
     </div>
 
+    <!-- Bahis Miktarı Onay Modalı -->
     <div id="bet-modal" class="modal-overlay">
         <div class="modal">
             <h3 id="modal-market-title">Pazar Adı</h3>
@@ -242,7 +251,7 @@
             document.getElementById(tabId).classList.add('active');
             if(event && event.currentTarget) event.currentTarget.classList.add('active');
         }
-        function logout() { window.location.href = 'login.html'; }
+        function logout() { localStorage.removeItem('currentUser'); window.location.href = 'login.html'; }
     </script>
 </body>
 </html>
