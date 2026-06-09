@@ -53,7 +53,6 @@
         .form-group input, .form-group select { width:100%; padding:15px; border-radius:12px; border:1px solid #1c2541; background:#030814; color:white; font-size:16px; }
         .form-group input:focus, .form-group select:focus { border-color:#24ffff; outline:none; }
         
-        /* Takvim ikonunun renk şemasını dark moda uydurmak ve imleci el işareti yapmak için */
         input[type="date"]::-webkit-calendar-picker-indicator {
             filter: invert(1);
             cursor: pointer;
@@ -71,4 +70,111 @@
         .btn-confirm { background:#24ffff; color:#030814; }
         .btn-cancel { background:#1e293b; color:#94a3b8; }
 
-        @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1;
+        /* Yarım kalan animasyon bloğu kapatıldı */
+        @keyframes fadeIn { 
+            from { opacity:0; transform:translateY(8px); } 
+            to { opacity:1; transform:translateY(0); } 
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo">⚡ LADES</div>
+        <div class="header-center">
+            <div class="token-bag">💰 <span id="token-balance">10000</span> TOKEN</div>
+            
+            <button class="icon-btn" onclick="alert('Yönetici Paneline Yetkiniz Yoktur.')" title="Yönetici Paneli">
+                <i class="fa-solid fa-user-shield"></i>
+            </button>
+            <button class="icon-btn" onclick="alert('Profil Sayfası Yakında eklenecek. E-posta: tsulhan@gmail.com')" title="Profilim">
+                <i class="fa-solid fa-user"></i>
+            </button>
+            <button class="icon-btn btn-logout" onclick="logout()" title="Çıkış Yap">
+                <i class="fa-solid fa-right-from-bracket"></i>
+            </button>
+        </div>
+    </header>
+
+    <div class="tabs-container">
+        <button class="tab-button active" onclick="switchTab('mevcut-ladesler')">Mevcut Ladesler</button>
+        <button class="tab-button" onclick="switchTab('lades-yarat')">Yarat</button>
+    </div>
+
+    <main>
+        
+        <div id="mevcut-ladesler" class="tab-content active">
+            <div class="market-grid" id="market-grid"></div>
+        </div>
+
+        <div id="lades-yarat" class="tab-content">
+            <div class="create-container">
+                <h2>Yeni Bir Tahmin Pazarı Oluştur</h2>
+                <p class="subtitle">Bahsinizi ve yönünüzü belirleyerek canlıya yeni bir iddia pazarı sürün.</p>
+                
+                <div class="form-group" style="margin-bottom: 24px;">
+                    <label>Lades Başlığı / Tahmin Sorusu</label>
+                    <input type="text" id="market-question" placeholder="Örn: Bu akşam maçı Real Madrid kazanır mı?">
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Pazar Kapanış Tarihi</label>
+                        <input type="date" id="market-date" onclick="this.showPicker()">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Sizin Tercihiniz</label>
+                        <select id="market-choice">
+                            <option value="YES">EVET</option>
+                            <option value="NO">HAYIR</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 30px;">
+                    <label>Yatırmak İstediğiniz Token Miktarı</label>
+                    <input type="number" id="market-initial-bet" placeholder="Örn: 150" min="1">
+                </div>
+                
+                <button class="btn-submit" onclick="createNewMarket()">PAZARI YAYINA AL ⚡</button>
+            </div>
+        </div>
+        
+    </main>
+
+    <div id="bet-modal" class="modal-overlay">
+        <div class="modal">
+            <h3 id="modal-market-title">Pazar Adı</h3>
+            <p>Seçiminiz: <span id="modal-bet-choice" style="font-weight:800;"></span></p>
+            <input type="number" id="bet-amount" placeholder="Kaç Token Yatıracaksınız?" min="1">
+            <div class="modal-buttons">
+                <button class="btn-modal btn-cancel" onclick="closeModal()">İptal</button>
+                <button class="btn-modal btn-confirm" onclick="confirmBet()">Yatır ve Kilitle ⚡</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="src/js/app.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            if(typeof updateUI === "function") updateUI();
+        });
+
+        function switchTab(tabId) {
+            // Tüm içerikleri gizle
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            // Tüm butonların aktiflik stilini kaldır
+            document.querySelectorAll('.tab-button').forEach(button => button.classList.remove('active'));
+            
+            // Seçilen sekmeyi aktif et
+            document.getElementById(tabId).classList.add('active');
+            event.currentTarget.classList.add('active');
+        }
+
+        function logout() {
+            window.location.href = 'login.html';
+        }
+    </script>
+</body>
+</html>
