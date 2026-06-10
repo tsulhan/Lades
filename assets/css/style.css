@@ -43,3 +43,9 @@ h1 { font-size: 60px; letter-spacing: 5px; margin: 10px 0; color: var(--text-whi
     box-shadow: 0 0 20px var(--neon-cyan);
     transition: 0.3s;
 }
+/* Beraberlik Buton Stili */
+.btn-draw { 
+    background: rgba(148, 163, 184, 0.1); 
+    color: #94a3b8; 
+    border: 1px solid rgba(148, 163, 184, 0.4); 
+}
