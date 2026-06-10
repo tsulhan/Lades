@@ -4,69 +4,58 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kayıt Ol - LADES</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght=300;400;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        if (localStorage.getItem('currentUser')) {
+            window.location.href = 'dashboard.html';
+        }
+    </script>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
-        body { background: #030814; color: white; min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px; }
-        
-        .register-container { background: #0b132b; border: 1px solid #1c2541; padding: 40px; border-radius: 24px; width: 100%; max-width: 450px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        
-        .logo-icon { font-size: 45px; color: #ff4aa2; text-shadow: 0 0 15px #ff4aa2; margin-bottom: 15px; }
-        h2 { font-size: 26px; font-weight: 800; letter-spacing: 1px; margin-bottom: 30px; }
-        
-        .form-group { margin-bottom: 18px; text-align: left; }
-        .form-group label { display: block; margin-bottom: 8px; color: #94a3b8; font-size: 13px; font-weight: 600; }
-        
-        /* Davet Kodu Satırı için Flex Yapı */
-        .invite-row { display: flex; gap: 10px; }
-        .invite-row input { flex: 1; }
-        .btn-request-code { background: rgba(36, 255, 255, 0.1); border: 1px solid #24ffff; color: #24ffff; padding: 0 15px; border-radius: 12px; font-weight: 700; font-size: 12px; cursor: pointer; transition: 0.2s; white-space: nowrap; }
-        .btn-request-code:hover { background: #24ffff; color: #030814; }
-
-        input { width: 100%; padding: 16px; border-radius: 12px; border: 1px solid #1c2541; background: #030814; color: white; font-size: 15px; transition: 0.3s; }
-        input:focus { border-color: #ff4aa2; outline: none; }
-        
-        .btn-register { width: 100%; padding: 16px; border-radius: 50px; border: none; background: #ff4aa2; color: white; font-weight: 800; font-size: 16px; cursor: pointer; margin-top: 15px; box-shadow: 0 0 15px #ff4aa2; transition: 0.3s; }
-        .btn-register:hover { background: #e03b8d; transform: translateY(-1px); }
-        
-        .footer-links { margin-top: 25px; font-size: 14px; color: #64748b; }
-        .footer-links a { color: #24ffff; text-decoration: none; font-weight: 600; }
-        .footer-links a:hover { text-decoration: underline; }
+        * { margin:0; padding:0; box-sizing:border-box; font-family:'Inter', sans-serif; }
+        body { background:#030814; color:white; min-height:100vh; display:flex; justify-content:center; align-items:center; }
+        .register-container { background:#0b132b; border:1px solid #1c2541; padding:40px; border-radius:24px; width:100%; max-width:450px; box-shadow:0 10px 30px rgba(0,0,0,0.5); text-align:center; }
+        .logo { font-size:32px; font-weight:800; color:#24ffff; text-shadow:0 0 10px #24ffff; margin-bottom:10px; }
+        .subtitle { color:#64748b; font-size:14px; margin-bottom:25px; }
+        .form-group { text-align:left; margin-bottom:15px; }
+        .form-group label { display:block; margin-bottom:6px; color:#94a3b8; font-size:13px; font-weight:600; }
+        .form-group input { width:100%; padding:12px; border-radius:12px; border:1px solid #1c2541; background:#030814; color:white; font-size:15px; }
+        .btn-register { width:100%; padding:15px; border-radius:50px; border:none; background:#24ffff; color:#030814; font-weight:800; font-size:16px; cursor:pointer; box-shadow:0 0 15px rgba(36, 255, 255, 0.3); transition:0.3s; margin-top:15px; }
+        .footer-link { margin-top:20px; font-size:13px; color:#64748b; }
+        .footer-link a { color:#ff4aa2; text-decoration:none; font-weight:600; }
+        .request-link { display:block; margin-top:10px; color:#64748b; font-size:12px; text-decoration:underline; cursor:pointer; }
     </style>
 </head>
 <body>
 
     <div class="register-container">
-        <div class="logo-icon">⚡</div>
-        <h2>KAYIT OL</h2>
+        <div class="logo">⚡ LADES</div>
+        <div class="subtitle">Aramıza katılmak için davet kodunu girin</div>
         
         <div class="form-group">
             <label>Davet Kodu</label>
-            <div class="invite-row">
-                <input type="text" id="reg-invite-code" placeholder="Örn: LADES2026">
-                <button type="button" class="btn-request-code" onclick="requestInviteCode()">KOD İSTE</button>
-            </div>
+            <input type="text" id="reg-invite-code" placeholder="LADES2026">
         </div>
-        
+
         <div class="form-group">
             <label>E-posta Adresi</label>
-            <input type="email" id="reg-email" placeholder="ornek@domain.com">
+            <input type="email" id="reg-email" placeholder="isim@lades.com">
         </div>
         
         <div class="form-group">
             <label>Şifre</label>
             <input type="password" id="reg-password" placeholder="••••••••">
         </div>
-        
+
         <div class="form-group">
-            <label>Şifreyi Doğrula</label>
+            <label>Şifre Tekrar</label>
             <input type="password" id="reg-password-confirm" placeholder="••••••••">
         </div>
         
-        <button class="btn-register" onclick="handleRegister()">KAYIT OL ⚡</button>
+        <button class="btn-register" onclick="handleRegister()">KAYIT OL 🚀</button>
+        <span class="request-link" onclick="requestInviteCode()">Davet kodum yok, talep et</span>
         
-        <div class="footer-links">
-            Hesabınız var mı? <a href="login.html">Giriş Yapın</a>
+        <div class="footer-link">
+            Zaten üye misiniz? <a href="index.html">Giriş Yap</a>
         </div>
     </div>
 
