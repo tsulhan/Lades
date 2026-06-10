@@ -383,7 +383,7 @@ function updateUI() {
                         Token
                     </p>
                 </div>
-                <div class="market-actions">
+                <div class="market-actions ${market.category === 'Spor' ? 'three-cols' : 'two-cols'}">
                     ${actionButtons}
                 </div>
             </div>
