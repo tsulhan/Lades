@@ -8,7 +8,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <script>
-        // Kullanıcı giriş yapmadıysa login sayfasına yönlendir
         if (!localStorage.getItem('currentUser')) {
             window.location.href = 'login.html';
         }
@@ -400,7 +399,6 @@
             transform: translateY(-1px);
         }
 
-        /* Yönetici Paneli */
         .admin-modal-overlay {
             display: none;
             position: fixed;
@@ -675,7 +673,6 @@
         </div>
     </main>
 
-    <!-- YÖNETİCİ PANELİ MODALI -->
     <div id="admin-modal" class="admin-modal-overlay">
         <div class="admin-box">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
@@ -728,7 +725,6 @@
         </div>
     </div>
 
-    <!-- Bahis Miktarı Onay Modalı -->
     <div id="bet-modal" class="modal-overlay">
         <div class="modal">
             <h3 id="modal-market-title">Pazar Adı</h3>
@@ -748,25 +744,6 @@
                 updateUI();
             }
         });
-
-        function switchTab(tabId) {
-            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-            document.querySelectorAll('.tab-button').forEach(button => button.classList.remove('active'));
-
-            const targetTab = document.getElementById(tabId);
-            if (targetTab) {
-                targetTab.classList.add('active');
-            }
-
-            if (window.event && window.event.currentTarget) {
-                window.event.currentTarget.classList.add('active');
-            }
-        }
-
-        function logout() {
-            localStorage.removeItem('currentUser');
-            window.location.href = 'login.html';
-        }
     </script>
 </body>
 </html>

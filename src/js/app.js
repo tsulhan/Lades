@@ -25,8 +25,6 @@ function safeSave(key, value) {
 // ------------------------------------------------------
 // BAŞLANGIÇ VERİLERİ
 // ------------------------------------------------------
-
-// Kullanıcılar
 if (!localStorage.getItem('ladesUsers')) {
     const defaultUsers = [
         { email: "tsulhan@gmail.com", password: "1234", balance: 10000, isAdmin: true },
@@ -36,26 +34,18 @@ if (!localStorage.getItem('ladesUsers')) {
     safeSave('ladesUsers', defaultUsers);
 }
 
-// Aktif kullanıcı
-// DİKKAT: Otomatik giriş YOK.
-// currentUser sadece login başarılı olunca set edilir.
-
-// Davet kodları
 if (!localStorage.getItem('inviteCodes')) {
     safeSave('inviteCodes', ["LADES2026", "VIPUX"]);
 }
 
-// Bekleyen yönetici istekleri
 if (!localStorage.getItem('adminRequests')) {
     safeSave('adminRequests', []);
 }
 
-// Marketler
 if (!localStorage.getItem('customMarkets')) {
     safeSave('customMarkets', []);
 }
 
-// Bahis geçmişi
 if (!localStorage.getItem('betHistory')) {
     safeSave('betHistory', []);
 }
@@ -429,6 +419,7 @@ function createNewMarket() {
     safeSave('betHistory', history);
 
     alert("⚡ Lades Başarıyla Yaratıldı!");
+
     const questionInput = document.getElementById('market-question');
     const betInput = document.getElementById('market-initial-bet');
 
@@ -589,7 +580,6 @@ function finalizeLades(marketId, winningChoice) {
 }
 
 function renderAdminPanel() {
-    // 1) Bekleyen istekler
     const requestsList = document.getElementById('admin-requests-list');
     const requests = safeParse('adminRequests', []).filter(r => r.status === "Bekliyor");
 
@@ -625,7 +615,6 @@ function renderAdminPanel() {
         }
     }
 
-    // 2) Aktif ladesler
     const adminActiveMarkets = document.getElementById('admin-active-markets');
     const activeMarkets = safeParse('customMarkets', []).filter(m => m.status === "Aktif");
 
@@ -660,7 +649,6 @@ function renderAdminPanel() {
         }
     }
 
-    // 3) Davet kodları
     const codesList = document.getElementById('admin-codes-list');
     const codes = safeParse('inviteCodes', []);
 
@@ -672,7 +660,6 @@ function renderAdminPanel() {
         `).join(" ");
     }
 
-    // 4) Kullanıcı listesi
     const usersTable = document.getElementById('admin-users-list');
     const users = safeParse('ladesUsers', []);
 
@@ -786,3 +773,37 @@ function closeModal() {
     const modalEl = document.getElementById('bet-modal');
     const betAmount = document.getElementById('bet-amount');
 
+    if (modalEl) modalEl.style.display = 'none';
+    if (betAmount) betAmount.value = "";
+}
+
+// ------------------------------------------------------
+// DİĞER YARDIMCI FONKSİYONLAR
+// ------------------------------------------------------
+function logout() {
+    localStorage.removeItem('currentUser');
+    window.location.href = 'login.html';
+}
+
+function switchTab(tabId) {
+    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+    document.querySelectorAll('.tab-button').forEach(button => button.classList.remove('active'));
+
+    const targetTab = document.getElementById(tabId);
+    if (targetTab) {
+        targetTab.classList.add('active');
+    }
+
+    if (window.event && window.event.currentTarget) {
+        window.event.currentTarget.classList.add('active');
+    }
+}
+
+// ------------------------------------------------------
+// SAYFA YÜKLENİNCE UI BAŞLAT
+// ------------------------------------------------------
+document.addEventListener('DOMContentLoaded', () => {
+    if (typeof updateUI === "function") {
+        updateUI();
+    }
+});
