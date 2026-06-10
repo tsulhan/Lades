@@ -4,22 +4,112 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Giriş Yap - LADES</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
-        body { background: #030814; color: white; min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px; }
-        .login-container { background: #0b132b; border: 1px solid #1c2541; padding: 40px; border-radius: 24px; width: 100%; max-width: 420px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .logo-icon { font-size: 45px; color: #24ffff; text-shadow: 0 0 15px #24ffff; margin-bottom: 15px; }
-        h2 { font-size: 26px; font-weight: 800; letter-spacing: 1px; margin-bottom: 30px; }
-        .form-group { margin-bottom: 20px; text-align: left; }
-        .form-group label { display: block; margin-bottom: 8px; color: #94a3b8; font-size: 13px; font-weight: 600; }
-        input { width: 100%; padding: 16px; border-radius: 12px; border: 1px solid #1c2541; background: #030814; color: white; font-size: 15px; transition: 0.3s; }
-        input:focus { border-color: #24ffff; outline: none; }
-        .btn-login { width: 100%; padding: 16px; border-radius: 50px; border: none; background: #24ffff; color: #030814; font-weight: 800; font-size: 16px; cursor: pointer; margin-top: 15px; box-shadow: 0 0 15px rgba(36, 255, 255, 0.4); transition: 0.3s; }
-        .btn-login:hover { background: #1de6e6; transform: translateY(-1px); }
-        .footer-links { margin-top: 25px; font-size: 14px; color: #64748b; }
-        .footer-links a { color: #ff4aa2; text-decoration: none; font-weight: 600; }
-        .footer-links a:hover { text-decoration: underline; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background: #030814;
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .login-container {
+            background: #0b132b;
+            border: 1px solid #1c2541;
+            padding: 40px;
+            border-radius: 24px;
+            width: 100%;
+            max-width: 420px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .logo-icon {
+            font-size: 45px;
+            color: #24ffff;
+            text-shadow: 0 0 15px #24ffff;
+            margin-bottom: 15px;
+        }
+
+        h2 {
+            font-size: 26px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+        }
+
+        .subtitle {
+            color: #64748b;
+            font-size: 14px;
+            margin-bottom: 30px;
+            line-height: 1.5;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #94a3b8;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 16px;
+            border-radius: 12px;
+            border: 1px solid #1c2541;
+            background: #030814;
+            color: white;
+            font-size: 15px;
+            transition: 0.3s;
+            outline: none;
+        }
+
+        .form-group input:focus {
+            border-color: #24ffff;
+            box-shadow: 0 0 10px rgba(36, 255, 255, 0.12);
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 16px;
+            border-radius: 50px;
+            border: none;
+            background: #24ffff;
+            color: #030814;
+            font-weight: 800;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+            box-shadow: 0 0 15px rgba(36, 255, 255, 0.35);
+            transition: 0.3s;
+        }
+
+        .btn-login:hover {
+            background: #1de6e6;
+            transform: translateY(-1px);
+        }
+
+        .footer-text {
+            margin-top: 25px;
+            font-size: 14px;
+            color: #64748b;
+        }
     </style>
 </head>
 <body>
@@ -27,48 +117,27 @@
     <div class="login-container">
         <div class="logo-icon">⚡</div>
         <h2>GİRİŞ YAP</h2>
-        
+        <div class="subtitle">
+            LADES sistemine giriş yapmak için e-posta ve şifrenizi girin.
+        </div>
+
         <div class="form-group">
             <label>E-posta Adresi</label>
-            <input type="email" id="login-email" placeholder="ornek@domain.com">
+            <input type="email" id="email" placeholder="ornek@domain.com">
         </div>
-        
+
         <div class="form-group">
             <label>Şifre</label>
-            <input type="password" id="login-password" placeholder="••••••••">
+            <input type="password" id="password" placeholder="••••••••">
         </div>
-        
-        <button class="btn-login" onclick="executeLogin()">GİRİŞ YAP ⚡</button>
-        
-        <div class="footer-links">
-            Hesabınız yok mu? <a href="kayit_ol.html">Yeni Hesap Oluşturun</a>
+
+        <button class="btn-login" onclick="handleLogin()">GİRİŞ YAP ⚡</button>
+
+        <div class="footer-text">
+            Hesabınız yoksa yönetici tarafından davet kodu ile kayıt oluşturulmalıdır.
         </div>
     </div>
 
     <script src="src/js/app.js"></script>
-    <script>
-        // Login ekranındaki ID karmaşasını önlemek ve tamamen dinamik kontrol etmek için lokal fonksiyon:
-        function executeLogin() {
-            const emailValue = document.getElementById('login-email').value.trim();
-            const passwordValue = document.getElementById('login-password').value;
-
-            if (emailValue === "" || passwordValue === "") {
-                alert("Lütfen tüm alanları doldurun!");
-                return;
-            }
-
-            // localStorage'daki güncel kullanıcı listesini çekiyoruz
-            const users = JSON.parse(localStorage.getItem('ladesUsers')) || [];
-            const user = users.find(u => u.email === emailValue);
-
-            // Yeni kayıt olanlar dahil herkes şifre olarak şimdilik test aşamasında "1234" kullanıyor
-            if (user && passwordValue === "1234") { 
-                localStorage.setItem('currentUser', user.email);
-                window.location.href = 'dashboard.html';
-            } else {
-                alert("Hatalı e-posta veya şifre! (Sistem testi için tüm şifreler: 1234)");
-            }
-        }
-    </script>
 </body>
 </html>
