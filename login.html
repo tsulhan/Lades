@@ -6,6 +6,25 @@
     <title>Giriş Yap - LADES</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
 
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-database-compat.js"></script>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyD2ijuUFDlYd2L5G84V0qxV6cRbGZZZ4zQ",
+            authDomain: "lades-f33dd.firebaseapp.com",
+            databaseURL: "https://lades-f33dd-default-rtdb.firebaseio.com",
+            projectId: "lades-f33dd",
+            storageBucket: "lades-f33dd.firebasestorage.app",
+            messagingSenderId: "483364824467",
+            appId: "1:483364824467:web:f30ca9ddd7e279b0057466"
+        };
+
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+    </script>
+
     <style>
         * {
             margin: 0;
@@ -129,7 +148,6 @@
     <div class="login-container">
         <div class="logo-icon">⚡</div>
         <h2>GİRİŞ YAP</h2>
-
         <div class="subtitle">
             LADES sistemine giriş yapmak için e-posta ve şifrenizi girin.
         </div>
