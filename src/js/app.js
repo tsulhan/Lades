@@ -1,6 +1,8 @@
 // ======================================================
 // LADES APP.JS
 // LocalStorage tabanlı demo / MVP sürümü
+// Spor kategorisinde: EVET / BERABERLİK / HAYIR
+// Diğer kategorilerde: EVET / HAYIR
 // ======================================================
 
 // ------------------------------------------------------
@@ -92,6 +94,10 @@ if (!localStorage.getItem('betHistory')) {
         }
         if (typeof m.noPool !== 'number') {
             m.noPool = parseInt(m.noPool || 0);
+            marketChanged = true;
+        }
+        if (typeof m.drawPool !== 'number') {
+            m.drawPool = parseInt(m.drawPool || 0);
             marketChanged = true;
         }
         if (!m.category) {
@@ -216,6 +222,31 @@ function requestInviteCode() {
 }
 
 // ------------------------------------------------------
+// OPSİYON GÖRÜNÜRLÜĞÜ
+// ------------------------------------------------------
+function updateChoiceOptions() {
+    const categorySelect = document.getElementById('market-category');
+    const choiceSelect = document.getElementById('market-choice');
+
+    if (!categorySelect || !choiceSelect) return;
+
+    const drawOption = choiceSelect.querySelector('option[value="DRAW"]');
+    if (!drawOption) return;
+
+    if (categorySelect.value === 'Spor') {
+        drawOption.hidden = false;
+        drawOption.disabled = false;
+    } else {
+        drawOption.hidden = true;
+        drawOption.disabled = true;
+
+        if (choiceSelect.value === 'DRAW') {
+            choiceSelect.value = 'YES';
+        }
+    }
+}
+
+// ------------------------------------------------------
 // DASHBOARD / ARAYÜZ
 // ------------------------------------------------------
 function filterCategory(categoryName) {
@@ -291,17 +322,53 @@ function updateUI() {
     markets.forEach(market => {
         const yesPool = market.yesPool || 0;
         const noPool = market.noPool || 0;
-        const totalVolume = yesPool + noPool;
+        const drawPool = market.drawPool || 0;
+
+        const totalVolume = market.category === 'Spor'
+            ? (yesPool + noPool + drawPool)
+            : (yesPool + noPool);
 
         let yesPercent = 50;
         let noPercent = 50;
+        let drawPercent = 0;
 
         if (totalVolume > 0) {
             yesPercent = Math.round((yesPool / totalVolume) * 100);
-            noPercent = 100 - yesPercent;
+            noPercent = Math.round((noPool / totalVolume) * 100);
+
+            if (market.category === 'Spor') {
+                drawPercent = 100 - yesPercent - noPercent;
+            } else {
+                noPercent = 100 - yesPercent;
+            }
         }
 
         const safeTitle = (market.title || "").replace(/'/g, "\\'");
+
+        let actionButtons = "";
+
+        if (market.category === 'Spor') {
+            actionButtons = `
+                <button class="btn-bet btn-yes" onclick="openBetModal('${market.id}', '${safeTitle}', 'YES')">
+                    EVET %${yesPercent}
+                </button>
+                <button class="btn-bet btn-draw" onclick="openBetModal('${market.id}', '${safeTitle}', 'DRAW')">
+                    BERABERLİK %${drawPercent}
+                </button>
+                <button class="btn-bet btn-no" onclick="openBetModal('${market.id}', '${safeTitle}', 'NO')">
+                    HAYIR %${noPercent}
+                </button>
+            `;
+        } else {
+            actionButtons = `
+                <button class="btn-bet btn-yes" onclick="openBetModal('${market.id}', '${safeTitle}', 'YES')">
+                    EVET %${yesPercent}
+                </button>
+                <button class="btn-bet btn-no" onclick="openBetModal('${market.id}', '${safeTitle}', 'NO')">
+                    HAYIR %${noPercent}
+                </button>
+            `;
+        }
 
         marketGrid.innerHTML += `
             <div class="market-card">
@@ -317,12 +384,7 @@ function updateUI() {
                     </p>
                 </div>
                 <div class="market-actions">
-                    <button class="btn-bet btn-yes" onclick="openBetModal('${market.id}', '${safeTitle}', 'YES')">
-                        EVET %${yesPercent}
-                    </button>
-                    <button class="btn-bet btn-no" onclick="openBetModal('${market.id}', '${safeTitle}', 'NO')">
-                        HAYIR %${noPercent}
-                    </button>
+                    ${actionButtons}
                 </div>
             </div>
         `;
@@ -385,6 +447,11 @@ function createNewMarket() {
         return;
     }
 
+    if (category !== 'Spor' && choice === 'DRAW') {
+        alert("Beraberlik seçeneği yalnızca Spor kategorisinde kullanılabilir.");
+        return;
+    }
+
     if (initialBet > users[userIndex].balance) {
         alert("Yetersiz bakiye!");
         return;
@@ -401,6 +468,7 @@ function createNewMarket() {
         date: date,
         yesPool: choice === 'YES' ? initialBet : 0,
         noPool: choice === 'NO' ? initialBet : 0,
+        drawPool: choice === 'DRAW' ? initialBet : 0,
         category: category,
         status: "Aktif"
     };
@@ -467,6 +535,8 @@ function confirmBet() {
             target.yesPool = (target.yesPool || 0) + amount;
         } else if (activeChoice === 'NO') {
             target.noPool = (target.noPool || 0) + amount;
+        } else if (activeChoice === 'DRAW') {
+            target.drawPool = (target.drawPool || 0) + amount;
         }
         safeSave('customMarkets', markets);
     }
@@ -527,10 +597,23 @@ function finalizeLades(marketId, winningChoice) {
 
     if (!market) return;
 
-    const totalPool = (market.yesPool || 0) + (market.noPool || 0);
-    const winningPool = winningChoice === 'YES'
-        ? (market.yesPool || 0)
-        : (market.noPool || 0);
+    const yesPool = market.yesPool || 0;
+    const noPool = market.noPool || 0;
+    const drawPool = market.drawPool || 0;
+
+    const totalPool = market.category === 'Spor'
+        ? (yesPool + noPool + drawPool)
+        : (yesPool + noPool);
+
+    let winningPool = 0;
+
+    if (winningChoice === 'YES') {
+        winningPool = yesPool;
+    } else if (winningChoice === 'NO') {
+        winningPool = noPool;
+    } else if (winningChoice === 'DRAW') {
+        winningPool = drawPool;
+    }
 
     if (totalPool === 0) {
         alert("Bu lades pazarında hiç token birikmemiş.");
@@ -571,7 +654,7 @@ function finalizeLades(marketId, winningChoice) {
 
     alert(
         `🎉 LADES Başarıyla Sonuçlandırıldı!\n` +
-        `Kazanan Seçenek: ${winningChoice === 'YES' ? 'EVET' : 'HAYIR'}\n` +
+        `Kazanan Seçenek: ${winningChoice === 'YES' ? 'EVET' : winningChoice === 'NO' ? 'HAYIR' : 'BERABERLİK'}\n` +
         `Toplam ${totalPool} Token dağıtıldı.`
     );
 
@@ -625,23 +708,48 @@ function renderAdminPanel() {
             adminActiveMarkets.innerHTML = `<p style="color:#64748b; font-size:13px;">Şu an sonuçlandırılacak aktif bir lades pazarı yok.</p>`;
         } else {
             activeMarkets.forEach(m => {
-                const total = (m.yesPool || 0) + (m.noPool || 0);
+                const yesPool = m.yesPool || 0;
+                const noPool = m.noPool || 0;
+                const drawPool = m.drawPool || 0;
+
+                const total = m.category === 'Spor'
+                    ? (yesPool + noPool + drawPool)
+                    : (yesPool + noPool);
+
+                let buttons = `
+                    <button onclick="finalizeLades('${m.id}', 'YES')" style="background:#22c55e; color:black; border:none; padding:6px 12px; border-radius:6px; font-weight:bold; font-size:12px; cursor:pointer;">
+                        EVET Kazandı
+                    </button>
+                    <button onclick="finalizeLades('${m.id}', 'NO')" style="background:#ef4444; color:white; border:none; padding:6px 12px; border-radius:6px; font-weight:bold; font-size:12px; cursor:pointer;">
+                        HAYIR Kazandı
+                    </button>
+                `;
+
+                if (m.category === 'Spor') {
+                    buttons = `
+                        <button onclick="finalizeLades('${m.id}', 'YES')" style="background:#22c55e; color:black; border:none; padding:6px 12px; border-radius:6px; font-weight:bold; font-size:12px; cursor:pointer;">
+                            EVET Kazandı
+                        </button>
+                        <button onclick="finalizeLades('${m.id}', 'DRAW')" style="background:#f59e0b; color:black; border:none; padding:6px 12px; border-radius:6px; font-weight:bold; font-size:12px; cursor:pointer;">
+                            BERABERLİK
+                        </button>
+                        <button onclick="finalizeLades('${m.id}', 'NO')" style="background:#ef4444; color:white; border:none; padding:6px 12px; border-radius:6px; font-weight:bold; font-size:12px; cursor:pointer;">
+                            HAYIR Kazandı
+                        </button>
+                    `;
+                }
 
                 adminActiveMarkets.innerHTML += `
-                    <div style="background:#030814; padding:12px; border-radius:10px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
+                    <div style="background:#030814; padding:12px; border-radius:10px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; gap:12px;">
                         <div style="font-size:13px; max-width:60%;">
                             <b style="color:white;">${m.title}</b><br>
-                            <span style="color:#64748b;">Havuz: ${total} Token (E: ${m.yesPool || 0} / H: ${m.noPool || 0})</span>
+                            <span style="color:#64748b;">
+                                Havuz: ${total} Token
+                                (E: ${yesPool} / H: ${noPool}${m.category === 'Spor' ? ` / B: ${drawPool}` : ''})
+                            </span>
                         </div>
-                        <div style="display:flex; gap:8px;">
-                            <button onclick="finalizeLades('${m.id}', 'YES')"
-                                style="background:#22c55e; color:black; border:none; padding:6px 12px; border-radius:6px; font-weight:bold; font-size:12px; cursor:pointer;">
-                                EVET Kazandı
-                            </button>
-                            <button onclick="finalizeLades('${m.id}', 'NO')"
-                                style="background:#ef4444; color:white; border:none; padding:6px 12px; border-radius:6px; font-weight:bold; font-size:12px; cursor:pointer;">
-                                HAYIR Kazandı
-                            </button>
+                        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                            ${buttons}
                         </div>
                     </div>
                 `;
@@ -762,10 +870,20 @@ function openBetModal(marketId, marketTitle, choice) {
     const modalEl = document.getElementById('bet-modal');
 
     if (titleEl) titleEl.innerText = marketTitle;
+
     if (choiceEl) {
-        choiceEl.innerText = choice === 'YES' ? 'EVET' : 'HAYIR';
-        choiceEl.style.color = (choice === 'YES') ? '#22c55e' : '#ef4444';
+        if (choice === 'YES') {
+            choiceEl.innerText = 'EVET';
+            choiceEl.style.color = '#22c55e';
+        } else if (choice === 'NO') {
+            choiceEl.innerText = 'HAYIR';
+            choiceEl.style.color = '#ef4444';
+        } else if (choice === 'DRAW') {
+            choiceEl.innerText = 'BERABERLİK';
+            choiceEl.style.color = '#f59e0b';
+        }
     }
+
     if (modalEl) modalEl.style.display = 'flex';
 }
 
@@ -803,6 +921,13 @@ function switchTab(tabId) {
 // SAYFA YÜKLENİNCE UI BAŞLAT
 // ------------------------------------------------------
 document.addEventListener('DOMContentLoaded', () => {
+    updateChoiceOptions();
+
+    const categorySelect = document.getElementById('market-category');
+    if (categorySelect) {
+        categorySelect.addEventListener('change', updateChoiceOptions);
+    }
+
     if (typeof updateUI === "function") {
         updateUI();
     }

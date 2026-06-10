@@ -292,6 +292,7 @@
         .market-actions {
             display: flex;
             gap: 12px;
+            flex-wrap: wrap;
         }
 
         .btn-bet {
@@ -328,6 +329,18 @@
             background: #ef4444;
             color: #fff;
             box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
+        }
+
+        .btn-draw {
+            background: rgba(245, 158, 11, 0.1);
+            color: #f59e0b;
+            border: 1px solid rgba(245, 158, 11, 0.4);
+        }
+
+        .btn-draw:hover {
+            background: #f59e0b;
+            color: #000;
+            box-shadow: 0 0 15px rgba(245, 158, 11, 0.4);
         }
 
         .create-container {
@@ -501,14 +514,8 @@
         }
 
         @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(8px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         @media (max-width: 900px) {
@@ -659,6 +666,7 @@
                         <select id="market-choice">
                             <option value="YES">EVET</option>
                             <option value="NO">HAYIR</option>
+                            <option value="DRAW">BERABERLİK</option>
                         </select>
                     </div>
                 </div>
