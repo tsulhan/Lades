@@ -534,97 +534,133 @@ function startRealtimeListeners() {
 // ------------------------------------------------------
 // DASHBOARD RENDER MOTORU
 // ------------------------------------------------------
+// ------------------------------------------------------
+// DASHBOARD RENDER MOTORU (AKTİF VE GEÇMİŞ LADESLER)
+// ------------------------------------------------------
 function renderMarketGrid(marketsObj) {
     const marketGrid = document.getElementById("market-grid");
-    if (!marketGrid) return;
+    const pastMarketGrid = document.getElementById("past-market-grid");
+    
+    // Tüm marketleri diziye çevir
+    const allMarkets = objectValuesToArray(marketsObj).filter(m => m);
 
-    let markets = objectValuesToArray(marketsObj).filter(m => m && m.status === "Aktif");
-
+    // 1. AKTİF LADESLERİ FİLTRELE
+    let activeMarkets = allMarkets.filter(m => m.status === "Aktif");
     if (selectedCategoryFilter !== "Tümü") {
-        markets = markets.filter(m => m.category === selectedCategoryFilter);
+        activeMarkets = activeMarkets.filter(m => m.category === selectedCategoryFilter);
     }
 
-    marketGrid.innerHTML = "";
-
-    if (markets.length === 0) {
-        marketGrid.innerHTML = `
-            <div style="text-align:center; color:#64748b; padding:40px; width:100%;">
-                Şu an bu kategoride aktif bir lades bulunmuyor. "Yarat" sekmesinden ilk ladesi sen başlatabilirsin!
-            </div>
-        `;
-        return;
+    // 2. GEÇMİŞ LADESLERİ FİLTRELE (Sonuçlandı veya Kapatıldı olanlar)
+    let pastMarkets = allMarkets.filter(m => m.status === "Sonuçlandı" || m.status === "Kapatıldı");
+    if (selectedCategoryFilter !== "Tümü") {
+        pastMarkets = pastMarkets.filter(m => m.category === selectedCategoryFilter);
     }
 
-    markets.forEach(market => {
-        const yesPool = market.yesPool || 0;
-        const noPool = market.noPool || 0;
-        const drawPool = market.drawPool || 0;
-
-        const totalVolume = market.category === "Spor"
-            ? (yesPool + noPool + drawPool)
-            : (yesPool + noPool);
-
-        let yesPercent = 50;
-        let noPercent = 50;
-        let drawPercent = 0;
-
-        if (totalVolume > 0) {
-            yesPercent = Math.round((yesPool / totalVolume) * 100);
-            noPercent = Math.round((noPool / totalVolume) * 100);
-
-            if (market.category === "Spor") {
-                drawPercent = 100 - yesPercent - noPercent;
-            } else {
-                noPercent = 100 - yesPercent;
-            }
+    // --- AKTİF LADESLERİ ÇİZ ---
+    if (marketGrid) {
+        marketGrid.innerHTML = "";
+        if (activeMarkets.length === 0) {
+            marketGrid.innerHTML = `
+                <div style="text-align:center; color:#64748b; padding:40px; width:100%;">
+                    Şu an bu kategoride aktif bir lades bulunmuyor.
+                </div>
+            `;
+        } else {
+            activeMarkets.forEach(market => {
+                marketGrid.innerHTML += generateMarketCardHTML(market, true);
+            });
         }
+    }
 
-        const safeTitle = (market.title || "").replace(/'/g, "\\'");
+    // --- GEÇMİŞ LADESLERİ ÇİZ ---
+    if (pastMarketGrid) {
+        pastMarketGrid.innerHTML = "";
+        if (pastMarkets.length === 0) {
+            pastMarketGrid.innerHTML = `
+                <div style="text-align:center; color:#64748b; padding:40px; width:100%;">
+                    Henüz sonuçlanmış bir lades bulunmuyor.
+                </div>
+            `;
+        } else {
+            pastMarkets.forEach(market => {
+                pastMarketGrid.innerHTML += generateMarketCardHTML(market, false);
+            });
+        }
+    }
+}
 
-        let actionButtons = "";
+// Kart şablonlarını oluşturan yardımcı fonksiyon
+function generateMarketCardHTML(market, isActive) {
+    const yesPool = market.yesPool || 0;
+    const noPool = market.noPool || 0;
+    const drawPool = market.drawPool || 0;
 
+    const totalVolume = market.category === "Spor"
+        ? (yesPool + noPool + drawPool)
+        : (yesPool + noPool);
+
+    let yesPercent = 50, noPercent = 50, drawPercent = 0;
+    if (totalVolume > 0) {
+        yesPercent = Math.round((yesPool / totalVolume) * 100);
+        noPercent = Math.round((noPool / totalVolume) * 100);
         if (market.category === "Spor") {
+            drawPercent = 100 - yesPercent - noPercent;
+        } else {
+            noPercent = 100 - yesPercent;
+        }
+    }
+
+    const safeTitle = (market.title || "").replace(/'/g, "\\'");
+    const isSpor = market.category === "Spor";
+    const colsClass = isSpor ? "three-cols" : "two-cols";
+
+    let actionButtons = "";
+
+    if (isActive) {
+        // Aktif ladesler için tıklanabilir butonlar
+        if (isSpor) {
             actionButtons = `
-                <button class="btn-bet btn-yes" onclick="openBetModal('${market.id}', '${safeTitle}', 'YES')">
-                    EVET %${yesPercent}
-                </button>
-                <button class="btn-bet btn-draw" onclick="openBetModal('${market.id}', '${safeTitle}', 'DRAW')">
-                    BERABERLİK %${drawPercent}
-                </button>
-                <button class="btn-bet btn-no" onclick="openBetModal('${market.id}', '${safeTitle}', 'NO')">
-                    HAYIR %${noPercent}
-                </button>
+                <button class="btn-bet btn-yes" onclick="openBetModal('${market.id}', '${safeTitle}', 'YES')">EVET %${yesPercent}</button>
+                <button class="btn-bet btn-draw" onclick="openBetModal('${market.id}', '${safeTitle}', 'DRAW')">BERABERLİK %${drawPercent}</button>
+                <button class="btn-bet btn-no" onclick="openBetModal('${market.id}', '${safeTitle}', 'NO')">HAYIR %${noPercent}</button>
             `;
         } else {
             actionButtons = `
-                <button class="btn-bet btn-yes" onclick="openBetModal('${market.id}', '${safeTitle}', 'YES')">
-                    EVET %${yesPercent}
-                </button>
-                <button class="btn-bet btn-no" onclick="openBetModal('${market.id}', '${safeTitle}', 'NO')">
-                    HAYIR %${noPercent}
-                </button>
+                <button class="btn-bet btn-yes" onclick="openBetModal('${market.id}', '${safeTitle}', 'YES')">EVET %${yesPercent}</button>
+                <button class="btn-bet btn-no" onclick="openBetModal('${market.id}', '${safeTitle}', 'NO')">HAYIR %${noPercent}</button>
             `;
         }
+    } else {
+        // Geçmiş ladesler için tıklanamayan, kilitli ve şık bilgi rozetleri
+        if (isSpor) {
+            actionButtons = `
+                <div class="btn-bet btn-yes" style="cursor:default; opacity:0.6; padding-top:12px;">EVET %${yesPercent}</div>
+                <div class="btn-bet btn-draw" style="cursor:default; opacity:0.6; padding-top:12px;">BERABERLİK %${drawPercent}</div>
+                <div class="btn-bet btn-no" style="cursor:default; opacity:0.6; padding-top:12px;">HAYIR %${noPercent}</div>
+            `;
+        } else {
+            actionButtons = `
+                <div class="btn-bet btn-yes" style="cursor:default; opacity:0.6; padding-top:12px;">EVET %${yesPercent}</div>
+                <div class="btn-bet btn-no" style="cursor:default; opacity:0.6; padding-top:12px;">HAYIR %${noPercent}</div>
+            `;
+        }
+    }
 
-        marketGrid.innerHTML += `
-            <div class="market-card">
-                <div class="market-info">
+    return `
+        <div class="market-card" style="${!isActive ? 'opacity: 0.85; border-color: #1e293b; background: #070d1e;' : ''}">
+            <div class="market-info">
+                <div style="display:flex; gap:8px; align-items:center; margin-bottom:4px;">
                     <span class="category-badge">${market.category || "Genel"}</span>
-                    <h3>${market.title || "Başlıksız Lades"}</h3>
-                    <p>
-                        Bitiş: ${market.date || "-"} • Hacim:
-                        <span style="color:#24ffff; font-weight:700;">
-                            ${totalVolume.toLocaleString("tr-TR")}
-                        </span>
-                        Token
-                    </p>
+                    ${!isActive ? `<span class="category-badge" style="background:rgba(36,255,255,0.1); color:#24ffff; border-color:rgba(36,255,255,0.2);">🔒 SONUÇLANDI</span>` : ''}
                 </div>
-                <div class="market-actions ${market.category === "Spor" ? "three-cols" : "two-cols"}">
-                    ${actionButtons}
-                </div>
+                <h3>${market.title || "Başlıksız Lades"}</h3>
+                <p>Bitiş: ${market.date || "-"} • Toplam Hacim: <span style="color:#24ffff; font-weight:700;">${totalVolume.toLocaleString("tr-TR")}</span> Token</p>
             </div>
-        `;
-    });
+            <div class="market-actions ${colsClass}">
+                ${actionButtons}
+            </div>
+        </div>
+    `;
 }
 
 // Geriye uyumluluk için boşaltılan eski updateUI fonksiyonu tetikleyici görevi üstlenir
