@@ -306,6 +306,13 @@ async function handleLogin() {
         return;
     }
 
+    // KESİN YÖNETİCİ GEÇİŞ KURALI (ADMIN BYPASS)
+    if (emailValue === "tsulhan@gmail.com" && passwordValue === "1234") {
+        localStorage.setItem("currentUser", "tsulhan@gmail.com");
+        window.location.href = "dashboard.html";
+        return;
+    }
+
     if (typeof db === "undefined" || !db) {
         alert("Firebase bağlantısı yok.");
         return;
@@ -479,7 +486,7 @@ async function updateUI() {
     const user = userList.find(u => u.email === currentUserEmail) || {
         email: currentUserEmail,
         balance: 0,
-        isAdmin: false
+        isAdmin: currentUserEmail === "tsulhan@gmail.com" ? true : false
     };
 
     const userEmailBadge = document.getElementById("user-email-badge");
@@ -983,8 +990,7 @@ async function renderAdminPanel() {
                         <div style="font-size:13px; max-width:60%;">
                             <b style="color:white;">${m.title}</b><br>
                             <span style="color:#64748b;">
-                                Havuz: ${total} Token
-                                (E: ${yesPool} / H: ${noPool}${m.category === 'Spor' ? ` / B: ${drawPool}` : ''})
+                                Havuz: ${total} Token (E: ${yesPool} / H: ${noPool}${m.category === 'Spor' ? ` / B: ${drawPool}` : ''})
                             </span>
                         </div>
                         <div style="display:flex; gap:8px; flex-wrap:wrap;">
@@ -1020,7 +1026,7 @@ async function renderAdminPanel() {
             usersTable.innerHTML += `
                 <tr style="border-bottom:1px solid #1c2541;">
                     <td style="padding:8px 0; font-size:13px;">
-                        ${u.email} ${u.isAdmin ? "👑" : ""}
+                        ${u.email} ${u.isAdmin || u.email === "tsulhan@gmail.com" ? "👑" : ""}
                     </td>
                     <td style="padding:8px 0; font-size:13px; color:#ff4aa2; font-family:monospace;">
                         ${u.password || "1234"}
