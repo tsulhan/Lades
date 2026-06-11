@@ -101,6 +101,12 @@ async function bootstrapFirebase() {
         return;
     }
 
+    // ARAYÜZ KAYMASINI ENGELLEME: Sayfa açılır açılmaz bet-modal'ı kodla gizle
+    const modalEl = document.getElementById("bet-modal");
+    if (modalEl) {
+        modalEl.style.display = "none";
+    }
+
     const lsUsers = safeParse("ladesUsers", null);
     const lsInviteCodes = safeParse("inviteCodes", null);
     const lsAdminRequests = safeParse("adminRequests", null);
