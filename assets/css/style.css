@@ -1,51 +1,457 @@
-:root {
-    --bg-dark: #0a0a0c;
-    --neon-cyan: #00f5d4;
-    --neon-pink: #ff007f;
-    --text-white: #ffffff;
+/* ======================================================
+   LADES GENEL STİL DOSYASI
+   ====================================================== */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 body {
-    background-color: var(--bg-dark);
-    color: var(--text-white);
-    font-family: 'Segoe UI', sans-serif;
-    margin: 0;
+    background-color: #020617;
+    color: #f8fafc;
+    overflow-x: hidden;
+}
+
+/* NAVBAR */
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #0b1329;
+    padding: 15px 30px;
+    border-bottom: 1px solid #1c2541;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.logo {
+    font-size: 22px;
+    font-weight: 900;
+    color: #24ffff;
+    letter-spacing: 1px;
+}
+
+.nav-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.user-email {
+    color: #94a3b8;
+    font-size: 14px;
+    background: rgba(255,255,255,0.05);
+    padding: 6px 12px;
+    border-radius: 20px;
+}
+
+.token-badge {
+    background: linear-gradient(135deg, #1e1b4b 0%, #311042 100%);
+    border: 1px solid #ff4aa2;
+    padding: 8px 16px;
+    border-radius: 30px;
+    font-weight: bold;
+    color: #fff;
+    box-shadow: 0 0 10px rgba(255, 74, 162, 0.2);
+}
+
+.btn-admin {
+    background: #f59e0b;
+    color: #000;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.btn-logout {
+    background: #ef4444;
+    color: white;
+    border: none;
+    width: 35px;
+    height: 35px;
+    border-radius: 5px;
+    font-weight: bold;
+    cursor: pointer;
     display: flex;
     justify-content: center;
     align-items: center;
-    min-height: 100vh;
 }
 
-.screen { text-align: center; width: 90%; max-width: 400px; }
+/* TOKEN BANNER */
+.token-banner {
+    background: linear-gradient(90deg, #ff4aa2 0%, #24ffff 100%);
+    color: #000;
+    text-align: center;
+    padding: 10px;
+    font-weight: bold;
+    font-size: 14px;
+}
 
-/* YILDIRIM LOGO ALANI */
-.logo-container { margin-bottom: 20px; }
-.lightning-icon { font-size: 80px; color: var(--neon-cyan); text-shadow: 0 0 30px var(--neon-cyan); }
-h1 { font-size: 60px; letter-spacing: 5px; margin: 10px 0; color: var(--text-white); }
-.subtitle { color: var(--text-white); font-size: 14px; margin-bottom: 40px; }
-
-/* ALT İKONLAR */
-.features { display: flex; justify-content: space-around; margin-bottom: 40px; }
-.feature-item { font-size: 12px; color: #888; }
-.feature-item div { font-size: 24px; margin-bottom: 5px; }
-
-/* BUTON */
-.btn-neon {
-    width: 100%;
-    padding: 20px;
-    border-radius: 50px;
+.token-banner button {
+    background: #000;
+    color: #fff;
     border: none;
-    background: var(--neon-cyan);
-    color: black;
-    font-weight: 800;
-    font-size: 18px;
+    padding: 4px 12px;
+    border-radius: 4px;
+    margin-left: 15px;
+    font-weight: bold;
     cursor: pointer;
-    box-shadow: 0 0 20px var(--neon-cyan);
-    transition: 0.3s;
 }
-/* Beraberlik Buton Stili */
-.btn-draw { 
-    background: rgba(148, 163, 184, 0.1); 
-    color: #94a3b8; 
-    border: 1px solid rgba(148, 163, 184, 0.4); 
+
+/* CONTAINER */
+.main-container {
+    display: flex;
+    min-height: calc(100vh - 70px);
+}
+
+/* SIDEBAR */
+.sidebar {
+    width: 260px;
+    background-color: #0b1329;
+    border-right: 1px solid #1c2541;
+    padding: 30px 20px;
+}
+
+.sidebar h3 {
+    font-size: 12px;
+    color: #64748b;
+    letter-spacing: 1px;
+    margin-bottom: 15px;
+    padding-left: 10px;
+}
+
+.sidebar-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.sidebar-menu button {
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    text-align: left;
+    padding: 12px 15px;
+    font-size: 15px;
+    font-weight: 500;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.sidebar-menu button:hover {
+    background: rgba(255,255,255,0.02);
+    color: #fff;
+}
+
+.sidebar-menu button.active {
+    background: rgba(36, 255, 255, 0.1);
+    color: #24ffff;
+    font-weight: bold;
+}
+
+/* CONTENT */
+.content {
+    flex: 1;
+    padding: 40px;
+}
+
+.tabs {
+    display: flex;
+    gap: 10px;
+    border-bottom: 1px solid #1c2541;
+    margin-bottom: 30px;
+}
+
+.tab-button {
+    background: transparent;
+    border: none;
+    color: #64748b;
+    padding: 12px 24px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    position: relative;
+}
+
+.tab-button.active {
+    color: #24ffff;
+}
+
+.tab-button.active::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background-color: #24ffff;
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/* MARKET CARDS */
+.market-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 24px;
+}
+
+.market-card {
+    background: #0b1329;
+    border: 1px solid #1c2541;
+    border-radius: 12px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: transform 0.2s;
+}
+
+.market-card:hover {
+    transform: translateY(-2px);
+    border-color: #24ffff;
+}
+
+.category-badge {
+    background: rgba(36, 255, 255, 0.1);
+    color: #24ffff;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: bold;
+    display: inline-block;
+    margin-bottom: 12px;
+}
+
+.market-info h3 {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 10px;
+    line-height: 1.4;
+}
+
+.market-info p {
+    color: #64748b;
+    font-size: 13px;
+    margin-bottom: 20px;
+}
+
+.market-actions {
+    display: grid;
+    gap: 10px;
+}
+
+.market-actions.two-cols {
+    grid-template-columns: 1fr 1fr;
+}
+
+.market-actions.three-cols {
+    grid-template-columns: 1fr 1fr 1fr;
+}
+
+.btn-bet {
+    border: none;
+    padding: 12px;
+    font-weight: bold;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.2s;
+    font-size: 13px;
+}
+
+.btn-yes { background: rgba(34, 197, 94, 0.1); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.2); }
+.btn-yes:hover { background: #22c55e; color: #000; }
+
+.btn-no { background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); }
+.btn-no:hover { background: #ef4444; color: #fff; }
+
+.btn-draw { background: rgba(245, 158, 11, 0.1); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.2); }
+.btn-draw:hover { background: #f59e0b; color: #000; }
+
+/* FORMS */
+.create-form {
+    background: #0b1329;
+    padding: 30px;
+    border-radius: 12px;
+    border: 1px solid #1c2541;
+    max-width: 600px;
+}
+
+.create-form h2 {
+    margin-bottom: 20px;
+    font-size: 20px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    color: #94a3b8;
+    font-size: 14px;
+}
+
+.form-group input, .form-group select {
+    background: #020617;
+    border: 1px solid #1c2541;
+    padding: 12px;
+    border-radius: 8px;
+    color: white;
+    font-size: 15px;
+}
+
+.form-group input:focus, .form-group select:focus {
+    outline: none;
+    border-color: #24ffff;
+}
+
+.btn-submit {
+    background: #24ffff;
+    color: #000;
+    border: none;
+    padding: 14px;
+    width: 100%;
+    border-radius: 8px;
+    font-weight: bold;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+/* MODALS */
+.modal {
+    display: none !important; /* SAYFA AÇILIŞINDA KESİN GİZLEME */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    z-index: 9999;
+    justify-content: center;
+    align-items: center;
+}
+
+/* JS ile açıldığında flex olarak ezmek için */
+.modal[style*="display: flex"], .modal[style*="display:flex"] {
+    display: flex !important;
+}
+
+.modal-content {
+    background: #0b1329;
+    border: 1px solid #24ffff;
+    padding: 30px;
+    border-radius: 16px;
+    width: 100%;
+    max-width: 450px;
+    box-shadow: 0 0 30px rgba(36, 255, 255, 0.2);
+}
+
+.modal-content h2 {
+    font-size: 20px;
+    margin-bottom: 15px;
+}
+
+.modal-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 20px;
+}
+
+.btn-cancel {
+    background: #1c2541;
+    color: white;
+    border: none;
+    padding: 12px;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.btn-confirm {
+    background: #24ffff;
+    color: #000;
+    border: none;
+    padding: 12px;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+/* ADMIN PANEL LARGE MODAL */
+.admin-modal-content {
+    background: #0b1329;
+    border: 1px solid #f59e0b;
+    padding: 30px;
+    border-radius: 16px;
+    width: 90%;
+    max-width: 1000px;
+    box-shadow: 0 0 30px rgba(245, 158, 11, 0.15);
+}
+
+.admin-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #1c2541;
+    padding-bottom: 15px;
+    margin-bottom: 20px;
+}
+
+.btn-close-admin {
+    background: transparent;
+    border: none;
+    color: #64748b;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+.admin-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.2fr;
+    gap: 25px;
+}
+
+.admin-section {
+    background: #020617;
+    border: 1px solid #1c2541;
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+}
+
+.admin-section h3 {
+    font-size: 14px;
+    color: #94a3b8;
+    margin-bottom: 12px;
+    border-bottom: 1px solid #1c2541;
+    padding-bottom: 5px;
+}
+
+.btn-admin-action {
+    border: none;
+    padding: 6px 12px;
+    border-radius: 5px;
+    font-weight: bold;
+    font-size: 12px;
+    cursor: pointer;
 }
