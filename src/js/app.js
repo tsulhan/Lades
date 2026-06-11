@@ -1,27 +1,15 @@
 // ======================================================
 // LADES APP.JS
-// Firebase Realtime Database + local session (currentUser)
-// Ortak veriler Firebase'de tutulur
+// Firebase Realtime Database uyumlu sürüm
+// Ortak veriler Firebase'de tutulur:
+// - ladesUsers
+// - customMarkets
+// - adminRequests
+// - betHistory
+// - inviteCodes
+//
+// Oturum şimdilik localStorage.currentUser ile tutulur
 // ======================================================
-
-// ------------------------------------------------------
-// FIREBASE INITIALIZATION
-// ------------------------------------------------------
-if (typeof firebase === "undefined") {
-    console.error("Firebase SDK yüklenmemiş.");
-}
-
-if (typeof firebaseConfig === "undefined") {
-    console.error("firebaseConfig tanımlı değil.");
-}
-
-if (typeof firebase !== "undefined" && typeof firebaseConfig !== "undefined") {
-    if (!firebase.apps.length) {
-        firebase.initializeApp(firebaseConfig);
-    }
-}
-
-const db = (typeof firebase !== "undefined" && firebase.database) ? firebase.database() : null;
 
 // ------------------------------------------------------
 // YARDIMCI FONKSİYONLAR
@@ -38,8 +26,17 @@ function fbSet(path, value) {
     return fbRef(path).set(value);
 }
 
-function fbUpdate(path, value) {
-    return fbRef(path).update(value);
+function fbRemove(path) {
+    return fbRef(path).remove();
+}
+
+function uniqueId(prefix = "id") {
+    return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function objectValuesToArray(obj) {
+    if (!obj) return [];
+    return Object.values(obj);
 }
 
 function safeParse(key, fallback) {
@@ -58,25 +55,6 @@ function safeSave(key, value) {
     localStorage.setItem(key, JSON.stringify(value));
 }
 
-function uniqueId(prefix = "id") {
-    return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-}
-
-function objectValuesToArray(obj) {
-    if (!obj) return [];
-    return Object.values(obj);
-}
-
-function arrayToObjectById(arr) {
-    const obj = {};
-    arr.forEach(item => {
-        if (item && item.id) {
-            obj[item.id] = item;
-        }
-    });
-    return obj;
-}
-
 // ------------------------------------------------------
 // GLOBAL DURUM
 // ------------------------------------------------------
@@ -84,7 +62,6 @@ let activeMarketId = "";
 let activeMarketTitle = "";
 let activeChoice = "";
 let selectedCategoryFilter = "Tümü";
-let fbReady = false;
 
 // ------------------------------------------------------
 // DEFAULT VERİLER
@@ -116,19 +93,21 @@ const DEFAULT_INVITE_CODES = {
 };
 
 // ------------------------------------------------------
-// MIGRATION / BOOTSTRAP
+// BOOTSTRAP / MIGRATION
 // ------------------------------------------------------
 async function bootstrapFirebase() {
-    if (!db) return;
+    if (typeof db === "undefined" || !db) {
+        console.error("Firebase bağlantısı yok.");
+        return;
+    }
 
-    // 1) localStorage'dan eski verileri oku
+    // localStorage'daki eski verileri oku
     const lsUsers = safeParse("ladesUsers", null);
     const lsInviteCodes = safeParse("inviteCodes", null);
     const lsAdminRequests = safeParse("adminRequests", null);
     const lsCustomMarkets = safeParse("customMarkets", null);
     const lsBetHistory = safeParse("betHistory", null);
 
-    // 2) Firebase'de mevcut verileri çek
     const [fbUsers, fbInviteCodes, fbAdminRequests, fbCustomMarkets, fbBetHistory] = await Promise.all([
         fbGet("ladesUsers"),
         fbGet("inviteCodes"),
@@ -137,58 +116,58 @@ async function bootstrapFirebase() {
         fbGet("betHistory")
     ]);
 
-    // 3) Kullanıcılar
-    let finalUsers = fbUsers || null;
-
-    if (!finalUsers) {
+    // 1) Kullanıcılar
+    if (!fbUsers) {
         if (lsUsers && Array.isArray(lsUsers) && lsUsers.length > 0) {
-            const arr = lsUsers.map(u => ({
-                email: u.email,
-                password: u.password || "1234",
-                balance: typeof u.balance === "number" ? u.balance : parseInt(u.balance || 0),
-                isAdmin: !!u.isAdmin
-            }));
+            const obj = {};
+            lsUsers.forEach((u, index) => {
+                const key = u.email || `user_${index + 1}`;
+                obj[key] = {
+                    email: u.email,
+                    password: u.password || "1234",
+                    balance: typeof u.balance === "number" ? u.balance : parseInt(u.balance || 0),
+                    isAdmin: !!u.isAdmin
+                };
+            });
 
-            // tsulhan admin ve bakiye garantisi
-            const tsu = arr.find(u => u.email === "tsulhan@gmail.com");
-            if (tsu) {
-                tsu.isAdmin = true;
-                if (!tsu.balance || tsu.balance <= 0) tsu.balance = 10000;
+            if (obj["tsulhan@gmail.com"]) {
+                obj["tsulhan@gmail.com"].isAdmin = true;
+                if (!obj["tsulhan@gmail.com"].balance || obj["tsulhan@gmail.com"].balance <= 0) {
+                    obj["tsulhan@gmail.com"].balance = 10000;
+                }
             }
 
-            finalUsers = arrayToObjectById(arr.map(u => ({
-                ...u,
-                id: u.email
-            })));
+            await fbSet("ladesUsers", obj);
         } else {
-            finalUsers = DEFAULT_USERS;
+            await fbSet("ladesUsers", DEFAULT_USERS);
         }
-
-        await fbSet("ladesUsers", finalUsers);
     } else {
-        // Firebase verisini onar
         let changed = false;
-        Object.keys(finalUsers).forEach(key => {
-            const user = finalUsers[key];
+
+        Object.keys(fbUsers).forEach(key => {
+            const user = fbUsers[key];
+
             if (!user.password) {
                 user.password = "1234";
                 changed = true;
             }
+
             if (typeof user.balance !== "number") {
                 user.balance = parseInt(user.balance || 0);
                 changed = true;
             }
+
             if (typeof user.isAdmin !== "boolean") {
                 user.isAdmin = false;
                 changed = true;
             }
 
-            // tsulhan admin ve bakiye garanti
             if (user.email === "tsulhan@gmail.com") {
                 if (!user.isAdmin) {
                     user.isAdmin = true;
                     changed = true;
                 }
+
                 if (!user.balance || user.balance <= 0) {
                     user.balance = 10000;
                     changed = true;
@@ -197,13 +176,13 @@ async function bootstrapFirebase() {
         });
 
         if (changed) {
-            await fbSet("ladesUsers", finalUsers);
+            await fbSet("ladesUsers", fbUsers);
         }
     }
 
-    // 4) Invite codes
+    // 2) Davet kodları
     if (!fbInviteCodes) {
-        if (lsInviteCodes && typeof lsInviteCodes === "object") {
+        if (lsInviteCodes) {
             if (Array.isArray(lsInviteCodes)) {
                 const obj = {};
                 lsInviteCodes.forEach((code, index) => {
@@ -218,7 +197,7 @@ async function bootstrapFirebase() {
         }
     }
 
-    // 5) Admin requests
+    // 3) Admin istekleri
     if (!fbAdminRequests) {
         if (lsAdminRequests) {
             if (Array.isArray(lsAdminRequests)) {
@@ -238,15 +217,16 @@ async function bootstrapFirebase() {
         }
     }
 
-    // 6) Custom markets
+    // 4) Marketler
     if (!fbCustomMarkets) {
         if (lsCustomMarkets) {
             if (Array.isArray(lsCustomMarkets)) {
                 const obj = {};
                 lsCustomMarkets.forEach((m, index) => {
-                    obj[m.id || `market_${index + 1}`] = {
+                    const id = m.id || `market_${index + 1}`;
+                    obj[id] = {
                         ...m,
-                        id: m.id || `market_${index + 1}`
+                        id
                     };
                 });
                 await fbSet("customMarkets", obj);
@@ -257,26 +237,31 @@ async function bootstrapFirebase() {
             await fbSet("customMarkets", {});
         }
     } else {
-        // Firebase'de varsa onar
         let changed = false;
-        Object.keys(fbCustomMarkets || {}).forEach(key => {
+
+        Object.keys(fbCustomMarkets).forEach(key => {
             const market = fbCustomMarkets[key];
+
             if (!market.status) {
                 market.status = "Aktif";
                 changed = true;
             }
+
             if (typeof market.yesPool !== "number") {
                 market.yesPool = parseInt(market.yesPool || 0);
                 changed = true;
             }
+
             if (typeof market.noPool !== "number") {
                 market.noPool = parseInt(market.noPool || 0);
                 changed = true;
             }
+
             if (typeof market.drawPool !== "number") {
                 market.drawPool = parseInt(market.drawPool || 0);
                 changed = true;
             }
+
             if (!market.category) {
                 market.category = "Genel";
                 changed = true;
@@ -288,15 +273,16 @@ async function bootstrapFirebase() {
         }
     }
 
-    // 7) Bet history
+    // 5) Bahis geçmişi
     if (!fbBetHistory) {
         if (lsBetHistory) {
             if (Array.isArray(lsBetHistory)) {
                 const obj = {};
                 lsBetHistory.forEach((h, index) => {
-                    obj[`history_${index + 1}`] = {
+                    const id = h.id || `history_${index + 1}`;
+                    obj[id] = {
                         ...h,
-                        id: h.id || `history_${index + 1}`
+                        id
                     };
                 });
                 await fbSet("betHistory", obj);
@@ -307,15 +293,6 @@ async function bootstrapFirebase() {
             await fbSet("betHistory", {});
         }
     }
-
-    // 8) Eski localStorage'ı tamamen silmek istemiyorsan burayı kapalı bırak
-    // localStorage.removeItem("ladesUsers");
-    // localStorage.removeItem("inviteCodes");
-    // localStorage.removeItem("adminRequests");
-    // localStorage.removeItem("customMarkets");
-    // localStorage.removeItem("betHistory");
-
-    fbReady = true;
 }
 
 // ------------------------------------------------------
@@ -330,7 +307,7 @@ async function handleLogin() {
         return;
     }
 
-    if (!db) {
+    if (typeof db === "undefined" || !db) {
         alert("Firebase bağlantısı yok.");
         return;
     }
@@ -365,7 +342,7 @@ async function handleRegister() {
         return;
     }
 
-    if (!db) {
+    if (typeof db === "undefined" || !db) {
         alert("Firebase bağlantısı yok.");
         return;
     }
@@ -400,7 +377,7 @@ async function handleRegister() {
 
     const inviteKey = Object.keys(inviteCodes).find(k => inviteCodes[k] === inviteCode);
     if (inviteKey) {
-        await fbRef(`inviteCodes/${inviteKey}`).remove();
+        await fbRemove(`inviteCodes/${inviteKey}`);
     }
 
     alert("Kayıt başarılı! Başlangıç bakiyeniz: 0 TOKEN");
@@ -415,7 +392,7 @@ async function requestInviteCode() {
         return;
     }
 
-    if (!db) {
+    if (typeof db === "undefined" || !db) {
         alert("Firebase bağlantısı yok.");
         return;
     }
@@ -445,7 +422,7 @@ async function requestInviteCode() {
 }
 
 // ------------------------------------------------------
-// OPSİYON GÖRÜNÜRLÜĞÜ
+// KATEGORİ / OPSİYON
 // ------------------------------------------------------
 function updateChoiceOptions() {
     const categorySelect = document.getElementById("market-category");
@@ -469,9 +446,6 @@ function updateChoiceOptions() {
     }
 }
 
-// ------------------------------------------------------
-// DASHBOARD / ARAYÜZ
-// ------------------------------------------------------
 function filterCategory(categoryName) {
     selectedCategoryFilter = categoryName;
 
@@ -490,11 +464,14 @@ function filterCategory(categoryName) {
     updateUI();
 }
 
+// ------------------------------------------------------
+// DASHBOARD GÖRÜNÜM
+// ------------------------------------------------------
 async function updateUI() {
     const currentUserEmail = localStorage.getItem("currentUser");
     if (!currentUserEmail) return;
 
-    if (!db) return;
+    if (typeof db === "undefined" || !db) return;
 
     const usersSnap = await fbGet("ladesUsers");
     const users = usersSnap || {};
@@ -616,6 +593,9 @@ async function updateUI() {
     });
 }
 
+// ------------------------------------------------------
+// TOKEN TALEBİ / LADES OLUŞTURMA / BAHİS
+// ------------------------------------------------------
 async function openTokenRequestModal() {
     const amount = prompt("Kaç Token talep etmek istiyorsunuz?");
     const tokenAmount = parseInt(amount);
@@ -632,7 +612,7 @@ async function openTokenRequestModal() {
         return;
     }
 
-    if (!db) {
+    if (typeof db === "undefined" || !db) {
         alert("Firebase bağlantısı yok.");
         return;
     }
@@ -664,7 +644,7 @@ async function createNewMarket() {
         return;
     }
 
-    if (!db) {
+    if (typeof db === "undefined" || !db) {
         alert("Firebase bağlantısı yok.");
         return;
     }
@@ -750,7 +730,7 @@ async function confirmBet() {
         return;
     }
 
-    if (!db) {
+    if (typeof db === "undefined" || !db) {
         alert("Firebase bağlantısı yok.");
         return;
     }
@@ -827,7 +807,7 @@ function closeAdminPanel() {
 }
 
 async function generateInviteCode() {
-    if (!db) return;
+    if (typeof db === "undefined" || !db) return;
 
     const newCode = "LADES_" + Math.random().toString(36).substring(2, 8).toUpperCase();
     const codeKey = uniqueId("code");
@@ -836,7 +816,7 @@ async function generateInviteCode() {
 }
 
 async function finalizeLades(marketId, winningChoice) {
-    if (!db) return;
+    if (typeof db === "undefined" || !db) return;
 
     const marketsSnap = await fbGet("customMarkets");
     const markets = marketsSnap || {};
@@ -916,8 +896,9 @@ async function finalizeLades(marketId, winningChoice) {
 }
 
 async function renderAdminPanel() {
-    if (!db) return;
+    if (typeof db === "undefined" || !db) return;
 
+    // Bekleyen istekler
     const requestsList = document.getElementById("admin-requests-list");
     const requestsSnap = await fbGet("adminRequests");
     const requests = requestsSnap || {};
@@ -956,6 +937,7 @@ async function renderAdminPanel() {
         }
     }
 
+    // Aktif ladesler
     const adminActiveMarkets = document.getElementById("admin-active-markets");
     const marketsSnap = await fbGet("customMarkets");
     const markets = marketsSnap || {};
@@ -1017,6 +999,7 @@ async function renderAdminPanel() {
         }
     }
 
+    // Davet kodları
     const codesList = document.getElementById("admin-codes-list");
     const inviteCodesSnap = await fbGet("inviteCodes");
     const inviteCodes = inviteCodesSnap || {};
@@ -1030,6 +1013,7 @@ async function renderAdminPanel() {
         `).join(" ");
     }
 
+    // Kullanıcı listesi
     const usersTable = document.getElementById("admin-users-list");
     const usersSnap = await fbGet("ladesUsers");
     const users = usersSnap || {};
@@ -1062,7 +1046,7 @@ async function renderAdminPanel() {
 }
 
 async function approveInvite(reqId, email) {
-    if (!db) return;
+    if (typeof db === "undefined" || !db) return;
 
     const newCode = "LADES_" + Math.random().toString(36).substring(2, 8).toUpperCase();
     const codeKey = uniqueId("code");
@@ -1073,7 +1057,7 @@ async function approveInvite(reqId, email) {
     const reqKey = Object.keys(requests).find(k => requests[k].id === reqId);
 
     if (reqKey) {
-        await fbRef(`adminRequests/${reqKey}`).remove();
+        await fbRemove(`adminRequests/${reqKey}`);
     }
 
     alert(`Onaylandı! Kod: ${newCode}`);
@@ -1081,7 +1065,7 @@ async function approveInvite(reqId, email) {
 }
 
 async function approveToken(reqId, email, amount) {
-    if (!db) return;
+    if (typeof db === "undefined" || !db) return;
 
     const usersSnap = await fbGet("ladesUsers");
     const users = usersSnap || {};
@@ -1098,7 +1082,7 @@ async function approveToken(reqId, email, amount) {
     const reqKey = Object.keys(requests).find(k => requests[k].id === reqId);
 
     if (reqKey) {
-        await fbRef(`adminRequests/${reqKey}`).remove();
+        await fbRemove(`adminRequests/${reqKey}`);
     }
 
     alert(`${email} hesabına ${amount} token yüklendi.`);
@@ -1111,7 +1095,7 @@ async function addTokensManual(email) {
     const amount = parseInt(amt);
 
     if (isNaN(amount) || amount <= 0) return;
-    if (!db) return;
+    if (typeof db === "undefined" || !db) return;
 
     const usersSnap = await fbGet("ladesUsers");
     const users = usersSnap || {};
@@ -1132,7 +1116,7 @@ async function hardResetDatabase() {
     if (confirm("Tüm verileri sıfırlamak istiyor musunuz?")) {
         localStorage.clear();
 
-        if (db) {
+        if (typeof db !== "undefined" && db) {
             await fbSet("ladesUsers", DEFAULT_USERS);
             await fbSet("inviteCodes", DEFAULT_INVITE_CODES);
             await fbSet("adminRequests", {});
