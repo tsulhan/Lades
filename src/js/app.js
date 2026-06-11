@@ -1200,16 +1200,23 @@ function logout() {
 }
 
 function switchTab(tabId) {
+    // Tüm sekme içeriklerini ve butonlarını pasif yap
     document.querySelectorAll(".tab-content").forEach(content => content.classList.remove("active"));
     document.querySelectorAll(".tab-button").forEach(button => button.classList.remove("active"));
 
+    // Tıklanan sekmeyi aktif et
     const targetTab = document.getElementById(tabId);
     if (targetTab) {
         targetTab.classList.add("active");
     }
 
+    // Tıklanan butona .active sınıfını güvenli bir şekilde ekle
     if (window.event && window.event.currentTarget) {
         window.event.currentTarget.classList.add("active");
+    } else {
+        // Eğer inline onclick tetiklendiyse, attribute değerine göre ilgili butonu bul ve aktif et
+        const targetBtn = document.querySelector(`.tab-button[onclick*="${tabId}"]`);
+        if (targetBtn) targetBtn.classList.add("active");
     }
 }
 

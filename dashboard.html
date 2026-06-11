@@ -10,10 +10,9 @@
     <script>
         // KESİN GİRİŞ KONTROLÜ
         const user = localStorage.getItem('currentUser');
-        // Eğer currentUser yoksa, "null" string'ine eşitse veya içi boşsa direkt login'e at
         if (!user || user === 'null' || user === 'undefined' || user.trim() === '') {
-            localStorage.removeItem('currentUser'); // Bozuk veri varsa temizle
-            window.location.replace('login.html'); // replace kullanarak geri tuşuna basılmasını da engelleriz
+            localStorage.removeItem('currentUser');
+            window.location.replace('login.html');
         }
     </script>
 
@@ -646,6 +645,7 @@
 
     <div class="tabs-container">
         <button class="tab-button active" onclick="switchTab('mevcut-ladesler')">Mevcut Ladesler</button>
+        <button class="tab-button" onclick="switchTab('gecmis-ladesler')">Geçmiş Ladesler</button>
         <button class="tab-button" onclick="switchTab('lades-yarat')">Yarat</button>
     </div>
 
@@ -674,6 +674,33 @@
                 </div>
 
                 <div class="market-grid" id="market-grid"></div>
+            </div>
+        </div>
+
+        <div id="gecmis-ladesler" class="tab-content">
+            <div class="content-layout">
+                <div class="sidebar-categories">
+                    <h4>Kategoriler</h4>
+                    <div class="sidebar-menu">
+                        <button class="active" onclick="filterCategory('Tümü')">
+                            <i class="fa-solid fa-globe"></i> Tümü
+                        </button>
+                        <button onclick="filterCategory('Spor')">
+                            <i class="fa-solid fa-trophy"></i> Spor
+                        </button>
+                        <button onclick="filterCategory('Ekonomi')">
+                            <i class="fa-solid fa-chart-line"></i> Ekonomi
+                        </button>
+                        <button onclick="filterCategory('Siyaset')">
+                            <i class="fa-solid fa-landmark"></i> Siyaset
+                        </button>
+                        <button onclick="filterCategory('Eğlence')">
+                            <i class="fa-solid fa-gamepad"></i> Eğlence
+                        </button>
+                    </div>
+                </div>
+
+                <div class="market-grid" id="past-market-grid"></div>
             </div>
         </div>
 
@@ -777,7 +804,7 @@
         </div>
     </div>
 
-    <div id="bet-modal-overlay" class="modal-overlay" style="display: none !important;">
+    <div id="bet-modal" class="modal-overlay" style="display: none !important;">
         <div class="modal">
             <h3 id="modal-market-title">Pazar Adı</h3>
             <p>Seçiminiz: <span id="modal-bet-choice" style="font-weight:800;"></span></p>
