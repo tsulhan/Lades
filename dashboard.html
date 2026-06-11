@@ -3,8 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - LADES</title>
-    https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap
+    <title>Dashboard - L">    <title>Dashboard - LADES</title>
+        <div class="modal">
+            <h3 id="modal-market-title">Pazar Adı</h3>
+            <p>Seçiminiz: <span id="modal-bet-choice" style="font-weight:800;"></span></p>
+            <input type="number" id="bet-amount" placeholder="Kaç Token Yatıracaksınız?" min="1">
+            <div class="modal-buttons">
+                <button class="btn-modal btn-cancel" onclick="closeModal()">İptal</button>
+                <button class="btn-modal btn-confirm" onclick="confirmBet()">Yatır ve Kilitle ⚡</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="src/js/app.js"></script>
+</body>
+</html>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <script>
@@ -13,9 +27,9 @@
         }
     </script>
 
-    https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.jsscript>
-    https://www.gstatic.com/firebasejs/10.12.5/firebase-database-compat.jsscript>
-    src/js/firebase.jsscript>
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-database-compat.js"></script>
+    <script src="src/js/firebase.js"></script>
 
     <style>
         * {
@@ -769,18 +783,3 @@
         </div>
     </div>
 
-    <div id="bet-modal" class="modal-overlay">
-        <div class="modal">
-            <h3 id="modal-market-title">Pazar Adı</h3>
-            <p>Seçiminiz: <span id="modal-bet-choice" style="font-weight:800;"></span></p>
-            <input type="number" id="bet-amount" placeholder="Kaç Token Yatıracaksınız?" min="1">
-            <div class="modal-buttons">
-                <button class="btn-modal btn-cancel" onclick="closeModal()">İptal</button>
-                <button class="btn-modal btn-confirm" onclick="confirmBet()">Yatır ve Kilitle ⚡</button>
-            </div>
-        </div>
-    </div>
-
-    src/js/app.jsscript>
-</body>
-</html>
