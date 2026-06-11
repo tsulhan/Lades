@@ -720,6 +720,7 @@ async function createNewMarket() {
         return;
     }
 
+    // DOĞRU FIrebase Anahtarı (tsulhan@gmail.com -> tsulhan@gmail,com)
     const userKey = currentUserEmail.replace(/\./g, ',');
     const currentUser = await fbGet(`ladesUsers/${userKey}`);
 
@@ -743,7 +744,8 @@ async function createNewMarket() {
         return;
     }
 
-    currentUser.balance -= initialBet;
+    // Bakiyeyi düşür ve doğıru adrese (userKey) kaydet -> Canlı dinleyici anında yukarıyı güncelleyecek
+    currentUser.balance = parseInt(currentUser.balance) - initialBet;
     await fbSet(`ladesUsers/${userKey}`, currentUser);
 
     const marketId = uniqueId("market");
@@ -806,6 +808,7 @@ async function confirmBet() {
         return;
     }
 
+    // DOĞRU Firebase Anahtarı (tsulhan@gmail.com -> tsulhan@gmail,com)
     const userKey = currentUserEmail.replace(/\./g, ',');
     const currentUser = await fbGet(`ladesUsers/${userKey}`);
 
@@ -815,7 +818,7 @@ async function confirmBet() {
     }
 
     if (amount > (currentUser.balance || 0)) {
-        alert("Geçersiz miktar veya yetersiz bakiye!");
+        alert("Yetersiz bakiye!");
         return;
     }
 
@@ -826,7 +829,8 @@ async function confirmBet() {
         return;
     }
 
-    currentUser.balance -= amount;
+    // Bakiyeyi düşür ve veritabanına doğru adrese yaz
+    currentUser.balance = parseInt(currentUser.balance) - amount;
     await fbSet(`ladesUsers/${userKey}`, currentUser);
 
     if (activeChoice === "YES") {
