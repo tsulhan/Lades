@@ -101,7 +101,6 @@ async function bootstrapFirebase() {
         return;
     }
 
-    // localStorage'daki eski verileri oku
     const lsUsers = safeParse("ladesUsers", null);
     const lsInviteCodes = safeParse("inviteCodes", null);
     const lsAdminRequests = safeParse("adminRequests", null);
@@ -116,7 +115,7 @@ async function bootstrapFirebase() {
         fbGet("betHistory")
     ]);
 
-    // 1) Kullanıcılar
+    // Kullanıcılar
     if (!fbUsers) {
         if (lsUsers && Array.isArray(lsUsers) && lsUsers.length > 0) {
             const obj = {};
@@ -180,7 +179,7 @@ async function bootstrapFirebase() {
         }
     }
 
-    // 2) Davet kodları
+    // Davet kodları
     if (!fbInviteCodes) {
         if (lsInviteCodes) {
             if (Array.isArray(lsInviteCodes)) {
@@ -197,7 +196,7 @@ async function bootstrapFirebase() {
         }
     }
 
-    // 3) Admin istekleri
+    // Admin istekleri
     if (!fbAdminRequests) {
         if (lsAdminRequests) {
             if (Array.isArray(lsAdminRequests)) {
@@ -217,7 +216,7 @@ async function bootstrapFirebase() {
         }
     }
 
-    // 4) Marketler
+    // Marketler
     if (!fbCustomMarkets) {
         if (lsCustomMarkets) {
             if (Array.isArray(lsCustomMarkets)) {
@@ -273,7 +272,7 @@ async function bootstrapFirebase() {
         }
     }
 
-    // 5) Bahis geçmişi
+    // Bahis geçmişi
     if (!fbBetHistory) {
         if (lsBetHistory) {
             if (Array.isArray(lsBetHistory)) {
@@ -898,7 +897,6 @@ async function finalizeLades(marketId, winningChoice) {
 async function renderAdminPanel() {
     if (typeof db === "undefined" || !db) return;
 
-    // Bekleyen istekler
     const requestsList = document.getElementById("admin-requests-list");
     const requestsSnap = await fbGet("adminRequests");
     const requests = requestsSnap || {};
@@ -937,7 +935,6 @@ async function renderAdminPanel() {
         }
     }
 
-    // Aktif ladesler
     const adminActiveMarkets = document.getElementById("admin-active-markets");
     const marketsSnap = await fbGet("customMarkets");
     const markets = marketsSnap || {};
@@ -999,7 +996,6 @@ async function renderAdminPanel() {
         }
     }
 
-    // Davet kodları
     const codesList = document.getElementById("admin-codes-list");
     const inviteCodesSnap = await fbGet("inviteCodes");
     const inviteCodes = inviteCodesSnap || {};
@@ -1013,7 +1009,6 @@ async function renderAdminPanel() {
         `).join(" ");
     }
 
-    // Kullanıcı listesi
     const usersTable = document.getElementById("admin-users-list");
     const usersSnap = await fbGet("ladesUsers");
     const users = usersSnap || {};
