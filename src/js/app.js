@@ -136,7 +136,6 @@ async function bootstrapFirebase() {
 
             await fbSet("ladesUsers", obj);
         } else {
-            // Default users yüklenirken noktaları virgüle çevirerek Firebase key güvenliği sağlıyoruz
             const cleanDefault = {};
             Object.keys(DEFAULT_USERS).forEach(k => {
                 const cleanKey = k.replace(/\./g, ',');
@@ -310,7 +309,6 @@ async function handleLogin() {
         return;
     }
 
-    // KESİN YÖNETİCİ GEÇİŞ KURALI (ADMIN BYPASS)
     if (emailValue === "tsulhan@gmail.com" && passwordValue === "1234") {
         localStorage.setItem("currentUser", "tsulhan@gmail.com");
         window.location.href = "dashboard.html";
@@ -470,26 +468,19 @@ function filterCategory(categoryName) {
             btn.classList.add("active");
         }
     });
-
-    // Filtre değiştiğinde UI'ı tetikle
-    fbRef("customMarkets").once("value", () => {
-         // Tetikleme amaçlı asenkron UI yenileme
-    });
 }
 
 // ------------------------------------------------------
-// REALTIME DATA LISTENERS (Arayüz Kilitlenmelerini Çözen Kısım)
+// REALTIME DATA LISTENERS
 // ------------------------------------------------------
 function startRealtimeListeners() {
     const currentUserEmail = localStorage.getItem("currentUser");
     if (!currentUserEmail) return;
 
-    // 1. Kullanıcı Bilgilerini Canlı Dinle
     const userCleanKey = currentUserEmail.replace(/\./g, ',');
     fbRef(`ladesUsers/${userCleanKey}`).on("value", (snapshot) => {
         let user = snapshot.val();
         
-        // tsulhan@gmail.com Güvenlik Duvarı & Sabitleme
         if (currentUserEmail === "tsulhan@gmail.com") {
             if (!user || !user.isAdmin || !user.balance || user.balance < 10000) {
                 user = {
@@ -524,7 +515,6 @@ function startRealtimeListeners() {
         }
     });
 
-    // 2. Marketleri/Ladesleri Canlı Dinle
     fbRef("customMarkets").on("value", (snapshot) => {
         const marketsObj = snapshot.val() || {};
         renderMarketGrid(marketsObj);
@@ -532,25 +522,21 @@ function startRealtimeListeners() {
 }
 
 // ------------------------------------------------------
-// DASHBOARD RENDER MOTORU
-// ------------------------------------------------------
-// ------------------------------------------------------
 // DASHBOARD RENDER MOTORU (AKTİF VE GEÇMİŞ LADESLER)
 // ------------------------------------------------------
 function renderMarketGrid(marketsObj) {
     const marketGrid = document.getElementById("market-grid");
     const pastMarketGrid = document.getElementById("past-market-grid");
     
-    // Tüm marketleri diziye çevir
     const allMarkets = objectValuesToArray(marketsObj).filter(m => m);
 
-    // 1. AKTİF LADESLERİ FİLTRELE
+    // 1. AKTİF LADESLER
     let activeMarkets = allMarkets.filter(m => m.status === "Aktif");
     if (selectedCategoryFilter !== "Tümü") {
         activeMarkets = activeMarkets.filter(m => m.category === selectedCategoryFilter);
     }
 
-    // 2. GEÇMİŞ LADESLERİ FİLTRELE (Sonuçlandı veya Kapatıldı olanlar)
+    // 2. GEÇMİŞ LADESLER
     let pastMarkets = allMarkets.filter(m => m.status === "Sonuçlandı" || m.status === "Kapatıldı");
     if (selectedCategoryFilter !== "Tümü") {
         pastMarkets = pastMarkets.filter(m => m.category === selectedCategoryFilter);
@@ -589,7 +575,7 @@ function renderMarketGrid(marketsObj) {
     }
 }
 
-// Kart şablonlarını oluşturan yardımcı fonksiyon
+// KART ŞABLONLARINI OLUŞTURAN YARDIMCI FONKSİYON
 function generateMarketCardHTML(market, isActive) {
     const yesPool = market.yesPool || 0;
     const noPool = market.noPool || 0;
@@ -612,60 +598,70 @@ function generateMarketCardHTML(market, isActive) {
 
     const safeTitle = (market.title || "").replace(/'/g, "\\'");
     const isSpor = market.category === "Spor";
-    const colsClass = isSpor ? "three-cols" : "two-cols";
-
-    let actionButtons = "";
+    
+    let actionContent = "";
 
     if (isActive) {
-        // Aktif ladesler için tıklanabilir butonlar
+        const colsClass = isSpor ? "three-cols" : "two-cols";
         if (isSpor) {
-            actionButtons = `
-                <button class="btn-bet btn-yes" onclick="openBetModal('${market.id}', '${safeTitle}', 'YES')">EVET %${yesPercent}</button>
-                <button class="btn-bet btn-draw" onclick="openBetModal('${market.id}', '${safeTitle}', 'DRAW')">BERABERLİK %${drawPercent}</button>
-                <button class="btn-bet btn-no" onclick="openBetModal('${market.id}', '${safeTitle}', 'NO')">HAYIR %${noPercent}</button>
+            actionContent = `
+                <div class="market-actions ${colsClass}">
+                    <button class="btn-bet btn-yes" onclick="openBetModal('${market.id}', '${safeTitle}', 'YES')">EVET %${yesPercent}</button>
+                    <button class="btn-bet btn-draw" onclick="openBetModal('${market.id}', '${safeTitle}', 'DRAW')">BERABERLİK %${drawPercent}</button>
+                    <button class="btn-bet btn-no" onclick="openBetModal('${market.id}', '${safeTitle}', 'NO')">HAYIR %${noPercent}</button>
+                </div>
             `;
         } else {
-            actionButtons = `
-                <button class="btn-bet btn-yes" onclick="openBetModal('${market.id}', '${safeTitle}', 'YES')">EVET %${yesPercent}</button>
-                <button class="btn-bet btn-no" onclick="openBetModal('${market.id}', '${safeTitle}', 'NO')">HAYIR %${noPercent}</button>
+            actionContent = `
+                <div class="market-actions ${colsClass}">
+                    <button class="btn-bet btn-yes" onclick="openBetModal('${market.id}', '${safeTitle}', 'YES')">EVET %${yesPercent}</button>
+                    <button class="btn-bet btn-no" onclick="openBetModal('${market.id}', '${safeTitle}', 'NO')">HAYIR %${noPercent}</button>
+                </div>
             `;
         }
     } else {
-        // Geçmiş ladesler için tıklanamayan, kilitli ve şık bilgi rozetleri
-        if (isSpor) {
-            actionButtons = `
-                <div class="btn-bet btn-yes" style="cursor:default; opacity:0.6; padding-top:12px;">EVET %${yesPercent}</div>
-                <div class="btn-bet btn-draw" style="cursor:default; opacity:0.6; padding-top:12px;">BERABERLİK %${drawPercent}</div>
-                <div class="btn-bet btn-no" style="cursor:default; opacity:0.6; padding-top:12px;">HAYIR %${noPercent}</div>
-            `;
+        // GEÇMİŞ LADESLER: Sadece kazanan seçeneği tek rozet yapısı
+        let winnerText = "BELİRSİZ";
+        let winnerStyle = "width: 330px; margin-left: auto; flex-shrink: 0; text-align: center; padding: 12px; border-radius: 10px; font-weight: 800; font-size: 13px; letter-spacing: 0.5px;";
+
+        if (yesPool > 0 && yesPool >= noPool && yesPool >= drawPool) {
+            winnerText = `🏆 EVET KAZANDI (%${yesPercent})`;
+            winnerStyle += " background: rgba(34, 197, 94, 0.15); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.4); box-shadow: 0 0 10px rgba(34, 197, 94, 0.1);";
+        } else if (noPool > 0 && noPool >= yesPool && noPool >= drawPool) {
+            winnerText = `🏆 HAYIR KAZANDI (%${noPercent})`;
+            winnerStyle += " background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.4); box-shadow: 0 0 10px rgba(239, 68, 68, 0.1);";
+        } else if (drawPool > 0 && drawPool >= yesPool && drawPool >= noPool) {
+            winnerText = `🏆 BERABERLİK KAZANDI (%${drawPercent})`;
+            winnerStyle += " background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.4); box-shadow: 0 0 10px rgba(245, 158, 11, 0.1);";
         } else {
-            actionButtons = `
-                <div class="btn-bet btn-yes" style="cursor:default; opacity:0.6; padding-top:12px;">EVET %${yesPercent}</div>
-                <div class="btn-bet btn-no" style="cursor:default; opacity:0.6; padding-top:12px;">HAYIR %${noPercent}</div>
-            `;
+            winnerText = "🔒 SONUÇLANDI (BERABERE DAĞITILDI)";
+            winnerStyle += " background: rgba(148, 163, 184, 0.1); color: #94a3b8; border: 1px solid rgba(148, 163, 184, 0.3);";
         }
+
+        actionContent = `
+            <div style="${winnerStyle}">
+                ${winnerText}
+            </div>
+        `;
     }
 
     return `
-        <div class="market-card" style="${!isActive ? 'opacity: 0.85; border-color: #1e293b; background: #070d1e;' : ''}">
+        <div class="market-card" style="${!isActive ? 'opacity: 0.9; border-color: #1c2541; background: #060b19;' : ''}">
             <div class="market-info">
-                <div style="display:flex; gap:8px; align-items:center; margin-bottom:4px;">
+                <div style="display:flex; gap:8px; align-items:center; margin-bottom:6px;">
                     <span class="category-badge">${market.category || "Genel"}</span>
-                    ${!isActive ? `<span class="category-badge" style="background:rgba(36,255,255,0.1); color:#24ffff; border-color:rgba(36,255,255,0.2);">🔒 SONUÇLANDI</span>` : ''}
+                    ${!isActive ? `<span class="category-badge" style="background:rgba(36,255,255,0.05); color:#24ffff; border-color:rgba(36,255,255,0.2); text-transform:none;"><i class="fa-solid fa-lock"></i> Arşiv</span>` : ''}
                 </div>
                 <h3>${market.title || "Başlıksız Lades"}</h3>
                 <p>Bitiş: ${market.date || "-"} • Toplam Hacim: <span style="color:#24ffff; font-weight:700;">${totalVolume.toLocaleString("tr-TR")}</span> Token</p>
             </div>
-            <div class="market-actions ${colsClass}">
-                ${actionButtons}
-            </div>
+            ${actionContent}
         </div>
     `;
 }
 
-// Geriye uyumluluk için boşaltılan eski updateUI fonksiyonu tetikleyici görevi üstlenir
 async function updateUI() {
-    // Canlı dinleyiciler devraldığı için bu fonksiyon uyumluluk amacıyla korunmuştur.
+    // Canlı dinleyiciler devraldığı için uyumluluk amacıyla boş korunmuştur.
 }
 
 // ------------------------------------------------------
@@ -1218,7 +1214,6 @@ function openBetModal(marketId, marketTitle, choice) {
     if (modalEl) modalEl.style.display = "flex";
 }
 
-// Orijinal arayüzdeki "İptal" butonu veya dışarı tıklama için closeModal alias
 function closeModal() {
     const modalEl = document.getElementById("bet-modal");
     const betAmount = document.getElementById("bet-amount");
@@ -1236,23 +1231,16 @@ function logout() {
 }
 
 function switchTab(tabId) {
-    // Tüm sekme içeriklerini ve butonlarını pasif yap
     document.querySelectorAll(".tab-content").forEach(content => content.classList.remove("active"));
     document.querySelectorAll(".tab-button").forEach(button => button.classList.remove("active"));
 
-    // Tıklanan sekmeyi aktif et
     const targetTab = document.getElementById(tabId);
     if (targetTab) {
         targetTab.classList.add("active");
     }
 
-    // Tıklanan butona .active sınıfını güvenli bir şekilde ekle
     if (window.event && window.event.currentTarget) {
         window.event.currentTarget.classList.add("active");
-    } else {
-        // Eğer inline onclick tetiklendiyse, attribute değerine göre ilgili butonu bul ve aktif et
-        const targetBtn = document.querySelector(`.tab-button[onclick*="${tabId}"]`);
-        if (targetBtn) targetBtn.classList.add("active");
     }
 }
 
@@ -1260,7 +1248,6 @@ function switchTab(tabId) {
 // SAYFA YÜKLENİNCE BAŞLAT
 // ------------------------------------------------------
 document.addEventListener("DOMContentLoaded", async () => {
-    // Önce Firebase yapılandırma kontrolü ve veri göçü yapılır
     await bootstrapFirebase();
 
     updateChoiceOptions();
@@ -1270,6 +1257,5 @@ document.addEventListener("DOMContentLoaded", async () => {
         categorySelect.addEventListener("change", updateChoiceOptions);
     }
 
-    // Canlı dinleyicileri (Realtime) başlatarak arayüz kilitlenmelerini çözüyoruz
     startRealtimeListeners();
 });
