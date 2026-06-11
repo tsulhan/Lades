@@ -129,8 +129,6 @@ async function bootstrapFirebase() {
 
             if (obj["tsulhan@gmail,com"]) {
                 obj["tsulhan@gmail,com"].isAdmin = true;
-                if (!obj["tsulhan@gmail,com"].balance || obj["tsulhan@gmail,com"].balance < 10000) {
-                    obj["tsulhan@gmail,com"].balance = 10000;
                 }
             }
 
