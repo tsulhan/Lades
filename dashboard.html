@@ -8,8 +8,12 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <script>
-        if (!localStorage.getItem('currentUser')) {
-            window.location.href = 'login.html';
+        // KESİN GİRİŞ KONTROLÜ
+        const user = localStorage.getItem('currentUser');
+        // Eğer currentUser yoksa, "null" string'ine eşitse veya içi boşsa direkt login'e at
+        if (!user || user === 'null' || user === 'undefined' || user.trim() === '') {
+            localStorage.removeItem('currentUser'); // Bozuk veri varsa temizle
+            window.location.replace('login.html'); // replace kullanarak geri tuşuna basılmasını da engelleriz
         }
     </script>
 
@@ -483,7 +487,7 @@
         }
 
         .modal-overlay {
-            display: none !important; /* SAYFA AÇILIŞINDA KESİN GİZLEME */
+            display: none !important;
             position: fixed;
             top: 0;
             left: 0;
@@ -496,7 +500,6 @@
             z-index: 999;
         }
 
-        /* JS ile açıldığında flex olarak ezmek için */
         .modal-overlay[style*="display: flex"], .modal-overlay[style*="display:flex"] {
             display: flex !important;
         }
