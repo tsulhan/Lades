@@ -9,15 +9,13 @@
 
     <script>
         // KESİN GİRİŞ KONTROLÜ
-        const userStr = localStorage.getItem('currentUser');
-        if (!userStr || userStr === 'null' || userStr === 'undefined' || userStr.trim() === '') {
+        const user = localStorage.getItem('currentUser');
+        if (!user || user === 'null' || user === 'undefined' || user.trim() === '') {
             localStorage.removeItem('currentUser');
             window.location.replace('login.html');
         }
-        const currentUser = JSON.parse(userStr);
     </script>
 
-    <!-- Firebase Legacy SDKs -->
     <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-database-compat.js"></script>
     <script src="src/js/firebase.js"></script>
@@ -488,7 +486,7 @@
         }
 
         .modal-overlay {
-            display: none;
+            display: none !important;
             position: fixed;
             top: 0;
             left: 0;
@@ -499,6 +497,10 @@
             justify-content: center;
             align-items: center;
             z-index: 999;
+        }
+
+        .modal-overlay[style*="display: flex"], .modal-overlay[style*="display:flex"] {
+            display: flex !important;
         }
 
         .modal {
@@ -548,52 +550,69 @@
             color: #94a3b8;
         }
 
-        /* Admin Tabloları ve Listeleri İçin Ekstra Uyum CSS */
-        .admin-req-item, .admin-market-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: #030814;
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 8px;
-            border: 1px solid #1c2541;
-        }
-
-        .admin-btn {
-            padding: 6px 12px;
-            border-radius: 6px;
-            border: none;
-            font-weight: 700;
-            font-size: 12px;
-            cursor: pointer;
-            margin-left: 5px;
-        }
-
-        .admin-btn-success { background: #22c55e; color: black; }
-        .admin-btn-danger { background: #ef4444; color: white; }
-
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(8px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
         @media (max-width: 900px) {
-            .content-layout { flex-direction: column; }
-            .sidebar-categories { width: 100%; }
-            .market-card { flex-direction: column; align-items: flex-start; }
-            .market-actions { width: 100%; margin-left: 0; }
-            .form-row { flex-direction: column; }
+            .content-layout {
+                flex-direction: column;
+            }
+
+            .sidebar-categories {
+                width: 100%;
+            }
+
+            .market-card {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .market-actions {
+                width: 100%;
+                margin-left: 0;
+            }
+
+            .form-row {
+                flex-direction: column;
+            }
         }
 
         @media (max-width: 700px) {
-            header { flex-direction: column; gap: 14px; align-items: flex-start; }
-            .header-center { flex-wrap: wrap; gap: 10px; }
-            main { padding: 20px; }
-            .tabs-container { flex-direction: column; }
-            .tab-button { width: 100%; }
-            .market-actions.two-cols, .market-actions.three-cols { grid-template-columns: 1fr; width: 100%; }
-            .btn-bet { font-size: 12px; padding: 10px 12px; }
+            header {
+                flex-direction: column;
+                gap: 14px;
+                align-items: flex-start;
+            }
+
+            .header-center {
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+
+            main {
+                padding: 20px;
+            }
+
+            .tabs-container {
+                flex-direction: column;
+            }
+
+            .tab-button {
+                width: 100%;
+            }
+
+            .market-actions.two-cols,
+            .market-actions.three-cols {
+                grid-template-columns: 1fr;
+                width: 100%;
+            }
+
+            .btn-bet {
+                font-size: 12px;
+                padding: 10px 12px;
+            }
         }
     </style>
 </head>
@@ -601,7 +620,7 @@
 
     <div id="token-request-area" class="token-request-banner">
         Bakiyenizde hiç Token bulunmuyor. Ladeslere katılmak için hemen talep oluşturun!
-        <button onclick="requestTokensDirectly()">💰 TOKEN İSTE</button>
+        <button onclick="openTokenRequestModal()">💰 TOKEN İSTE</button>
     </div>
 
     <header>
@@ -625,67 +644,66 @@
     </header>
 
     <div class="tabs-container">
-        <button id="tab-btn-mevcut" class="tab-button active" onclick="switchTab('mevcut-ladesler')">Mevcut Ladesler</button>
-        <button id="tab-btn-gecmis" class="tab-button" onclick="switchTab('gecmis-ladesler')">Geçmiş Ladesler</button>
-        <button id="tab-btn-yarat" class="tab-button" onclick="switchTab('lades-yarat')">Yarat</button>
+        <button class="tab-button active" onclick="switchTab('mevcut-ladesler')">Mevcut Ladesler</button>
+        <button class="tab-button" onclick="switchTab('gecmis-ladesler')">Geçmiş Ladesler</button>
+        <button class="tab-button" onclick="switchTab('lades-yarat')">Yarat</button>
     </div>
 
     <main>
-        <!-- MEVCUT LADESLER -->
         <div id="mevcut-ladesler" class="tab-content active">
             <div class="content-layout">
                 <div class="sidebar-categories">
                     <h4>Kategoriler</h4>
-                    <div class="sidebar-menu" id="current-categories-menu">
-                        <button class="category-filter-btn active" data-category="Tümü" onclick="filterCategory('Tümü', 'mevcut')">
+                    <div class="sidebar-menu">
+                        <button class="active" onclick="filterCategory('Tümü')">
                             <i class="fa-solid fa-globe"></i> Tümü
                         </button>
-                        <button class="category-filter-btn" data-category="Spor" onclick="filterCategory('Spor', 'mevcut')">
+                        <button onclick="filterCategory('Spor')">
                             <i class="fa-solid fa-trophy"></i> Spor
                         </button>
-                        <button class="category-filter-btn" data-category="Ekonomi" onclick="filterCategory('Ekonomi', 'mevcut')">
+                        <button onclick="filterCategory('Ekonomi')">
                             <i class="fa-solid fa-chart-line"></i> Ekonomi
                         </button>
-                        <button class="category-filter-btn" data-category="Siyaset" onclick="filterCategory('Siyaset', 'mevcut')">
+                        <button onclick="filterCategory('Siyaset')">
                             <i class="fa-solid fa-landmark"></i> Siyaset
                         </button>
-                        <button class="category-filter-btn" data-category="Eğlence" onclick="filterCategory('Eğlence', 'mevcut')">
+                        <button onclick="filterCategory('Eğlence')">
                             <i class="fa-solid fa-gamepad"></i> Eğlence
                         </button>
                     </div>
                 </div>
+
                 <div class="market-grid" id="market-grid"></div>
             </div>
         </div>
 
-        <!-- GEÇMİŞ LADESLER -->
         <div id="gecmis-ladesler" class="tab-content">
             <div class="content-layout">
                 <div class="sidebar-categories">
                     <h4>Kategoriler</h4>
-                    <div class="sidebar-menu" id="past-categories-menu">
-                        <button class="category-filter-btn active" data-category="Tümü" onclick="filterCategory('Tümü', 'gecmis')">
+                    <div class="sidebar-menu">
+                        <button class="active" onclick="filterCategory('Tümü')">
                             <i class="fa-solid fa-globe"></i> Tümü
                         </button>
-                        <button class="category-filter-btn" data-category="Spor" onclick="filterCategory('Spor', 'gecmis')">
+                        <button onclick="filterCategory('Spor')">
                             <i class="fa-solid fa-trophy"></i> Spor
                         </button>
-                        <button class="category-filter-btn" data-category="Ekonomi" onclick="filterCategory('Ekonomi', 'gecmis')">
+                        <button onclick="filterCategory('Ekonomi')">
                             <i class="fa-solid fa-chart-line"></i> Ekonomi
                         </button>
-                        <button class="category-filter-btn" data-category="Siyaset" onclick="filterCategory('Siyaset', 'gecmis')">
+                        <button onclick="filterCategory('Siyaset')">
                             <i class="fa-solid fa-landmark"></i> Siyaset
                         </button>
-                        <button class="category-filter-btn" data-category="Eğlence" onclick="filterCategory('Eğlence', 'gecmis')">
+                        <button onclick="filterCategory('Eğlence')">
                             <i class="fa-solid fa-gamepad"></i> Eğlence
                         </button>
                     </div>
                 </div>
+
                 <div class="market-grid" id="past-market-grid"></div>
             </div>
         </div>
 
-        <!-- LADES YARAT -->
         <div id="lades-yarat" class="tab-content">
             <div class="create-container">
                 <h2>Yeni Bir Tahmin Pazarı Oluştur</h2>
@@ -716,7 +734,7 @@
 
                     <div class="form-group">
                         <label>Sizin Tercihiniz</label>
-                        <select id="market-choice">
+                        <select id="market-choice" onchange="updateChoiceOptions()">
                             <option value="YES">EVET</option>
                             <option value="NO">HAYIR</option>
                             <option value="DRAW">BERABERLİK</option>
@@ -734,7 +752,6 @@
         </div>
     </main>
 
-    <!-- YÖNETİCİ MODAL PANELİ -->
     <div id="admin-modal" class="admin-modal-overlay">
         <div class="admin-box">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
@@ -748,12 +765,12 @@
 
             <div class="admin-section" style="border-top:none; margin-top:0; padding-top:0;">
                 <h4>🎯 Aktif Ladesleri Sonuçlandır (Havuz Dağıtımı)</h4>
-                <div id="admin-active-markets" style="background: rgba(36,255,255,0.02); border:1px dashed #1c2541; padding:15px; border-radius:12px; max-height:200px; overflow-y:auto;"></div>
+                <div id="admin-active-markets" style="background: rgba(36,255,255,0.02); border:1px dashed #1c2541; padding:15px; border-radius:12px;"></div>
             </div>
 
             <div class="admin-section">
                 <h4>📥 Bekleyen İstekler (Davet &amp; Token)</h4>
-                <div id="admin-requests-list" style="max-height:200px; overflow-y:auto;"></div>
+                <div id="admin-requests-list"></div>
             </div>
 
             <div class="admin-section">
@@ -761,12 +778,12 @@
                 <button onclick="generateInviteCode()" style="background:#24ffff; color:#030814; border:none; padding:10px 18px; border-radius:8px; font-weight:800; cursor:pointer; margin-bottom:12px;">
                     + Yeni Davet Kodu Üret
                 </button>
-                <div id="admin-codes-list" style="display:flex; flex-wrap:wrap; gap:8px; background:#030814; padding:12px; border-radius:12px; max-height:120px; overflow-y:auto;"></div>
+                <div id="admin-codes-list" style="display:flex; flex-wrap:wrap; gap:8px; background:#030814; padding:12px; border-radius:12px;"></div>
             </div>
 
             <div class="admin-section">
                 <h4>👥 Kayıtlı Kullanıcılar ve Şifre Tanımlama</h4>
-                <div style="overflow-x:auto; max-height:200px;">
+                <div style="overflow-x:auto;">
                     <table style="width:100%; border-collapse:collapse; text-align:left;">
                         <thead>
                             <tr style="border-bottom:2px solid #1c2541; color:#64748b; font-size:12px;">
@@ -787,11 +804,10 @@
         </div>
     </div>
 
-    <!-- BAHİS OYNA MODAL -->
-    <div id="bet-modal" class="modal-overlay">
+    <div id="bet-modal" class="modal-overlay" style="display: none !important;">
         <div class="modal">
             <h3 id="modal-market-title">Pazar Adı</h3>
-            <p style="margin: 10px 0;">Seçiminiz: <span id="modal-bet-choice" style="font-weight:800; color:#24ffff;"></span></p>
+            <p>Seçiminiz: <span id="modal-bet-choice" style="font-weight:800;"></span></p>
             <input type="number" id="bet-amount" placeholder="Kaç Token Yatıracaksınız?" min="1">
             <div class="modal-buttons">
                 <button class="btn-modal btn-cancel" onclick="closeModal()">İptal</button>
@@ -800,419 +816,7 @@
         </div>
     </div>
 
-    <!-- CORE & APP SCRIPTS SİLİNMEDİ, YANINA DİNAMİK YAPI EKLENDİ -->
     <script src="src/js/core.js"></script>
     <script src="src/js/app.js"></script>
-
-    <!-- TÜM JAVASCRIPT ÇALIŞMA MANTIĞI VE DİNAMİK ENTEGRASYON -->
-    <script>
-        // Global Durum Tanımlamaları
-        let activeTab = 'mevcut-ladesler';
-        let currentSelectedCategory = 'Tümü';
-        let pastSelectedCategory = 'Tümü';
-        let allMarkets = {};
-        let selectedMarketId = null;
-        let selectedChoice = null;
-
-        // Sayfa Başlangıcı Yüklemeleri
-        document.addEventListener("DOMContentLoaded", () => {
-            if (currentUser) {
-                document.getElementById('user-email-badge').innerText = currentUser.email;
-                if (currentUser.role === 'admin') {
-                    document.getElementById('admin-panel-btn').style.display = 'block';
-                }
-                listenToUserData();
-                listenToMarkets();
-                if (currentUser.role === 'admin') {
-                    listenToRequests();
-                    listenToInviteCodes();
-                    listenToAllUsers();
-                }
-            }
-        });
-
-        // Firebase: Kullanıcı Bilgilerini Dinamik İzleme
-        function listenToUserData() {
-            const userSafeKey = currentUser.email.replace(/[.#$\[\]]/g, "_");
-            firebase.database().ref(`users/${userSafeKey}`).on('value', snapshot => {
-                const data = snapshot.val();
-                if (data) {
-                    const balance = data.tokens || 0;
-                    document.getElementById('token-balance').innerText = balance;
-                    
-                    // Token sıfırsa bannerı göster
-                    const banner = document.getElementById('token-request-area');
-                    if (balance <= 0) {
-                        banner.style.display = 'block';
-                    } else {
-                        banner.style.display = 'none';
-                    }
-                }
-            });
-        }
-
-        // Sekme Değiştirici Mantığı
-        function switchTab(tabId) {
-            activeTab = tabId;
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.tab-button').forEach(el => el.classList.remove('active'));
-
-            document.getElementById(tabId).classList.add('active');
-            
-            if (tabId === 'mevcut-ladesler') document.getElementById('tab-btn-mevcut').classList.add('active');
-            if (tabId === 'gecmis-ladesler') document.getElementById('tab-btn-gecmis').classList.add('active');
-            if (tabId === 'lades-yarat') document.getElementById('tab-btn-yarat').classList.add('active');
-
-            renderMarkets();
-        }
-
-        // Kategori Filtreleme Mantığı
-        function filterCategory(category, type) {
-            if (type === 'mevcut') {
-                currentSelectedCategory = category;
-                updateActiveCategoryUI('current-categories-menu', category);
-            } else {
-                pastSelectedCategory = category;
-                updateActiveCategoryUI('past-categories-menu', category);
-            }
-            renderMarkets();
-        }
-
-        function updateActiveCategoryUI(menuId, category) {
-            const buttons = document.querySelectorAll(`#${menuId} .category-filter-btn`);
-            buttons.forEach(btn => {
-                if (btn.getAttribute('data-category') === category) {
-                    btn.classList.add('active');
-                } else {
-                    btn.classList.remove('active');
-                }
-            });
-        }
-
-        // Firebase: Tahmin Pazarlarını (Ladesleri) Çekme ve Filtreleme
-        function listenToMarkets() {
-            firebase.database().ref('markets').on('value', snapshot => {
-                allMarkets = snapshot.val() || {};
-                renderMarkets();
-                if (currentUser.role === 'admin') renderAdminMarkets();
-            });
-        }
-
-        function renderMarkets() {
-            const currentGrid = document.getElementById('market-grid');
-            const pastGrid = document.getElementById('past-market-grid');
-            
-            currentGrid.innerHTML = '';
-            pastGrid.innerHTML = '';
-
-            let hasCurrent = false;
-            let hasPast = false;
-
-            Object.keys(allMarkets).forEach(id => {
-                const m = allMarkets[id];
-                const isPast = m.status === 'resolved' || new Date(m.endDate) < new Date();
-                
-                if (!isPast) {
-                    // Mevcut Ladesler Filtresi
-                    if (currentSelectedCategory === 'Tümü' || m.category === currentSelectedCategory) {
-                        currentGrid.appendChild(createMarketCard(id, m, false));
-                        hasCurrent = true;
-                    }
-                } else {
-                    // Geçmiş Ladesler Filtresi
-                    if (pastSelectedCategory === 'Tümü' || m.category === pastSelectedCategory) {
-                        pastGrid.appendChild(createMarketCard(id, m, true));
-                        hasPast = true;
-                    }
-                }
-            });
-
-            if (!hasCurrent) currentGrid.innerHTML = `<p style="color:#64748b; padding:20px;">Bu kategoride aktif lades bulunmamaktadır.</p>`;
-            if (!hasPast) pastGrid.innerHTML = `<p style="color:#64748b; padding:20px;">Geçmiş veya sonuçlanmış lades bulunmamaktadır.</p>`;
-        }
-
-        // Dinamik Lades Kartı Oluşturucu HTML Şablonu
-        function createMarketCard(id, m, isPast) {
-            const card = document.createElement('div');
-            card.className = 'market-card';
-
-            const totalPool = (m.poolYES || 0) + (m.poolNO || 0) + (m.poolDRAW || 0);
-            
-            let actionHtml = '';
-            if (isPast) {
-                let kazananMetni = m.winner ? `KAZANAN: ${m.winner}` : 'SÜRESİ DOLDU (SONUÇ BEKLİYOR)';
-                actionHtml = `<div style="color: #ff4aa2; font-weight:800; font-size:12px; text-align:right;">${kazananMetni}</div>`;
-            } else {
-                actionHtml = `
-                    <div class="market-actions three-cols">
-                        <button class="btn-bet btn-yes" onclick="openBetModal('${id}', 'YES')">EVET (${m.poolYES || 0})</button>
-                        <button class="btn-bet btn-no" onclick="openBetModal('${id}', 'NO')">HAYIR (${m.poolNO || 0})</button>
-                        <button class="btn-bet btn-draw" onclick="openBetModal('${id}', 'DRAW')">BERABER (${m.poolDRAW || 0})</button>
-                    </div>
-                `;
-            }
-
-            card.innerHTML = `
-                <div class="market-info">
-                    <span class="category-badge">${m.category}</span>
-                    <h3>${m.question}</h3>
-                    <p><i class="fa-solid fa-calendar-days"></i> Kapanış: ${m.endDate} | 💰 Toplam Havuz: ${totalPool} Token</p>
-                </div>
-                ${actionHtml}
-            `;
-            return card;
-        }
-
-        // Yeni Lades Yaratma Mantığı
-        function createNewMarket() {
-            const category = document.getElementById('market-category').value;
-            const question = document.getElementById('market-question').value.trim();
-            const endDate = document.getElementById('market-date').value;
-            const initialBet = parseInt(document.getElementById('market-initial-bet').value);
-            const choice = document.getElementById('market-choice').value;
-
-            if (!question || !endDate || isNaN(initialBet) || initialBet <= 0) {
-                alert('Lütfen tüm pazar oluşturma alanlarını geçerli değerlerle doldurun.');
-                return;
-            }
-
-            const currentBalance = parseInt(document.getElementById('token-balance').innerText);
-            if (initialBet > currentBalance) {
-                alert('Yatırmak istediğiniz miktar mevcut bakiyenizden yüksek olamaz.');
-                return;
-            }
-
-            const userSafeKey = currentUser.email.replace(/[.#$\[\]]/g, "_");
-            const newMarketRef = firebase.database().ref('markets').push();
-            
-            const marketData = {
-                category: category,
-                question: question,
-                endDate: endDate,
-                status: 'active',
-                creator: currentUser.email,
-                poolYES: choice === 'YES' ? initialBet : 0,
-                poolNO: choice === 'NO' ? initialBet : 0,
-                poolDRAW: choice === 'DRAW' ? initialBet : 0
-            };
-
-            newMarketRef.set(marketData).then(() => {
-                // Kullanıcı bakiyesini güncelle
-                firebase.database().ref(`users/${userSafeKey}/tokens`).set(currentBalance - initialBet);
-                alert('Yeni tahmin pazarı başarıyla oluşturuldu ve ilk bahis kilitlendi!');
-                
-                // Formu sıfırla ve ana sekmeye dön
-                document.getElementById('market-question').value = '';
-                document.getElementById('market-initial-bet').value = '';
-                switchTab('mevcut-ladesler');
-            });
-        }
-
-        // Bahis Giriş Modalı Fonksiyonları
-        function openBetModal(marketId, choice) {
-            selectedMarketId = marketId;
-            selectedChoice = choice;
-            
-            const market = allMarkets[marketId];
-            document.getElementById('modal-market-title').innerText = market.question;
-            document.getElementById('modal-bet-choice').innerText = choice === 'YES' ? 'EVET' : choice === 'NO' ? 'HAYIR' : 'BERABERLİK';
-            document.getElementById('bet-amount').value = '';
-            
-            document.getElementById('bet-modal').style.display = 'flex';
-        }
-
-        function closeModal() {
-            document.getElementById('bet-modal').style.display = 'none';
-        }
-
-        function confirmBet() {
-            const amount = parseInt(document.getElementById('bet-amount').value);
-            const currentBalance = parseInt(document.getElementById('token-balance').innerText);
-
-            if (isNaN(amount) || amount <= 0) {
-                alert('Lütfen geçerli bir token tutarı girin.');
-                return;
-            }
-            if (amount > currentBalance) {
-                alert('Yetersiz bakiye! Sahip olduğunuzdan daha fazla token yatıramazsınız.');
-                return;
-            }
-
-            const userSafeKey = currentUser.email.replace(/[.#$\[\]]/g, "_");
-            const poolField = `pool${selectedChoice}`;
-            const currentPoolValue = allMarkets[selectedMarketId][poolField] || 0;
-
-            // Havuzu ve Kullanıcı Bakiyesini Eşzamanlı Güncelle
-            firebase.database().ref(`markets/${selectedMarketId}/${poolField}`).set(currentPoolValue + amount);
-            firebase.database().ref(`users/${userSafeKey}/tokens`).set(currentBalance - amount);
-
-            alert('Bahis isteğiniz başarıyla işlendi ve havuza eklendi! ⚡');
-            closeModal();
-        }
-
-        // Doğrudan Hızlı Token Talebi Oluşturma
-        function requestTokensDirectly() {
-            const userSafeKey = currentUser.email.replace(/[.#$\[\]]/g, "_");
-            const reqRef = firebase.database().ref('requests').push();
-            reqRef.set({
-                type: 'token_request',
-                email: currentUser.email,
-                userKey: userSafeKey,
-                status: 'pending',
-                timestamp: Date.now()
-            }).then(() => {
-                alert('1000 Token yükleme talebiniz yöneticiye iletildi. Lütfen onay bekleyin.');
-            });
-        }
-
-        // ==========================================
-        // YÖNETİCİ PANELİ MANTIĞI & VERİ AKIŞLARI
-        // ==========================================
-        function openAdminPanel() { document.getElementById('admin-modal').style.display = 'flex'; }
-        function closeAdminPanel() { document.getElementById('admin-modal').style.display = 'none'; }
-
-        function renderAdminMarkets() {
-            const container = document.getElementById('admin-active-markets');
-            container.innerHTML = '';
-            let hasActive = false;
-
-            Object.keys(allMarkets).forEach(id => {
-                const m = allMarkets[id];
-                if (m.status === 'active') {
-                    hasActive = true;
-                    const div = document.createElement('div');
-                    div.className = 'admin-market-item';
-                    div.innerHTML = `
-                        <div style="font-size:13px; max-width:60%; overflow:hidden; text-overflow:ellipsis;">${m.question}</div>
-                        <div>
-                            <button class="admin-btn admin-btn-success" onclick="resolveMarket('${id}', 'YES')">EVET Bitir</button>
-                            <button class="admin-btn admin-btn-success" onclick="resolveMarket('${id}', 'NO')">HAYIR Bitir</button>
-                            <button class="admin-btn admin-btn-success" onclick="resolveMarket('${id}', 'DRAW')">BERABER Bitir</button>
-                        </div>
-                    `;
-                    container.appendChild(div);
-                }
-            });
-            if (!hasActive) container.innerHTML = '<p style="color:#64748b; font-size:12px;">Sonuçlandırılacak aktif lades bulunmuyor.</p>';
-        }
-
-        function resolveMarket(marketId, winningChoice) {
-            if(confirm(`Bu ladesi "${winningChoice}" seçeneği ile kapatıp havuzu dağıtmak istediğinize emin misiniz?`)) {
-                firebase.database().ref(`markets/${marketId}`).update({
-                    status: 'resolved',
-                    winner: winningChoice
-                }).then(() => {
-                    alert('Lades sonuçlandırıldı!');
-                });
-            }
-        }
-
-        function listenToRequests() {
-            firebase.database().ref('requests').on('value', snapshot => {
-                const reqs = snapshot.val() || {};
-                const container = document.getElementById('admin-requests-list');
-                container.innerHTML = '';
-                let hasReq = false;
-
-                Object.keys(reqs).forEach(id => {
-                    const r = reqs[id];
-                    if (r.status === 'pending') {
-                        hasReq = true;
-                        const div = document.createElement('div');
-                        div.className = 'admin-req-item';
-                        div.innerHTML = `
-                            <div style="font-size:13px;"><strong>${r.email}</strong> (${r.type === 'token_request' ? 'Token Talebi' : 'Kayıt İzni'})</div>
-                            <div>
-                                <button class="admin-btn admin-btn-success" onclick="handleRequest('${id}', true, '${r.userKey}')">Onayla</button>
-                                <button class="admin-btn admin-btn-danger" onclick="handleRequest('${id}', false)">Reddet</button>
-                            </div>
-                        `;
-                        container.appendChild(div);
-                    }
-                });
-                if (!hasReq) container.innerHTML = '<p style="color:#64748b; font-size:12px; padding:10px;">Bekleyen istek bulunmuyor.</p>';
-            });
-        }
-
-        function handleRequest(reqId, approve, userKey) {
-            if (approve) {
-                firebase.database().ref(`requests/${reqId}/type`).once('value', snap => {
-                    if (snap.val() === 'token_request') {
-                        // Kullanıcıya 1000 Token Tanımla
-                        firebase.database().ref(`users/${userKey}/tokens`).once('value', bSnap => {
-                            const current = bSnap.val() || 0;
-                            firebase.database().ref(`users/${userKey}/tokens`).set(current + 1000);
-                        });
-                    }
-                    firebase.database().ref(`requests/${reqId}`).update({ status: 'approved' });
-                });
-            } else {
-                firebase.database().ref(`requests/${reqId}`).update({ status: 'rejected' });
-            }
-        }
-
-        function listenToInviteCodes() {
-            firebase.database().ref('inviteCodes').on('value', snapshot => {
-                const codes = snapshot.val() || {};
-                const container = document.getElementById('admin-codes-list');
-                container.innerHTML = '';
-                
-                Object.keys(codes).forEach(c => {
-                    const span = document.createElement('span');
-                    span.style.cssText = "background:#1c2541; padding:4px 10px; border-radius:6px; font-size:12px; color:#24ffff; border:1px solid rgba(36,255,255,0.2);";
-                    span.innerText = c;
-                    container.appendChild(span);
-                });
-                if(Object.keys(codes).length === 0) container.innerHTML = '<p style="color:#64748b; font-size:12px;">Üretilmiş aktif kod yok.</p>';
-            });
-        }
-
-        function generateInviteCode() {
-            const newCode = 'LDS-' + Math.random().toString(36).substring(2, 8).toUpperCase();
-            firebase.database().ref(`inviteCodes/${newCode}`).set(true);
-        }
-
-        function listenToAllUsers() {
-            firebase.database().ref('users').on('value', snapshot => {
-                const users = snapshot.val() || {};
-                const tbody = document.getElementById('admin-users-list');
-                tbody.innerHTML = '';
-
-                Object.keys(users).forEach(k => {
-                    const u = users[k];
-                    const tr = document.createElement('tr');
-                    tr.style.cssText = "border-bottom:1px solid #1c2541; font-size:13px; color:#94a3b8;";
-                    tr.innerHTML = `
-                        <td style="padding:10px 0;">${u.email}</td>
-                        <td><input type="text" id="pw-${k}" value="${u.password || ''}" style="background:#030814; border:1px solid #1c2541; color:white; padding:4px 8px; border-radius:6px; width:100px; text-align:left; font-size:12px; margin:0;"></td>
-                        <td>${u.tokens || 0} Token</td>
-                        <td style="text-align:right;"><button class="admin-btn admin-btn-success" onclick="updateUserPassword('${k}')">Güncelle</button></td>
-                    `;
-                    tbody.appendChild(tr);
-                });
-            });
-        }
-
-        function updateUserPassword(userKey) {
-            const newPw = document.getElementById(`pw-${userKey}`).value.trim();
-            if(!newPw) { alert('Şifre boş bırakılamaz.'); return; }
-            firebase.database().ref(`users/${userKey}/password`).set(newPw).then(() => {
-                alert('Kullanıcı şifresi başarıyla güncellendi!');
-            });
-        }
-
-        function hardResetDatabase() {
-            if(confirm('Uygulama yerel verilerini temizlemek istediğinize emin misiniz? Oturumunuz kapatılacaktır.')) {
-                localStorage.clear();
-                window.location.replace('login.html');
-            }
-        }
-
-        // Çıkış Yapma Mantığı
-        function logout() {
-            localStorage.removeItem('currentUser');
-            window.location.replace('login.html');
-        }
-    </script>
 </body>
 </html>
