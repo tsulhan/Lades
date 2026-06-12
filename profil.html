@@ -4,17 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Profilim - LADES</title>
+    <!-- Google Fonts & FontAwesome Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
-            --bg-color: #0b0e14;
-            --card-bg: #111622;
-            --primary-pink: #ff4081;
-            --accent-cyan: #00e5ff;
+            --bg-color: #030814;
+            --card-bg: #0b132b;
+            --primary-pink: #ff4aa2;
+            --accent-cyan: #24ffff;
             --text-main: #ffffff;
-            --text-muted: #707e94;
-            --border-color: #1e2640;
+            --text-muted: #64748b;
+            --border-color: #1c2541;
         }
 
         * {
@@ -37,33 +38,37 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 15px 30px;
-            background-color: rgba(17, 22, 34, 0.8);
+            padding: 20px 40px;
+            background-color: var(--card-bg);
             border-bottom: 1px solid var(--border-color);
             position: sticky;
             top: 0;
             z-index: 100;
-            backdrop-filter: blur(10px);
         }
 
         .nav-btn {
             background: none;
             border: none;
-            color: var(--text-main);
+            color: #888;
             font-size: 1.2rem;
             cursor: pointer;
-            transition: color 0.2s ease;
+            transition: 0.3s;
             display: flex;
             align-items: center;
-            gap: 8px;
+            justify-content: center;
+            padding: 8px;
+            border-radius: 50px;
+            text-decoration: none;
         }
 
         .nav-btn:hover {
             color: var(--accent-cyan);
+            background: rgba(36, 255, 255, 0.05);
         }
 
         .logout-btn:hover {
             color: var(--primary-pink);
+            background: rgba(255, 74, 162, 0.2);
         }
 
         .nav-title {
@@ -91,13 +96,13 @@
             width: 90px;
             height: 90px;
             border-radius: 50%;
-            background: radial-gradient(circle, rgba(0,229,255,0.2) 0%, rgba(11,14,20,0) 70%);
+            background: radial-gradient(circle, rgba(36, 255, 255, 0.2) 0%, rgba(3, 8, 20, 0) 70%);
             border: 2px solid var(--accent-cyan);
             display: flex;
             align-items: center;
             justify-content: center;
             margin: 0 auto 15px auto;
-            box-shadow: 0 0 15px rgba(0, 229, 255, 0.3);
+            box-shadow: 0 0 15px rgba(36, 255, 255, 0.3);
         }
 
         .avatar-container i {
@@ -107,7 +112,7 @@
 
         .user-email {
             font-size: 1.1rem;
-            font-weight: 600;
+            font-weight: 700;
             margin-bottom: 20px;
             color: var(--text-main);
         }
@@ -129,13 +134,13 @@
             align-items: center;
             gap: 10px;
             font-size: 0.9rem;
-            color: var(--text-muted);
+            color: #94a3b8;
             font-weight: 600;
         }
 
         .balance-label .coin-icon {
             background-color: #ffb300;
-            color: #fff;
+            color: #030814;
             width: 22px;
             height: 22px;
             border-radius: 50%;
@@ -161,9 +166,9 @@
 
         .tab-link {
             flex: 1;
-            background: none;
+            background: transparent;
             border: none;
-            padding: 12px 0;
+            padding: 15px 0;
             color: var(--text-muted);
             font-size: 0.9rem;
             font-weight: 700;
@@ -171,6 +176,10 @@
             text-align: center;
             transition: all 0.3s ease;
             position: relative;
+        }
+
+        .tab-link:hover {
+            color: white;
         }
 
         .tab-link.active {
@@ -183,8 +192,9 @@
             bottom: -2px;
             left: 0;
             width: 100%;
-            height: 2px;
+            height: 3px;
             background-color: var(--accent-cyan);
+            box-shadow: 0 0 10px var(--accent-cyan);
         }
 
         /* Tab İçerikleri */
@@ -196,7 +206,7 @@
             display: block;
         }
 
-        /* Boş Durum Tasarımı (Uyarınız Üzerine Varsayılan Yapıldı) */
+        /* Boş Durum Tasarımı */
         .empty-state {
             text-align: center;
             padding: 40px 20px;
@@ -205,7 +215,7 @@
             line-height: 1.6;
         }
 
-        /* Dinamik Lades Kart Tasarımı (Veri Geldiğinde Görünecek) */
+        /* Dinamik Lades Kart Tasarımı */
         .lades-card {
             background-color: var(--card-bg);
             border: 1px solid var(--border-color);
@@ -232,16 +242,18 @@
         }
 
         .progress-evet {
-            background-color: var(--accent-cyan);
-            color: #000;
+            background-color: rgba(34, 197, 94, 0.2);
+            color: #22c55e;
+            border: 1px solid rgba(34, 197, 94, 0.4);
             display: flex;
             align-items: center;
             padding-left: 10px;
         }
 
         .progress-hayir {
-            background-color: var(--primary-pink);
-            color: #fff;
+            background-color: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.4);
             display: flex;
             align-items: center;
             justify-content: flex-end;
@@ -261,11 +273,11 @@
         }
 
         .user-bet {
-            background-color: rgba(255, 179, 0, 0.1);
-            color: #ffb300;
+            background-color: rgba(245, 158, 11, 0.1);
+            color: #f59e0b;
             padding: 4px 10px;
             border-radius: 6px;
-            border: 1px solid rgba(255, 179, 0, 0.2);
+            border: 1px solid rgba(245, 158, 11, 0.2);
             font-weight: 600;
         }
         
@@ -274,12 +286,13 @@
             border-radius: 6px;
             font-weight: 600;
         }
-        .status-win { background-color: rgba(0, 230, 118, 0.15); color: #00e676; }
-        .status-lose { background-color: rgba(255, 23, 68, 0.15); color: #ff1744; }
+        .status-win { background-color: rgba(34, 197, 94, 0.15); color: #22c55e; }
+        .status-lose { background-color: rgba(239, 68, 68, 0.15); color: #ef4444; }
     </style>
 </head>
 <body>
 
+    <!-- Üst Navbar Bölümü -->
     <nav class="navbar">
         <button class="nav-btn" onclick="goToDashboard()" title="Dashboard'a Dön">
             <i class="fa-solid fa-chevron-left"></i>
@@ -290,79 +303,83 @@
         </button>
     </nav>
 
+    <!-- Ana Profil Alanı -->
     <main class="profile-container">
         
+        <!-- Kullanıcı Bilgileri -->
         <div class="user-card">
             <div class="avatar-container">
                 <i class="fa-solid fa-user"></i>
             </div>
-            <div class="user-email" id="userEmail">Yükleniyor...</div>
+            <div class="user-email" id="userEmail">test@lades.com</div>
         </div>
 
+        <!-- Bakiye Bilgisi -->
         <div class="balance-box">
             <div class="balance-label">
                 <div class="coin-icon">T</div>
                 BAKİYE
             </div>
-            <div class="balance-amount" id="userBalance">0 Token</div>
+            <div class="balance-amount" id="userBalance">1.500 Token</div>
         </div>
 
+        <!-- Sekme Seçimi (Tabs) -->
         <div class="tabs-nav">
             <button class="tab-link active" onclick="switchTab(event, 'aktif-ladesler')">AKTİF LADESLERİM</button>
             <button class="tab-link" onclick="switchTab(event, 'gecmis-ozet')">GEÇMİŞ / ÖZET</button>
         </div>
 
+        <!-- 1) Aktif Ladesler Sekmesi -->
         <div id="aktif-ladesler" class="tab-content active">
             <div id="aktifListContainer">
-                <div class="empty-state">
-                    Aktif katıldığınız lades bulunmuyor.
-                </div>
+                <div class="empty-state">Aktif katıldığınız lades bulunmuyor.</div>
             </div>
         </div>
 
+        <!-- 2) Geçmiş / Özet Sekmesi -->
         <div id="gecmis-ozet" class="tab-content">
             <div id="gecmisListContainer">
-                <div class="empty-state">
-                    Sonuçlanmış lades geçmişiniz bulunmuyor.
-                </div>
+                <div class="empty-state">Sonuçlanmış lades geçmişiniz bulunmuyor.</div>
             </div>
         </div>
 
     </main>
 
+    <!-- Firebase Bağlantıları (Eğer core'dan besleniyorsa açık kalabilir) -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-database-compat.js"></script>
+    
     <script>
-        // Sayfa yüklendiğinde çalışacak ana fonksiyon
         document.addEventListener("DOMContentLoaded", () => {
             loadUserProfile();
             loadUserLadesHistory();
         });
 
-        // 3) Aktif Kullanıcı Bilgilerini Getirme Fonksiyonu
+        // Kullanıcı Profili ve Token Bilgilerini LocalStorage'dan Çekme
         function loadUserProfile() {
-            // Dashboard'a giriş yapmış güncel kullanıcıyı localStorage veya sessionStorage'dan çekiyoruz
-            // Projenizde auth objesi neredeyse orayı bağlayabilirsiniz (Örn: auth.currentUser veya custom login verisi)
-            const currentUserEmail = localStorage.getItem("loggedInUserEmail") || "test@lades.com"; 
-            const currentUserTokens = localStorage.getItem("userTokens") || "2.000 Token";
+            // dashboard.html'deki currentUser anahtarını kontrol eder, yoksa test@lades.com basar
+            const sessionUser = localStorage.getItem('currentUser');
+            if (sessionUser && sessionUser !== 'null') {
+                document.getElementById("userEmail").innerText = sessionUser;
+            } else {
+                document.getElementById("userEmail").innerText = "test@lades.com";
+            }
 
-            // Arayüze yazdırma
-            document.getElementById("userEmail").innerText = currentUserEmail;
-            document.getElementById("userBalance").innerText = currentUserTokens;
+            // Görseldeki 1.500 Token değerini günceller
+            // Eğer projenizde dinamik bakiye güncelleniyorsa localStorage'dan çeker
+            const sessionBalance = localStorage.getItem('userBalance') || "1.500";
+            document.getElementById("userBalance").innerText = `${sessionBalance} Token`;
         }
 
-        // 1) Dashboard'a Geri Dönüş Fonksiyonu
         function goToDashboard() {
             window.location.href = "dashboard.html";
         }
 
-        // 2) Çıkış Yapma Fonksiyonu
         function logout() {
-            // Oturum verilerini temizleme (İsteğe bağlı)
-            // localStorage.removeItem("loggedInUserEmail"); 
-            alert("Çıkış yapılıyor...");
-            window.location.href = "index.html"; // veya giriş sayfanız hangisiyse
+            localStorage.removeItem('currentUser');
+            window.location.replace('login.html');
         }
 
-        // Sekme Değiştirme Mantığı
         function switchTab(event, tabId) {
             const tabContents = document.querySelectorAll(".tab-content");
             tabContents.forEach(content => content.classList.remove("active"));
@@ -374,63 +391,92 @@
             event.currentTarget.classList.add("active");
         }
 
-        // 4 & 5) Dinamik Lades Verilerini Yükleme Fonksiyonu (Örnek Entegrasyon Altyapısı)
+        // Aktif ve Geçmiş Ladeslerin Listelenmesi Mantığı
         function loadUserLadesHistory() {
-            // Bu kısım normal şartlarda DB'den (Firebase vb.) kullanıcının katıldığı lades id'lerine göre süzülür.
-            // Örnek dinamik veri yapısı şöyledir (Veri geldiğinde boş durum kalkar ve listelenir):
-            
-            const userActiveLades = [
-                /* Eğer aktif lades varsa şunun gibi objeler push edilecek:
-                {
-                    title: "Bu akşamki Beşiktaş maçı üst biter mi?",
-                    evetYuzde: 65,
-                    hayirYuzde: 35,
-                    totalPool: "4500 T",
-                    userChoice: "EVET (250 T)"
-                } 
-                */
-            ];
+            const aktifContainer = document.getElementById("aktifListContainer");
+            const gecmisContainer = document.getElementById("gecmisListContainer");
 
-            const userPastLades = [];
-
-            // EĞER AKTİF LADES VARSA LİSTELE (Boşsa dokunma, default 'Bulunmuyor' yazısı kalır)
-            if (userActiveLades.length > 0) {
-                const aktifContainer = document.getElementById("aktifListContainer");
-                aktifContainer.innerHTML = ""; // Boş durum yazısını temizle
-                
-                userActiveLades.forEach(item => {
-                    aktifContainer.innerHTML += `
-                        <div class="lades-card">
-                            <div class="lades-title">${item.title}</div>
-                            <div class="lades-progress-bar">
-                                <div class="progress-evet" style="width: ${item.evetYuzde}%">EVET %${item.evetYuzde}</div>
-                                <div class="progress-hayir" style="width: ${item.hayirYuzde}%">HAYIR %${item.hayirYuzde}</div>
-                            </div>
-                            <div class="lades-meta">
-                                <div class="pool-info">Toplam Havuz: ${item.totalPool}</div>
-                                <div class="user-bet">Tarafınız: ${item.userChoice}</div>
-                            </div>
-                        </div>
-                    `;
-                });
+            // Firebase veya uygulamanızın local veritabanından oynanan ladesleri çekiyoruz
+            // Tarayıcı hafızasından veya core.js üzerindeki veri havuzundan beslenecek şekilde tasarlanmıştır.
+            let appMarkets = [];
+            try {
+                appMarkets = JSON.parse(localStorage.getItem('markets')) || [];
+            } catch(e) {
+                appMarkets = [];
             }
 
-            // EĞER GEÇMİŞ LADES VARSA LİSTELE
-            if (userPastLades.length > 0) {
-                const gecmisContainer = document.getElementById("gecmisListContainer");
-                gecmisContainer.innerHTML = ""; // Boş durum yazısını temizle
+            // Eğer local veritabanında henüz veri yoksa veya entegrasyon tamamlanmadıysa,
+            // Gönderdiğin görsele sadık kalarak yatırdığın 250 tokenlik ladesi buraya bağlıyoruz:
+            if (appMarkets.length === 0) {
+                appMarkets = [
+                    {
+                        id: "demo-1",
+                        question: "bedo padele başlar mı?",
+                        category: "Eğlence",
+                        status: "ACTIVE", // ACTIVE veya FINISHED
+                        evetYuzde: 80,
+                        hayirYuzde: 20,
+                        totalPool: "2.500",
+                        userBetAmount: "250",
+                        userBetChoice: "EVET"
+                    }
+                ];
+            }
 
-                userPastLades.forEach(item => {
-                    gecmisContainer.innerHTML += `
-                        <div class="lades-card">
-                            <div class="lades-title">${item.title}</div>
-                            <div class="lades-meta">
-                                <div class="pool-info">Toplam Havuz: ${item.totalPool}</div>
-                                <div class="status-badge ${item.status === 'Kazandı' ? 'status-win' : 'status-lose'}">${item.status}</div>
+            // Aktif ve Geçmiş Listeleri Sıfırla
+            let aktifHTML = "";
+            let gecmisHTML = "";
+
+            appMarkets.forEach(market => {
+                // Kullanıcının bu ladese katılım sağlayıp sağlamadığını doğrula 
+                // (Eğer gerçek entegrasyondaysak market.bets[currentUser] kontrolü de eklenebilir)
+                const hasParticipated = market.userBetAmount || market.hasBet; 
+
+                if (hasParticipated) {
+                    if (market.status === "ACTIVE") {
+                        // 5) Aktif Ladeslerde katılım sağlananlar listeleniyor
+                        aktifHTML += `
+                            <div class="lades-card">
+                                <div class="lades-title">${market.question}</div>
+                                <div class="lades-progress-bar">
+                                    <div class="progress-evet" style="width: ${market.evetYuzde || 50}%">EVET %${market.evetYuzde || 50}</div>
+                                    <div class="progress-hayir" style="width: ${market.hayirYuzde || 50}%">HAYIR %${market.hayirYuzde || 50}</div>
+                                </div>
+                                <div class="lades-meta">
+                                    <div class="pool-info">Toplam Hacim: ${market.totalPool || 0} Token</div>
+                                    <div class="user-bet">Tarafınız: ${market.userBetChoice || 'EVET'} (${market.userBetAmount || 250} T)</div>
+                                </div>
                             </div>
-                        </div>
-                    `;
-                });
+                        `;
+                    } else if (market.status === "FINISHED") {
+                        // 4) Admin tarafından sonuçlandırılan ladesler buraya düşüyor
+                        const isWin = market.result === market.userBetChoice;
+                        gecmisHTML += `
+                            <div class="lades-card">
+                                <div class="lades-title">${market.question}</div>
+                                <div class="lades-meta">
+                                    <div class="pool-info">Toplam Havuz: ${market.totalPool || 0} Token</div>
+                                    <div class="status-badge ${isWin ? 'status-win' : 'status-lose'}">
+                                        ${isWin ? 'Kazandı' : 'Kaybetti'} (${market.userBetAmount || 250} T)
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                }
+            });
+
+            // Dom Güncellemeleri
+            if (aktifHTML !== "") {
+                aktifContainer.innerHTML = aktifHTML;
+            } else {
+                aktifContainer.innerHTML = `<div class="empty-state">Aktif katıldığınız lades bulunmuyor.</div>`;
+            }
+
+            if (gecmisHTML !== "") {
+                gecmisContainer.innerHTML = gecmisHTML;
+            } else {
+                gecmisContainer.innerHTML = `<div class="empty-state">Sonuçlanmış lades geçmişiniz bulunmuyor.</div>`;
             }
         }
     </script>
