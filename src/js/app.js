@@ -1,7 +1,7 @@
 // ======================================================
 // LADES APP.JS - TAM VE GÜNCELLENMİŞ SÜRÜM
 // Firebase Realtime Database Canlı Dinleyicili & Güvenli Sürüm
-// Yönetici İçin Geçmiş Ladesleri Tamamen Silme Özellikli
+// Yönetici İçin Doğrudan Bakiye Belirleme (TOKEN Butonu) Özellikli
 // ======================================================
 
 // ------------------------------------------------------
@@ -1096,9 +1096,9 @@ async function renderAdminPanel() {
                         ${(u.balance || 0).toLocaleString("tr-TR")}
                     </td>
                     <td style="padding:8px 0; text-align:right;">
-                        <button onclick="addTokensManual('${u.email}')"
-                            style="background:#ff4aa2; color:white; border:none; padding:3px 8px; border-radius:4px; font-size:11px; cursor:pointer;">
-                            + Token Yükle
+                        <button onclick="setTokensManual('${u.email}')"
+                            style="background:#ff4aa2; color:white; border:none; padding:3px 12px; border-radius:4px; font-size:11px; font-weight:bold; cursor:pointer;">
+                            TOKEN
                         </button>
                     </td>
                 </tr>
@@ -1151,11 +1151,20 @@ async function approveToken(reqId, email, amount) {
     await renderAdminPanel();
 }
 
-async function addTokensManual(email) {
-    const amt = prompt(`${email} için yüklenecek miktar:`);
+// YENİ VE GÜNCELLENMİŞ DOĞRUDAN BAKİYE ATAMA FONKSİYONU
+async function setTokensManual(email) {
+    const amt = prompt(`${email} için yeni güncel TOKEN miktarını girin:`);
+    
+    // İptal edilirse veya boş geçilirse işlemi durdur
+    if (amt === null) return;
+    
     const amount = parseInt(amt);
 
-    if (isNaN(amount) || amount <= 0) return;
+    if (isNaN(amount) || amount < 0) {
+        alert("Geçersiz bir miktar girdiniz!");
+        return;
+    }
+    
     if (typeof db === "undefined" || !db) return;
 
     const usersSnap = await fbGet("ladesUsers");
@@ -1164,11 +1173,14 @@ async function addTokensManual(email) {
 
     if (userEntry) {
         const [userKey, userObj] = userEntry;
-        userObj.balance = (userObj.balance || 0) + amount;
+        // Bakiyeyi üstüne eklemek yerine doğrudan yazdığımız miktar yapıyoruz
+        userObj.balance = amount;
         await fbSet(`ladesUsers/${userKey}`, userObj);
+        alert(`Başarılı! ${email} bakiyesi ${amount} Token olarak güncellendi.`);
+    } else {
+        alert("Kullanıcı bulunamadı.");
     }
 
-    alert("Yüklendi!");
     await renderAdminPanel();
 }
 
@@ -1241,6 +1253,13 @@ function openBetModal(marketId, marketTitle, choice) {
     }
 
     if (modalEl) modalEl.style.display = "flex";
+}
+
+// ------------------------------------------------------
+// ESKİ UYUMLULUK İÇİN addTokensManual ÇAĞRISI (Eğer HTML'de kalmış yerler varsa patlamasın)
+// ------------------------------------------------------
+function addTokensManual(email) {
+    setTokensManual(email);
 }
 
 function closeModal() {
