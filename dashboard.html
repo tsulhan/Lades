@@ -29,8 +29,8 @@
         }
 
         body {
-            background: #060d1f;
-            color: #f8fafc;
+            background: #030814;
+            color: white;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
@@ -40,30 +40,28 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 18px 40px;
-            background: #0b1528;
-            border-bottom: 1px solid #1e293b;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            padding: 20px 40px;
+            background: #0b132b;
+            border-bottom: 1px solid #1c2541;
         }
 
         .logo {
-            font-size: 26px;
+            font-size: 24px;
             font-weight: 800;
             color: #24ffff;
-            text-shadow: 0 0 12px rgba(36, 255, 255, 0.4);
+            text-shadow: 0 0 10px #24ffff;
             text-decoration: none;
-            letter-spacing: 1px;
         }
 
         .header-center {
             display: flex;
             align-items: center;
-            gap: 16px;
+            gap: 20px;
         }
 
         .user-email-badge {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid #1e293b;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid #1c2541;
             padding: 10px 18px;
             border-radius: 30px;
             font-size: 13px;
@@ -76,102 +74,83 @@
         }
 
         .token-bag {
-            background: rgba(36, 255, 255, 0.08);
-            border: 1px solid rgba(36, 255, 255, 0.3);
+            background: rgba(36, 255, 255, 0.1);
+            border: 1px solid #24ffff;
             padding: 10px 20px;
             border-radius: 30px;
             font-weight: 700;
             color: #24ffff;
-            box-shadow: 0 0 15px rgba(36, 255, 255, 0.1);
+            box-shadow: 0 0 10px rgba(36, 255, 255, 0.2);
         }
 
         .icon-btn {
-            background: #111c33;
-            border: 1px solid #1e293b;
-            color: #94a3b8;
-            width: 40px;
-            height: 40px;
-            font-size: 16px;
+            background: transparent;
+            border: none;
+            color: #888;
+            font-size: 20px;
             cursor: pointer;
-            transition: all 0.2s ease;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            transition: 0.3s;
+            padding: 8px;
+            border-radius: 50px;
         }
 
         .icon-btn:hover {
             color: #24ffff;
-            border-color: #24ffff;
             background: rgba(36, 255, 255, 0.05);
-            transform: translateY(-1px);
         }
 
         .btn-logout {
             color: #ff4aa2;
-            border-color: rgba(255, 74, 162, 0.2);
+            margin-left: 10px;
         }
 
         .btn-logout:hover {
             color: white;
-            background: #ff4aa2;
-            border-color: #ff4aa2;
-            box-shadow: 0 0 15px rgba(255, 74, 162, 0.4);
+            background: rgba(255, 74, 162, 0.2);
         }
 
         .token-request-banner {
             background: linear-gradient(90deg, #ff4aa2, #24ffff);
             color: #030814;
             text-align: center;
-            padding: 12px;
+            padding: 10px;
             font-weight: 800;
             font-size: 14px;
             display: none;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
         }
 
         .token-request-banner button {
             background: #030814;
             color: white;
             border: none;
-            padding: 6px 16px;
+            padding: 4px 14px;
             border-radius: 20px;
             font-weight: 700;
             margin-left: 15px;
             cursor: pointer;
-            transition: 0.2s;
-        }
-
-        .token-request-banner button:hover {
-            transform: scale(1.05);
         }
 
         .tabs-container {
             display: flex;
             justify-content: center;
-            background: #0b1528;
-            border-bottom: 1px solid #1e293b;
-            gap: 10px;
-            padding: 0 20px;
+            background: #0b132b;
+            border-bottom: 1px solid #1c2541;
         }
 
         .tab-button {
             background: transparent;
             border: none;
-            color: #64748b;
-            padding: 18px 24px;
-            font-size: 15px;
+            color: #888;
+            padding: 15px 30px;
+            font-size: 16px;
             font-weight: 700;
             cursor: pointer;
             position: relative;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            transition: 0.3s;
         }
 
         .tab-button:hover {
-            color: #f8fafc;
+            color: white;
         }
 
         .tab-button.active {
@@ -181,19 +160,18 @@
         .tab-button.active::after {
             content: '';
             position: absolute;
-            bottom: -1px;
+            bottom: 0;
             left: 0;
             width: 100%;
             height: 3px;
             background: #24ffff;
-            box-shadow: 0 0 12px #24ffff;
-            border-radius: 3px 3px 0 0;
+            box-shadow: 0 0 10px #24ffff;
         }
 
         main {
             flex: 1;
-            padding: 40px 20px;
-            max-width: 1200px;
+            padding: 40px;
+            max-width: 1100px;
             width: 100%;
             margin: 0 auto;
         }
@@ -204,7 +182,7 @@
 
         .tab-content.active {
             display: block;
-            animation: fadeIn 0.35s ease-out;
+            animation: fadeIn 0.4s ease;
         }
 
         .content-layout {
@@ -214,208 +192,207 @@
         }
 
         .sidebar-categories {
-            width: 250px;
-            background: #0b1528;
-            border: 1px solid #1e293b;
-            border-radius: 16px;
+            width: 240px;
+            background: #0b132b;
+            border: 1px solid #1c2541;
+            border-radius: 20px;
             padding: 20px;
             flex-shrink: 0;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
         }
 
         .sidebar-categories h4 {
-            font-size: 12px;
-            color: #475569;
-            font-weight: 800;
+            font-size: 14px;
+            color: #64748b;
+            font-weight: 700;
             text-transform: uppercase;
             margin-bottom: 15px;
-            letter-spacing: 1.5px;
+            letter-spacing: 1px;
         }
 
         .sidebar-menu {
             display: flex;
             flex-direction: column;
-            gap: 6px;
+            gap: 8px;
         }
 
         .sidebar-menu button {
             width: 100%;
             text-align: left;
-            padding: 12px 14px;
+            padding: 12px 16px;
             background: transparent;
-            border: 1px solid transparent;
+            border: none;
             color: #94a3b8;
             border-radius: 10px;
             font-weight: 600;
             font-size: 14px;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: 0.2s;
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
         }
 
         .sidebar-menu button:hover {
-            background: rgba(255, 255, 255, 0.02);
-            color: #f8fafc;
+            background: rgba(36, 255, 255, 0.05);
+            color: white;
         }
 
         .sidebar-menu button.active {
-            background: rgba(36, 255, 255, 0.05);
+            background: rgba(36, 255, 255, 0.1);
             color: #24ffff;
-            border-color: rgba(36, 255, 255, 0.15);
+            border: 1px solid rgba(36, 255, 255, 0.2);
         }
 
         .market-grid {
             flex: 1;
             display: flex;
             flex-direction: column;
-            gap: 16px;
+            gap: 20px;
             width: 100%;
         }
 
         .market-card {
-            background: #0b1528;
-            border: 1px solid #1e293b;
-            border-radius: 16px;
-            padding: 24px;
+            background: #0b132b;
+            border: 1px solid #1c2541;
+            border-radius: 20px;
+            padding: 22px 24px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            gap: 24px;
-            transition: all 0.2s ease;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            gap: 20px;
+            transition: 0.3s;
         }
 
         .market-card:hover {
             border-color: #334155;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 15px rgba(0,0,0,0.2);
         }
 
         .market-info {
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 4px;
             min-width: 0;
             flex: 1;
+            overflow: hidden;
         }
 
         .market-info h3 {
-            font-size: 18px;
+            font-size: 19px;
             color: #fff;
             font-weight: 700;
-            line-height: 1.4;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 100%;
         }
 
-        .market-meta {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            flex-wrap: wrap;
+        .market-info p {
+            font-size: 14px;
+            color: #64748b;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 100%;
         }
 
         .category-badge {
+            display: inline-block;
+            align-self: flex-start;
             background: rgba(255, 74, 162, 0.1);
             color: #ff4aa2;
             font-size: 11px;
             font-weight: 700;
             padding: 4px 10px;
-            border-radius: 6px;
+            border-radius: 20px;
             border: 1px solid rgba(255, 74, 162, 0.2);
             text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .date-badge {
-            color: #64748b;
-            font-size: 13px;
-            display: flex;
-            align-items: center;
-            gap: 5px;
         }
 
         .market-actions {
             display: grid;
             gap: 8px;
-            width: 320px;
+            width: 330px;
             margin-left: auto;
             flex-shrink: 0;
         }
 
-        .market-actions.two-cols { grid-template-columns: repeat(2, 1fr); }
-        .market-actions.three-cols { grid-template-columns: repeat(3, 1fr); }
+        .market-actions.two-cols {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .market-actions.three-cols {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
 
         .btn-bet {
             width: 100%;
-            padding: 12px 10px;
+            padding: 9px 10px;
             border-radius: 10px;
             border: none;
-            font-weight: 700;
-            font-size: 12px;
+            font-weight: 800;
+            font-size: 11px;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: 0.2s;
             text-align: center;
+            white-space: nowrap;
             line-height: 1;
-            min-height: 40px;
+            flex-shrink: 0;
+            min-height: 38px;
         }
 
         .btn-yes {
-            background: rgba(34, 197, 94, 0.08);
+            background: rgba(34, 197, 94, 0.1);
             color: #22c55e;
-            border: 1px solid rgba(34, 197, 94, 0.25);
+            border: 1px solid rgba(34, 197, 94, 0.4);
         }
 
         .btn-yes:hover {
             background: #22c55e;
-            color: #060d1f;
-            box-shadow: 0 0 15px rgba(34, 197, 94, 0.3);
+            color: #000;
+            box-shadow: 0 0 15px rgba(34, 197, 94, 0.4);
         }
 
         .btn-no {
-            background: rgba(239, 68, 68, 0.08);
+            background: rgba(239, 68, 68, 0.1);
             color: #ef4444;
-            border: 1px solid rgba(239, 68, 68, 0.25);
+            border: 1px solid rgba(239, 68, 68, 0.4);
         }
 
         .btn-no:hover {
             background: #ef4444;
             color: #fff;
-            box-shadow: 0 0 15px rgba(239, 68, 68, 0.3);
+            box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
         }
 
         .btn-draw {
-            background: rgba(245, 158, 11, 0.08);
+            background: rgba(245, 158, 11, 0.1);
             color: #f59e0b;
-            border: 1px solid rgba(245, 158, 11, 0.25);
+            border: 1px solid rgba(245, 158, 11, 0.4);
         }
 
         .btn-draw:hover {
             background: #f59e0b;
-            color: #060d1f;
-            box-shadow: 0 0 15px rgba(245, 158, 11, 0.3);
+            color: #000;
+            box-shadow: 0 0 15px rgba(245, 158, 11, 0.4);
         }
 
-        /* Yarat Form Tasarımı */
         .create-container {
-            background: #0b1528;
-            border: 1px solid #1e293b;
-            padding: 40px;
-            border-radius: 20px;
-            max-width: 800px;
+            background: #0b132b;
+            border: 1px solid #1c2541;
+            padding: 35px;
+            border-radius: 24px;
+            max-width: 850px;
             margin: 0 auto;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
         }
 
         .create-container h2 {
-            margin-bottom: 8px;
+            margin-bottom: 10px;
             font-weight: 800;
-            font-size: 24px;
         }
 
         .create-container .subtitle {
             color: #64748b;
-            margin-bottom: 30px;
+            margin-bottom: 25px;
             font-size: 14px;
         }
 
@@ -433,159 +410,41 @@
             display: block;
             margin-bottom: 8px;
             color: #94a3b8;
-            font-size: 13px;
+            font-size: 14px;
             font-weight: 600;
         }
 
         .form-group input,
         .form-group select {
             width: 100%;
-            padding: 14px;
-            border-radius: 10px;
-            border: 1px solid #1e293b;
-            background: #060d1f;
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid #1c2541;
+            background: #030814;
             color: white;
-            font-size: 15px;
+            font-size: 16px;
             outline: none;
-            transition: border-color 0.2s;
-        }
-
-        .form-group input:focus,
-        .form-group select:focus {
-            border-color: #24ffff;
         }
 
         .btn-submit {
             width: 100%;
-            padding: 16px;
-            border-radius: 30px;
+            padding: 18px;
+            border-radius: 50px;
             border: none;
             background: #ff4aa2;
             color: white;
             font-weight: 800;
-            font-size: 16px;
+            font-size: 18px;
             cursor: pointer;
-            box-shadow: 0 4px 15px rgba(255, 74, 162, 0.3);
-            transition: all 0.2s;
+            box-shadow: 0 0 15px #ff4aa2;
+            transition: 0.3s;
         }
 
         .btn-submit:hover {
             background: #e03b8d;
             transform: translateY(-1px);
-            box-shadow: 0 6px 20px rgba(255, 74, 162, 0.4);
         }
 
-        /* Ortak Modal Arka Planı */
-        .modal-overlay {
-            display: none !important;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(3, 7, 18, 0.85);
-            backdrop-filter: blur(8px);
-            justify-content: center;
-            align-items: center;
-            z-index: 999;
-        }
-
-        .modal-overlay[style*="display: flex"], 
-        .modal-overlay[style*="display:flex"] {
-            display: flex !important;
-        }
-
-        .modal {
-            background: #0b1528;
-            border: 1px solid #1e293b;
-            padding: 32px;
-            border-radius: 20px;
-            width: 100%;
-            max-width: 420px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.4);
-            animation: modalScale 0.25s ease-out;
-        }
-
-        .modal h3 {
-            font-size: 20px;
-            font-weight: 700;
-            margin-bottom: 12px;
-        }
-
-        .modal input {
-            width: 100%;
-            padding: 14px;
-            border-radius: 10px;
-            border: 1px solid #1e293b;
-            background: #060d1f;
-            color: white;
-            font-size: 16px;
-            text-align: center;
-            margin-top: 15px;
-            margin-bottom: 20px;
-            outline: none;
-        }
-
-        .modal-buttons {
-            display: flex;
-            gap: 12px;
-        }
-
-        .btn-modal {
-            flex: 1;
-            padding: 14px;
-            border-radius: 10px;
-            border: none;
-            font-weight: 700;
-            font-size: 14px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .btn-confirm {
-            background: #24ffff;
-            color: #060d1f;
-        }
-
-        .btn-confirm:hover {
-            box-shadow: 0 0 15px rgba(36, 255, 255, 0.3);
-        }
-
-        .btn-cancel {
-            background: #1e293b;
-            color: #94a3b8;
-        }
-
-        .btn-cancel:hover {
-            background: #334155;
-            color: #fff;
-        }
-
-        /* Profil Modalı İç Yapı - Temizlendi */
-        .profile-card-group {
-            background: rgba(255,255,255,0.02);
-            border: 1px solid #1e293b;
-            border-radius: 12px;
-            padding: 16px;
-            margin-bottom: 14px;
-            text-align: left;
-        }
-        .profile-card-label {
-            display: block;
-            font-size: 11px;
-            color: #475569;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 6px;
-        }
-        .profile-card-value {
-            color: #f8fafc;
-            font-size: 16px;
-            font-weight: 600;
-        }
-
-        /* Admin Paneli Genel */
         .admin-modal-overlay {
             display: none;
             position: fixed;
@@ -593,8 +452,8 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(3, 7, 18, 0.9);
-            backdrop-filter: blur(10px);
+            background: rgba(3, 8, 20, 0.9);
+            backdrop-filter: blur(8px);
             justify-content: center;
             align-items: center;
             z-index: 9999;
@@ -602,47 +461,178 @@
         }
 
         .admin-box {
-            background: #0b1528;
-            border: 1px solid #1e293b;
-            box-shadow: 0 15px 50px rgba(0,0,0,0.5);
-            padding: 35px;
+            background: #0b132b;
+            border: 1px solid #24ffff;
+            box-shadow: 0 0 20px rgba(36, 255, 255, 0.2);
+            padding: 30px;
             border-radius: 24px;
             width: 100%;
-            max-width: 800px;
+            max-width: 750px;
             max-height: 85vh;
             overflow-y: auto;
         }
 
         .admin-section {
-            border-top: 1px solid #1e293b;
+            border-top: 1px solid #1c2541;
             padding-top: 20px;
-            margin-top: 25px;
+            margin-top: 20px;
         }
 
         .admin-section h4 {
-            font-size: 14px;
+            font-size: 16px;
             color: #24ffff;
-            margin-bottom: 14px;
+            margin-bottom: 12px;
             font-weight: 700;
-            letter-spacing: 0.5px;
+        }
+
+        .modal-overlay {
+            display: none !important;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(3, 8, 20, 0.8);
+            backdrop-filter: blur(5px);
+            justify-content: center;
+            align-items: center;
+            z-index: 999;
+        }
+
+        .modal-overlay[style*="display: flex"], .modal-overlay[style*="display:flex"] {
+            display: flex !important;
+        }
+
+        .modal {
+            background: #0b132b;
+            border: 1px solid #1c2541;
+            padding: 30px;
+            border-radius: 24px;
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .modal input {
+            width: 100%;
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid #1c2541;
+            background: #030814;
+            color: white;
+            font-size: 18px;
+            text-align: center;
+            margin-bottom: 20px;
+            outline: none;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-modal {
+            flex: 1;
+            padding: 15px;
+            border-radius: 12px;
+            border: none;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .btn-confirm {
+            background: #24ffff;
+            color: #030814;
+        }
+
+        .btn-cancel {
+            background: #1e293b;
+            color: #94a3b8;
+        }
+
+        /* Yeni Eklenen Profil Alanı CSS Stilleri */
+        .profile-card-group {
+            text-align: left;
+            margin-bottom: 18px;
+        }
+        .profile-card-label {
+            display: block;
+            font-size: 11px;
+            color: #64748b;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-bottom: 4px;
+        }
+        .profile-card-value {
+            color: white;
+            font-size: 15px;
+            font-weight: 600;
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(6px); }
+            from { opacity: 0; transform: translateY(8px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
-        @keyframes modalScale {
-            from { opacity: 0; transform: scale(0.95); }
-            to { opacity: 1; transform: scale(1); }
+        @media (max-width: 900px) {
+            .content-layout {
+                flex-direction: column;
+            }
+
+            .sidebar-categories {
+                width: 100%;
+            }
+
+            .market-card {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .market-actions {
+                width: 100%;
+                margin-left: 0;
+            }
+
+            .form-row {
+                flex-direction: column;
+            }
         }
 
-        @media (max-width: 950px) {
-            .content-layout { flex-direction: column; }
-            .sidebar-categories { width: 100%; }
-            .market-card { flex-direction: column; align-items: flex-start; gap: 16px; }
-            .market-actions { width: 100%; margin-left: 0; }
-            .form-row { flex-direction: column; gap: 0; }
+        @media (max-width: 700px) {
+            header {
+                flex-direction: column;
+                gap: 14px;
+                align-items: flex-start;
+            }
+
+            .header-center {
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+
+            main {
+                padding: 20px;
+            }
+
+            .tabs-container {
+                flex-direction: column;
+            }
+
+            .tab-button {
+                width: 100%;
+            }
+
+            .market-actions.two-cols,
+            .market-actions.three-cols {
+                grid-template-columns: 1fr;
+                width: 100%;
+            }
+
+            .btn-bet {
+                font-size: 12px;
+                padding: 10px 12px;
+            }
         }
     </style>
 </head>
@@ -659,7 +649,7 @@
             <div id="user-email-badge" class="user-email-badge">yükleniyor...</div>
             <div class="token-bag">💰 <span id="token-balance">0</span> TOKEN</div>
 
-            <button id="admin-panel-btn" class="icon-btn" onclick="openAdminPanel()" title="Yönetici Paneli" style="display:none;">
+            <button id="admin-panel-btn" class="icon-btn" onclick="openAdminPanel()" title="Yönetici Paneli" style="display:none; color:#24ffff;">
                 <i class="fa-solid fa-user-shield"></i>
             </button>
 
@@ -673,85 +663,74 @@
         </div>
     </header>
 
-    <!-- GÜNCELLENEN SEKME YAPISI (Katıldığım Ladesler Eklendi) -->
     <div class="tabs-container">
-        <button class="tab-button active" onclick="switchTab('mevcut-ladesler')">
-            <i class="fa-solid fa-fire"></i> Mevcut Ladesler
-        </button>
-        <button class="tab-button" onclick="switchTab('katildigim-ladesler')">
-            <i class="fa-solid fa-ticket"></i> Katıldığım Ladesler
-        </button>
-        <button class="tab-button" onclick="switchTab('gecmis-ladesler')">
-            <i class="fa-solid fa-clock-rotate-left"></i> Geçmiş Ladesler
-        </button>
-        <button class="tab-button" onclick="switchTab('lades-yarat')">
-            <i class="fa-solid fa-plus"></i> Yarat
-        </button>
+        <button class="tab-button active" onclick="switchTab('mevcut-ladesler')">Mevcut Ladesler</button>
+        <button class="tab-button" onclick="switchTab('gecmis-ladesler')">Geçmiş Ladesler</button>
+        <button class="tab-button" onclick="switchTab('lades-yarat')">Yarat</button>
     </div>
 
     <main>
-        <!-- 1. SEKME: MEVCUT LADESLER -->
         <div id="mevcut-ladesler" class="tab-content active">
             <div class="content-layout">
                 <div class="sidebar-categories">
                     <h4>Kategoriler</h4>
                     <div class="sidebar-menu">
-                        <button class="active" onclick="filterCategory('Tümü')"><i class="fa-solid fa-globe"></i> Tümü</button>
-                        <button onclick="filterCategory('Spor')"><i class="fa-solid fa-trophy"></i> Spor</button>
-                        <button onclick="filterCategory('Ekonomi')"><i class="fa-solid fa-chart-line"></i> Ekonomi</button>
-                        <button onclick="filterCategory('Siyaset')"><i class="fa-solid fa-landmark"></i> Siyaset</button>
-                        <button onclick="filterCategory('Eğlence')"><i class="fa-solid fa-gamepad"></i> Eğlence</button>
+                        <button class="active" onclick="filterCategory('Tümü')">
+                            <i class="fa-solid fa-globe"></i> Tümü
+                        </button>
+                        <button onclick="filterCategory('Spor')">
+                            <i class="fa-solid fa-trophy"></i> Spor
+                        </button>
+                        <button onclick="filterCategory('Ekonomi')">
+                            <i class="fa-solid fa-chart-line"></i> Ekonomi
+                        </button>
+                        <button onclick="filterCategory('Siyaset')">
+                            <i class="fa-solid fa-landmark"></i> Siyaset
+                        </button>
+                        <button onclick="filterCategory('Eğlence')">
+                            <i class="fa-solid fa-gamepad"></i> Eğlence
+                        </button>
                     </div>
                 </div>
+
                 <div class="market-grid" id="market-grid"></div>
             </div>
         </div>
 
-        <!-- 2. SEKME: KATILDIĞIM LADESLER (Yeni Alan) -->
-        <div id="katildigim-ladesler" class="tab-content">
-            <div class="content-layout">
-                <div class="sidebar-categories">
-                    <h4>Kategoriler</h4>
-                    <div class="sidebar-menu">
-                        <button class="active" onclick="filterCategory('Tümü')"><i class="fa-solid fa-globe"></i> Tümü</button>
-                        <button onclick="filterCategory('Spor')"><i class="fa-solid fa-trophy"></i> Spor</button>
-                        <button onclick="filterCategory('Ekonomi')"><i class="fa-solid fa-chart-line"></i> Ekonomi</button>
-                        <button onclick="filterCategory('Siyaset')"><i class="fa-solid fa-landmark"></i> Siyaset</button>
-                        <button onclick="filterCategory('Eğlence')"><i class="fa-solid fa-gamepad"></i> Eğlence</button>
-                    </div>
-                </div>
-                <div class="market-grid" id="my-bets-market-grid">
-                    <!-- Dinamik olarak kullanıcının oynadığı ladesler core.js/app.js tarafında buraya render edilecek -->
-                    <p style="color: #64748b; text-align: center; padding: 20px; width: 100%;">Henüz katıldığınız bir lades bulunmuyor.</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- 3. SEKME: GEÇMİŞ LADESLER -->
         <div id="gecmis-ladesler" class="tab-content">
             <div class="content-layout">
                 <div class="sidebar-categories">
                     <h4>Kategoriler</h4>
                     <div class="sidebar-menu">
-                        <button class="active" onclick="filterCategory('Tümü')"><i class="fa-solid fa-globe"></i> Tümü</button>
-                        <button onclick="filterCategory('Spor')"><i class="fa-solid fa-trophy"></i> Spor</button>
-                        <button onclick="filterCategory('Ekonomi')"><i class="fa-solid fa-chart-line"></i> Ekonomi</button>
-                        <button onclick="filterCategory('Siyaset')"><i class="fa-solid fa-landmark"></i> Siyaset</button>
-                        <button onclick="filterCategory('Eğlence')"><i class="fa-solid fa-gamepad"></i> Eğlence</button>
+                        <button class="active" onclick="filterCategory('Tümü')">
+                            <i class="fa-solid fa-globe"></i> Tümü
+                        </button>
+                        <button onclick="filterCategory('Spor')">
+                            <i class="fa-solid fa-trophy"></i> Spor
+                        </button>
+                        <button onclick="filterCategory('Ekonomi')">
+                            <i class="fa-solid fa-chart-line"></i> Ekonomi
+                        </button>
+                        <button onclick="filterCategory('Siyaset')">
+                            <i class="fa-solid fa-landmark"></i> Siyaset
+                        </button>
+                        <button onclick="filterCategory('Eğlence')">
+                            <i class="fa-solid fa-gamepad"></i> Eğlence
+                        </button>
                     </div>
                 </div>
+
                 <div class="market-grid" id="past-market-grid"></div>
             </div>
         </div>
 
-        <!-- 4. SEKME: YARAT -->
         <div id="lades-yarat" class="tab-content">
             <div class="create-container">
                 <h2>Yeni Bir Tahmin Pazarı Oluştur</h2>
                 <p class="subtitle">Bahsinizi ve yönünüzü belirleyerek canlıya yeni bir iddia pazarı sürün.</p>
 
                 <div class="form-row">
-                    <div class="form-group">
+                    <div class="form-group" style="flex: 1;">
                         <label>Kategori Seçin</label>
                         <select id="market-category">
                             <option value="Spor">🏆 Spor</option>
@@ -775,7 +754,7 @@
 
                     <div class="form-group">
                         <label>Sizin Tercihiniz</label>
-                        <select id="market-choice">
+                        <select id="market-choice" onchange="updateChoiceOptions()">
                             <option value="YES">EVET</option>
                             <option value="NO">HAYIR</option>
                             <option value="DRAW">BERABERLİK</option>
@@ -793,57 +772,20 @@
         </div>
     </main>
 
-    <!-- TEKLİF VERME MODALI -->
-    <div id="bet-modal" class="modal-overlay" style="display: none !important;">
-        <div class="modal">
-            <h3 id="modal-market-title">Pazar Adı</h3>
-            <p style="color:#94a3b8; font-size:14px;">Seçiminiz: <span id="modal-bet-choice" style="color:#24ffff; font-weight:800;"></span></p>
-            <input type="number" id="bet-amount" placeholder="Kaç Token Yatıracaksınız?" min="1">
-            <div class="modal-buttons">
-                <button class="btn-modal btn-cancel" onclick="closeModal()">İptal</button>
-                <button class="btn-modal btn-confirm" onclick="confirmBet()">Yatır ve Kilitle ⚡</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- YENİLENEN SADE PROFİL MODALI (Gereksiz Rol/Admin Satırları Temizlendi) -->
-    <div id="my-profile-modal" class="modal-overlay" style="display: none !important;">
-        <div class="modal">
-            <div style="text-align: center; margin-bottom: 24px;">
-                <h3 style="color: #24ffff; font-size: 22px; font-weight: 800;">👤 Hesap Bilgilerim</h3>
-            </div>
-            
-            <div style="margin-bottom: 24px;">
-                <div class="profile-card-group">
-                    <span class="profile-card-label">E-Posta Adresi</span>
-                    <span id="profile-card-email" class="profile-card-value">-</span>
-                </div>
-                
-                <div class="profile-card-group" style="border-color: rgba(34, 197, 94, 0.2);">
-                    <span class="profile-card-label" style="color: #22c55e;">Güncel Hesap Bakiyesi</span>
-                    <span style="color: #22c55e; font-weight: 800; font-size: 18px; display: flex; align-items: center; gap: 6px; margin-top: 4px;">
-                        💰 <span id="profile-card-tokens">0</span> TOKEN
-                    </span>
-                </div>
-            </div>
-
-            <div class="modal-buttons">
-                <button class="btn-modal btn-cancel" onclick="closeMyProfileModal()" style="width: 100%;">Kapat</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- ADMİN MODALI -->
     <div id="admin-modal" class="admin-modal-overlay">
         <div class="admin-box">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                <h2 style="color:#24ffff;"><i class="fa-solid fa-user-shield"></i> Lades Yönetim Paneli</h2>
-                <button onclick="closeAdminPanel()" style="background:transparent; border:none; color:#888; font-size:24px; cursor:pointer;">&times;</button>
+                <h2 style="color:#24ffff;">
+                    <i class="fa-solid fa-user-shield"></i> Lades Yönetim Paneli
+                </h2>
+                <button onclick="closeAdminPanel()" style="background:transparent; border:none; color:#888; font-size:24px; cursor:pointer;">
+                    &times;
+                </button>
             </div>
 
             <div class="admin-section" style="border-top:none; margin-top:0; padding-top:0;">
                 <h4>🎯 Aktif Ladesleri Sonuçlandır (Havuz Dağıtımı)</h4>
-                <div id="admin-active-markets" style="background: rgba(36,255,255,0.02); border:1px dashed #1e293b; padding:15px; border-radius:12px;"></div>
+                <div id="admin-active-markets" style="background: rgba(36,255,255,0.02); border:1px dashed #1c2541; padding:15px; border-radius:12px;"></div>
             </div>
 
             <div class="admin-section">
@@ -853,8 +795,10 @@
 
             <div class="admin-section">
                 <h4>🔑 Davet Kodu Yönetimi</h4>
-                <button onclick="generateInviteCode()" style="background:#24ffff; color:#060d1f; border:none; padding:10px 18px; border-radius:8px; font-weight:800; cursor:pointer; margin-bottom:12px;">+ Yeni Davet Kodu Üret</button>
-                <div id="admin-codes-list" style="display:flex; flex-wrap:wrap; gap:8px; background:#060d1f; padding:12px; border-radius:12px;"></div>
+                <button onclick="generateInviteCode()" style="background:#24ffff; color:#030814; border:none; padding:10px 18px; border-radius:8px; font-weight:800; cursor:pointer; margin-bottom:12px;">
+                    + Yeni Davet Kodu Üret
+                </button>
+                <div id="admin-codes-list" style="display:flex; flex-wrap:wrap; gap:8px; background:#030814; padding:12px; border-radius:12px;"></div>
             </div>
 
             <div class="admin-section">
@@ -862,7 +806,7 @@
                 <div style="overflow-x:auto;">
                     <table style="width:100%; border-collapse:collapse; text-align:left;">
                         <thead>
-                            <tr style="border-bottom:2px solid #1e293b; color:#475569; font-size:12px;">
+                            <tr style="border-bottom:2px solid #1c2541; color:#64748b; font-size:12px;">
                                 <th style="padding-bottom:8px;">Kullanıcı E-posta</th>
                                 <th style="padding-bottom:8px;">Şifre</th>
                                 <th style="padding-bottom:8px;">Mevcut Bakiye</th>
@@ -872,7 +816,53 @@
                         <tbody id="admin-users-list"></tbody>
                     </table>
                 </div>
-                <button onclick="hardResetDatabase()" style="background:transparent; border:1px solid #ef4444; color:#ef4444; width:100%; padding:10px; margin-top:20px; border-radius:8px; font-weight:600; cursor:pointer;">⚠️ ESKİ HAFIZAYI TAMAMEN TEMİZLE</button>
+
+                <button onclick="hardResetDatabase()" style="background:transparent; border:1px solid #ef4444; color:#ef4444; width:100%; padding:10px; margin-top:20px; border-radius:8px; font-weight:600; cursor:pointer;">
+                    ⚠️ ESKİ HAFIZAYI (LOCALSTORAGE) TAMAMEN TEMİZLE
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="bet-modal" class="modal-overlay" style="display: none !important;">
+        <div class="modal">
+            <h3 id="modal-market-title">Pazar Adı</h3>
+            <p>Seçiminiz: <span id="modal-bet-choice" style="font-weight:800;"></span></p>
+            <input type="number" id="bet-amount" placeholder="Kaç Token Yatıracaksınız?" min="1">
+            <div class="modal-buttons">
+                <button class="btn-modal btn-cancel" onclick="closeModal()">İptal</button>
+                <button class="btn-modal btn-confirm" onclick="confirmBet()">Yatır ve Kilitle ⚡</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="my-profile-modal" class="modal-overlay" style="display: none !important;">
+        <div class="modal" style="max-width: 420px;">
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 22px; border-bottom: 1px solid #1c2541; padding-bottom: 12px;">
+                <h3 style="color: #24ffff; margin: 0; font-size: 20px; font-weight: 700;">👤 Profil Bilgilerim</h3>
+            </div>
+            
+            <div style="margin-bottom: 25px;">
+                <div class="profile-card-group">
+                    <span class="profile-card-label">E-Posta Adresi</span>
+                    <span id="profile-card-email" class="profile-card-value">-</span>
+                </div>
+                
+                <div class="profile-card-group">
+                    <span class="profile-card-label">Hesap Yetki Tipi</span>
+                    <span id="profile-card-role" class="profile-card-value" style="text-transform: uppercase;">-</span>
+                </div>
+                
+                <div class="profile-card-group" style="margin-bottom: 5px;">
+                    <span class="profile-card-label">Hesap Bakiyesi</span>
+                    <span style="color: #22c55e; font-weight: 800; font-size: 17px; display: flex; align-items: center; gap: 6px;">
+                        💰 <span id="profile-card-tokens">0</span> TOKEN
+                    </span>
+                </div>
+            </div>
+
+            <div class="modal-buttons">
+                <button class="btn-modal btn-cancel" onclick="closeMyProfileModal()" style="width: 100%; font-weight: 700;">Kapat</button>
             </div>
         </div>
     </div>
@@ -882,20 +872,34 @@
 
     <script>
         function openMyProfileModal() {
+            // Giriş kontrolündeki currentUser anahtarından e-postayı okuyoruz
             const activeUserEmail = localStorage.getItem('currentUser');
             const profileEmailElement = document.getElementById('profile-card-email');
+            const profileRoleElement = document.getElementById('profile-card-role');
             const profileTokensElement = document.getElementById('profile-card-tokens');
             const myModal = document.getElementById('my-profile-modal');
 
             if (activeUserEmail) {
                 profileEmailElement.innerText = activeUserEmail;
+                
+                // Rol kontrolü: Admin butonunun görünürlük durumuna veya e-postaya göre dinamik belirleme
+                const adminBtn = document.getElementById('admin-panel-btn');
+                if ((adminBtn && adminBtn.style.display !== 'none') || activeUserEmail.toLowerCase() === 'test@lades.com') {
+                    profileRoleElement.innerText = 'Yönetici (Admin)';
+                    profileRoleElement.style.color = '#ff4aa2';
+                } else {
+                    profileRoleElement.innerText = 'Standart Kullanıcı';
+                    profileRoleElement.style.color = '#24ffff';
+                }
             }
 
+            // Üst barda yer alan anlık token değerini çekip modal içine aktarıyoruz
             const liveTokenBalance = document.getElementById('token-balance');
             if (liveTokenBalance) {
                 profileTokensElement.innerText = liveTokenBalance.innerText;
             }
 
+            // Tasarımdaki [style*="display: flex"] kuralını tetiklemek için attribute değiştiriyoruz
             myModal.setAttribute('style', 'display: flex !important;');
         }
 
