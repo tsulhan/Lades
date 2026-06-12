@@ -33,11 +33,15 @@ async function handleLogin() {
     }
 
     try {
-        // core.js'teki asenkron fbGet fonksiyonunu kullanıyoruz
+        // Eğer core.js yüklenemediyse veya fbGet tanımlı değilse kullanıcıyı uyaralım
+        if (typeof fbGet !== "function") {
+            alert("Sistem altyapısı (core.js) yüklenemedi. Lütfen login.html dosyasında core.js scriptinin eklendiğini kontrol edin.");
+            return;
+        }
+
         const usersSnap = await fbGet("ladesUsers");
         const users = usersSnap || {};
 
-        // Firebase formatına uygun key (noktalar virgüle)
         const firebaseUserKey = emailValue.replace(/\./g, ',');
         const user = users[firebaseUserKey];
 
@@ -48,8 +52,8 @@ async function handleLogin() {
             alert("Hatalı e-posta veya şifre!");
         }
     } catch (error) {
-        console.error("Giriş yapılırken hata oluştu:", error);
-        alert("Giriş işlemi sırasında bir hata meydana geldi.");
+        console.error("Giriş hatası detayları:", error);
+        alert("Giriş işlemi sırasında teknik bir hata meydana geldi. Konsol (F12) kayıtlarını inceleyebilirsiniz.");
     }
 }
 
