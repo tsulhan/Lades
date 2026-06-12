@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profilim - LADES</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght=300;400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="assets/css/style.css"> <style>
+        .profile-container {
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+        .profile-header {
+            background: #0b132b;
+            border: 1px solid #1c2541;
+            padding: 30px;
+            border-radius: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        .profile-info h2 {
+            font-size: 24px;
+            font-weight: 800;
+            color: white;
+            margin-bottom: 5px;
+        }
+        .profile-info p {
+            color: #64748b;
+            font-size: 14px;
+        }
+        .profile-balance {
+            text-align: right;
+        }
+        .profile-balance .label {
+            font-size: 12px;
+            color: #94a3b8;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .profile-balance .value {
+            font-size: 28px;
+            font-weight: 800;
+            color: #24ffff;
+            text-shadow: 0 0 15px rgba(36, 255, 255, 0.3);
+        }
+        .section-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: white;
+            margin: 30px 0 15px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .user-bet-card {
+            background: #0b132b;
+            border: 1px solid #1c2541;
+            padding: 20px;
+            border-radius: 16px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .bet-details h3 {
+            font-size: 16px;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 6px;
+        }
+        .bet-details p {
+            font-size: 13px;
+            color: #64748b;
+        }
+        .bet-stats {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+        .stat-box {
+            text-align: right;
+        }
+        .stat-box .lbl {
+            font-size: 11px;
+            color: #64748b;
+            text-transform: uppercase;
+        }
+        .stat-box .val {
+            font-size: 14px;
+            font-weight: 700;
+        }
+        .badge-choice {
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 800;
+        }
+        .badge-yes { background: rgba(34, 197, 94, 0.1); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.2); }
+        .badge-no { background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); }
+        .badge-draw { background: rgba(245, 158, 11, 0.1); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.2); }
+        
+        .result-win { color: #22c55e; font-weight: 800; }
+        .result-lose { color: #ef4444; font-weight: 800; }
+        .result-refund { color: #94a3b8; font-weight: 800; }
+    </style>
+</head>
+<body style="background: #030814; color: white;">
+
+    <header class="navbar" style="background: #0b132b; border-bottom: 1px solid #1c2541; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center;">
+        <div class="logo" onclick="window.location.href='dashboard.html'" style="cursor:pointer; display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 20px; color: #24ffff; text-shadow: 0 0 10px #24ffff;">
+            ⚡ LADES
+        </div>
+        <div style="display: flex; gap: 15px; align-items: center;">
+            <button onclick="window.location.href='dashboard.html'" style="background: rgba(36,255,255,0.08); border: 1px solid rgba(36,255,255,0.2); color: #24ffff; padding: 8px 16px; border-radius: 50px; cursor: pointer; font-weight: 600; font-size: 13px;">
+                <i class="fa-solid fa-chart-pie"></i> Dashboard'a Dön
+            </button>
+        </div>
+    </header>
+
+    <div class="profile-container">
+        <div class="profile-header">
+            <div class="profile-info">
+                <p>Hoş Geldiniz,</p>
+                <h2 id="profile-email">Yükleniyor...</h2>
+                <p style="margin-top: 5px;"><i class="fa-solid fa-circle" style="color: #22c55e; font-size: 10px;"></i> Oyuncu Hesabı</p>
+            </div>
+            <div class="profile-balance">
+                <div class="label">Kullanılabilir Bakiye</div>
+                <div class="value"><span id="profile-token-balance">0</span> TOKEN</div>
+            </div>
+        </div>
+
+        <div class="section-title">
+            <i class="fa-solid fa-bolt" style="color: #24ffff;"></i> Katıldığınız Aktif Ladesler
+        </div>
+        <div id="profile-active-bets">
+            <div style="text-align:center; color:#64748b; padding:20px;">Yükleniyor...</div>
+        </div>
+
+        <div class="section-title">
+            <i class="fa-solid fa-clock-rotate-left" style="color: #ff4aa2;"></i> Geçmiş Ladesleriniz ve Kazançlar
+        </div>
+        <div id="profile-past-bets">
+            <div style="text-align:center; color:#64748b; padding:20px;">Yükleniyor...</div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-database-compat.js"></script>
+    <script src="src/js/firebase.js"></script>
+    <script src="src/js/core.js"></script>
+    <script src="src/js/app.js"></script>
+    
+    <script>
+        // Sayfa açıldığında profil verilerini tetikleyelim
+        document.addEventListener("DOMContentLoaded", () => {
+            setTimeout(() => {
+                if (typeof initProfilePage === "function") {
+                    initProfilePage();
+                }
+            }, 1000); // Veritabanı bağlantısının oturması için kısa bir bekleme
+        });
+    </script>
+</body>
+</html>
