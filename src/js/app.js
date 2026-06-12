@@ -22,23 +22,38 @@ async function handleLogin() {
         alert("Lütfen tüm alanları doldurun!");
         return;
     }
+
+    // Özel Admin Kolay Giriş Koruması
     if (emailValue === "tsulhan@gmail.com" && passwordValue === "1234") {
         localStorage.setItem("currentUser", "tsulhan@gmail.com");
         window.location.href = "dashboard.html";
         return;
     }
-    if (typeof db === "undefined" || !db) { alert("Firebase bağlantısı yok."); return; }
 
-    const usersSnap = await fbGet("ladesUsers");
-    const users = usersSnap || {};
-    const userList = objectValuesToArray(users);
-    const user = userList.find(u => u.email === emailValue);
+    if (typeof db === "undefined" || !db) { 
+        alert("Firebase bağlantısı kuruluyor, lütfen birkaç saniye sonra tekrar deneyin."); 
+        return; 
+    }
 
-    if (user && user.password === passwordValue) {
-        localStorage.setItem("currentUser", user.email);
-        window.location.href = "dashboard.html";
-    } else {
-        alert("Hatalı e-posta veya şifre!");
+    try {
+        // Firebase'den güncel kullanıcı listesini çekiyoruz
+        const usersSnap = await fbGet("ladesUsers");
+        const users = usersSnap || {};
+
+        // Firebase formatına uygun key oluşturuyoruz (noktaları virgüle çevirerek direkt kontrol)
+        const firebaseUserKey = emailValue.replace(/\./g, ',');
+        const user = users[firebaseUserKey];
+
+        // Eğer kullanıcı varsa ve şifre doğruysa
+        if (user && user.password === String(passwordValue)) {
+            localStorage.setItem("currentUser", user.email);
+            window.location.href = "dashboard.html";
+        } else {
+            alert("Hatalı e-posta veya şifre!");
+        }
+    } catch (error) {
+        console.error("Giriş yapılırken hata oluştu:", error);
+        alert("Giriş işlemi sırasında bir hata meydana geldi.");
     }
 }
 
