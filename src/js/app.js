@@ -1,5 +1,5 @@
 // ======================================================
-// LADES APP.JS - SADECE İŞ MANTIĞI (TEMİZLENMİŞ SÜRÜM)
+// LADES APP.JS - SADECE İŞ MANTIĞI (GÜNCEL FİLTRELİ SÜRÜM)
 // ======================================================
 
 // GLOBAL DURUM
@@ -33,9 +33,8 @@ async function handleLogin() {
     }
 
     try {
-        // Eğer core.js yüklenemediyse veya fbGet tanımlı değilse kullanıcıyı uyaralım
         if (typeof fbGet !== "function") {
-            alert("Sistem altyapısı (core.js) yüklenemedi. Lütfen login.html dosyasında core.js scriptinin eklendiğini kontrol edin.");
+            alert("Altyapı fonksiyonları (core.js) yüklenemedi.");
             return;
         }
 
@@ -53,7 +52,7 @@ async function handleLogin() {
         }
     } catch (error) {
         console.error("Giriş hatası detayları:", error);
-        alert("Giriş işlemi sırasında teknik bir hata meydana geldi. Konsol (F12) kayıtlarını inceleyebilirsiniz.");
+        alert("Giriş işlemi sırasında teknik bir hata meydana geldi.");
     }
 }
 
@@ -153,7 +152,7 @@ async function requestInviteCode() {
 }
 
 // ------------------------------------------------------
-// KATEGORİ / OPSİYON
+// KATEGORİ / OPSİYON VE FİLTRELEME MOTORU
 // ------------------------------------------------------
 function updateChoiceOptions() {
     const categorySelect = document.getElementById("market-category");
@@ -191,6 +190,13 @@ function filterCategory(categoryName) {
             btn.classList.add("active");
         }
     });
+
+    // Kategori değiştiğinde veritabanından güncel veriyi çekip grid'i yeniden tetikliyoruz
+    if (typeof fbGet === "function") {
+        fbGet("customMarkets").then(marketsObj => {
+            renderMarketGrid(marketsObj || {});
+        }).catch(err => console.error("Filtreleme hatası:", err));
+    }
 }
 
 // ------------------------------------------------------
@@ -565,10 +571,12 @@ async function openAdminPanel() {
     await renderAdminPanel();
 }
 
-function closeAdminPanel() {
+fn_closeAdminPanel = function() {
     const modal = document.getElementById("admin-modal");
     if (modal) modal.style.display = "none";
 }
+// global haritaya eşle
+if (typeof closeAdminPanel === "undefined") { window.closeAdminPanel = fn_closeAdminPanel; }
 
 async function generateInviteCode() {
     if (typeof db === "undefined" || !db) return;
@@ -625,7 +633,7 @@ async function finalizeLades(marketId, winningChoice) {
     await fbSet(`customMarkets/${marketId}`, market);
     await fbSet("ladesUsers", users);
 
-    alert(`🎉 Dağıtıldı! Toplam ${totalPool} Token kazananlara aktarıldığı.`);
+    alert(`🎉 Dağıtıldı! Toplam ${totalPool} Token kazananlara aktarıldı.`);
     await renderAdminPanel();
 }
 
@@ -825,7 +833,6 @@ function openBetModal(marketId, marketTitle, choice) {
 // SAYFA YÜKLENİNCE BAŞLAT
 // ------------------------------------------------------
 document.addEventListener("DOMContentLoaded", async () => {
-    // bootstrapFirebase() artık sadece core.js'ten çağrılıyor
     if (typeof bootstrapFirebase === "function") {
         await bootstrapFirebase();
     }
