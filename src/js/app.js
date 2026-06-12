@@ -1,6 +1,7 @@
 // ======================================================
 // LADES APP.JS - TAM VE GÜNCELLENMİŞ SÜRÜM
 // Firebase Realtime Database Canlı Dinleyicili & Güvenli Sürüm
+// Yönetici İçin Geçmiş Ladesleri Tamamen Silme Özellikli
 // ======================================================
 
 // ------------------------------------------------------
@@ -635,14 +636,29 @@ function generateMarketCardHTML(market, isActive) {
         `;
     }
 
+    // YÖNETİCİ KONTROLÜ: Çarpı butonunu sadece geçmiş ladeslerde ve sadece tsulhan@gmail.com ise göstermek için
+    const currentUserEmail = localStorage.getItem("currentUser");
+    let deleteButtonHTML = "";
+    if (!isActive && (currentUserEmail === "tsulhan@gmail.com")) {
+        deleteButtonHTML = `
+            <button onclick="deleteMarket('${market.id}', '${safeTitle}')" 
+                    style="position: absolute; top: 12px; right: 12px; background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.4); width: 26px; height: 26px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold; transition: all 0.2s;"
+                    onmouseover="this.style.background='#ef4444'; this.style.color='white';"
+                    onmouseout="this.style.background='rgba(239, 68, 68, 0.2)'; this.style.color='#ef4444';">
+                ✕
+            </button>
+        `;
+    }
+
     return `
-        <div class="market-card" style="${!isActive ? 'opacity: 0.9; border-color: #1c2541; background: #060b19;' : ''}">
+        <div class="market-card" style="position: relative; ${!isActive ? 'opacity: 0.9; border-color: #1c2541; background: #060b19;' : ''}">
+            ${deleteButtonHTML}
             <div class="market-info">
                 <div style="display:flex; gap:8px; align-items:center; margin-bottom:6px;">
                     <span class="category-badge">${market.category || "Genel"}</span>
                     ${!isActive ? `<span class="category-badge" style="background:rgba(36,255,255,0.05); color:#24ffff; border-color:rgba(36,255,255,0.2); text-transform:none;"><i class="fa-solid fa-lock"></i> Arşiv</span>` : ''}
                 </div>
-                <h3>${market.title || "Başlıksız Lades"}</h3>
+                <h3 style="${!isActive && currentUserEmail === 'tsulhan@gmail.com' ? 'padding-right: 25px;' : ''}">${market.title || "Başlıksız Lades"}</h3>
                 <p>Bitiş: ${market.date || "-"} • Toplam Hacim: <span style="color:#24ffff; font-weight:700;">${totalVolume.toLocaleString("tr-TR")}</span> Token</p>
             </div>
             ${actionContent}
@@ -710,7 +726,7 @@ async function createNewMarket() {
         return;
     }
 
-    // DOĞRU FIrebase Anahtarı (tsulhan@gmail.com -> tsulhan@gmail,com)
+    // DOĞRU Firebase Anahtarı (tsulhan@gmail.com -> tsulhan@gmail,com)
     const userKey = currentUserEmail.replace(/\./g, ',');
     const currentUser = await fbGet(`ladesUsers/${userKey}`);
 
@@ -734,7 +750,7 @@ async function createNewMarket() {
         return;
     }
 
-    // Bakiyeyi düşür ve doğıru adrese (userKey) kaydet -> Canlı dinleyici anında yukarıyı güncelleyecek
+    // Bakiyeyi düşür ve doğru adrese (userKey) kaydet -> Canlı dinleyici anında yukarıyı güncelleyecek
     currentUser.balance = parseInt(currentUser.balance) - initialBet;
     await fbSet(`ladesUsers/${userKey}`, currentUser);
 
@@ -1154,6 +1170,25 @@ async function addTokensManual(email) {
 
     alert("Yüklendi!");
     await renderAdminPanel();
+}
+
+async function deleteMarket(marketId, marketTitle) {
+    if (typeof db === "undefined" || !db) {
+        alert("Firebase bağlantısı yok.");
+        return;
+    }
+
+    const confirmation = confirm(`"${marketTitle}" başlıklı ladesi ve tüm verilerini tamamen silmek istediğinize emin misiniz?\nBu işlem geri alınamaz.`);
+    
+    if (!confirmation) return;
+
+    try {
+        await fbRemove(`customMarkets/${marketId}`);
+        alert("Lades başarıyla tüm sistemden silindi.");
+    } catch (error) {
+        console.error("Lades silinirken hata oluştu:", error);
+        alert("Silme işlemi sırasında bir hata meydana geldi.");
+    }
 }
 
 async function hardResetDatabase() {
