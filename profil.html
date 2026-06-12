@@ -3,145 +3,434 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Profilim | Lades</title>
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <title>Profilim - LADES</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body {
+        :root {
+            --bg-color: #0b0e14;
+            --card-bg: #111622;
+            --primary-pink: #ff4081;
+            --accent-cyan: #00e5ff;
+            --text-main: #ffffff;
+            --text-muted: #707e94;
+            --border-color: #1e2640;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
             font-family: 'Inter', sans-serif;
-            background-color: #060913;
         }
-        .neon-shadow {
-            box-shadow: 0 0 20px rgba(0, 245, 212, 0.15);
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
-        .tab-active {
-            color: #00F5D4;
-            border-bottom: 3px solid #00F5D4;
+
+        /* Üst Navbar */
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 30px;
+            background-color: rgba(17, 22, 34, 0.8);
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
         }
+
+        .nav-btn {
+            background: none;
+            border: none;
+            color: var(--text-main);
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: color 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .nav-btn:hover {
+            color: var(--accent-cyan);
+        }
+
+        .logout-btn:hover {
+            color: var(--primary-pink);
+        }
+
+        .nav-title {
+            font-weight: 700;
+            font-size: 1.1rem;
+            letter-spacing: 1px;
+        }
+
+        /* Profil İçerik Alanı */
+        .profile-container {
+            max-width: 600px;
+            width: 100%;
+            margin: 40px auto;
+            padding: 0 20px;
+            flex: 1;
+        }
+
+        /* Kullanıcı Kartı */
+        .user-card {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .avatar-container {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(0,229,255,0.2) 0%, rgba(11,14,20,0) 70%);
+            border: 2px solid var(--accent-cyan);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px auto;
+            box-shadow: 0 0 15px rgba(0, 229, 255, 0.3);
+        }
+
+        .avatar-container i {
+            font-size: 2.5rem;
+            color: var(--accent-cyan);
+        }
+
+        .user-email {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--text-main);
+        }
+
+        /* Bakiye Alanı */
+        .balance-box {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 14px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .balance-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .balance-label .coin-icon {
+            background-color: #ffb300;
+            color: #fff;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 900;
+        }
+
+        .balance-amount {
+            color: var(--accent-cyan);
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        /* Tab Menü Navigasyonu */
+        .tabs-nav {
+            display: flex;
+            border-bottom: 2px solid var(--border-color);
+            margin-bottom: 20px;
+        }
+
+        .tab-link {
+            flex: 1;
+            background: none;
+            border: none;
+            padding: 12px 0;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            font-weight: 700;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .tab-link.active {
+            color: var(--accent-cyan);
+        }
+
+        .tab-link.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: var(--accent-cyan);
+        }
+
+        /* Tab İçerikleri */
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Boş Durum Tasarımı (Uyarınız Üzerine Varsayılan Yapıldı) */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        /* Dinamik Lades Kart Tasarımı (Veri Geldiğinde Görünecek) */
+        .lades-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+        }
+
+        .lades-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            line-height: 1.4;
+        }
+
+        .lades-progress-bar {
+            display: flex;
+            height: 28px;
+            border-radius: 6px;
+            overflow: hidden;
+            margin-bottom: 12px;
+            font-size: 0.8rem;
+            font-weight: 700;
+        }
+
+        .progress-evet {
+            background-color: var(--accent-cyan);
+            color: #000;
+            display: flex;
+            align-items: center;
+            padding-left: 10px;
+        }
+
+        .progress-hayir {
+            background-color: var(--primary-pink);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 10px;
+            flex-grow: 1;
+        }
+
+        .lades-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85rem;
+        }
+
+        .pool-info {
+            color: var(--text-muted);
+        }
+
+        .user-bet {
+            background-color: rgba(255, 179, 0, 0.1);
+            color: #ffb300;
+            padding: 4px 10px;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 179, 0, 0.2);
+            font-weight: 600;
+        }
+        
+        .status-badge {
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-weight: 600;
+        }
+        .status-win { background-color: rgba(0, 230, 118, 0.15); color: #00e676; }
+        .status-lose { background-color: rgba(255, 23, 68, 0.15); color: #ff1744; }
     </style>
 </head>
-<body class="text-white min-h-screen flex flex-col">
+<body>
 
-    <header class="bg-[#0D111A] px-4 py-3 flex items-center justify-between border-b border-white/5 sticky top-0 z-50">
-        <button class="text-white/80 hover:text-white transition">
-            <i class="fa-solid fa-chevron-left text-sm"></i>
+    <nav class="navbar">
+        <button class="nav-btn" onclick="goToDashboard()" title="Dashboard'a Dön">
+            <i class="fa-solid fa-chevron-left"></i>
         </button>
-        <h1 class="text-sm font-bold tracking-wide">Profilim</h1>
-        <button class="text-red-400 hover:text-red-500 transition">
-            <i class="fa-solid fa-right-from-bracket text-lg"></i>
+        <div class="nav-title">Profilim</div>
+        <button class="nav-btn logout-btn" onclick="logout()" title="Çıkış Yap">
+            <i class="fa-solid fa-right-from-bracket"></i>
         </button>
-    </header>
+    </nav>
 
-    <main class="w-full max-w-md mx-auto flex-1 flex flex-col">
+    <main class="profile-container">
         
-        <section class="p-6 flex flex-col items-center text-center">
-            <div class="w-20 h-20 rounded-full bg-[#0D111A] border border-[#00F5D4]/40 flex items-center justify-center neon-shadow mb-3">
-                <i class="fa-solid fa-user text-3xl text-[#00F5D4]"></i>
+        <div class="user-card">
+            <div class="avatar-container">
+                <i class="fa-solid fa-user"></i>
             </div>
-            
-            <h2 class="text-sm font-bold tracking-wide text-white/90">kullanici@lades.com</h2>
-            
-            <div class="w-full bg-gradient-to-br from-[#0D111A] to-[#141A29] rounded-2xl border border-white/5 p-4 mt-5 flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                    <div class="w-5 h-5 rounded-full bg-[#FFBE0B] flex items-center justify-center text-[10px] font-black text-black">
-                        T
-                    </div>
-                    <span class="text-xs font-bold tracking-wider text-white/70">BAKİYE</span>
-                </div>
-                <span class="text-sm font-bold text-[#00F5D4]">1500 Token</span>
+            <div class="user-email" id="userEmail">Yükleniyor...</div>
+        </div>
+
+        <div class="balance-box">
+            <div class="balance-label">
+                <div class="coin-icon">T</div>
+                BAKİYE
             </div>
-        </section>
+            <div class="balance-amount" id="userBalance">0 Token</div>
+        </div>
 
-        <nav class="bg-[#0D111A] flex border-b border-white/5">
-            <button onclick="switchTab('aktif')" id="tab-aktif" class="flex-1 py-3 text-xs font-bold tracking-wider text-center transition tab-active">
-                AKTİF LADESLERİM
-            </button>
-            <button onclick="switchTab('gecmis')" id="tab-gecmis" class="flex-1 py-3 text-xs font-bold tracking-wider text-center text-white/50 transition">
-                GEÇMİŞ / ÖZET
-            </button>
-        </nav>
+        <div class="tabs-nav">
+            <button class="tab-link active" onclick="switchTab(event, 'aktif-ladesler')">AKTİF LADESLERİM</button>
+            <button class="tab-link" onclick="switchTab(event, 'gecmis-ozet')">GEÇMİŞ / ÖZET</button>
+        </div>
 
-        <section class="p-4 flex-1">
-            
-            <div id="content-aktif" class="space-y-3">
-                <div class="bg-[#0D111A] rounded-2xl border border-white/5 p-4 flex flex-col gap-3">
-                    <h3 class="text-sm font-bold leading-relaxed">Bu akşamki Beşiktaş maçı üst biter mi?</h3>
-                    
-                    <div class="w-full h-7 rounded-lg overflow-hidden flex text-[10px] font-bold">
-                        <div class="bg-[#00F5D4] text-black flex items-center justify-center transition-all" style="width: 65%;">
-                            EVET %65
-                        </div>
-                        <div class="bg-[#FF006E] text-white flex items-center justify-center transition-all" style="width: 35%;">
-                            HAYIR %35
-                        </div>
-                    </div>
-                    
-                    <div class="flex items-center justify-between text-xs">
-                        <span class="text-white/50">Toplam Havuz: 4500 T</span>
-                        <span class="bg-amber-500/10 text-amber-400 font-bold px-2 py-1 rounded-md text-[10px]">
-                            Tarafınız: EVET (250 T)
-                        </span>
-                    </div>
+        <div id="aktif-ladesler" class="tab-content active">
+            <div id="aktifListContainer">
+                <div class="empty-state">
+                    Aktif katıldığınız lades bulunmuyor.
                 </div>
             </div>
+        </div>
 
-            <div id="content-gecmis" class="space-y-3 hidden">
-                <div class="bg-[#0D111A] rounded-2xl border border-[#00F5D4]/15 p-4 flex items-center justify-between gap-4">
-                    <div class="flex flex-col gap-1.5">
-                        <h3 class="text-sm font-semibold leading-snug">Federer Wimbledon'ı kazanır mı?</h3>
-                        <div class="flex items-center gap-3 text-xs text-white/40">
-                            <span>12.06.2026</span>
-                            <span>• Seçim: EVET</span>
-                        </div>
-                    </div>
-                    <div class="flex flex-col items-end gap-1.5 shrink-0">
-                        <span class="bg-[#00F5D4]/15 text-[#00F5D4] text-[10px] font-bold px-2 py-1 rounded-md">KAZANDI</span>
-                        <span class="text-sm font-bold text-[#00F5D4]">+450 T</span>
-                    </div>
-                </div>
-
-                <div class="bg-[#0D111A] rounded-2xl border border-[#FF006E]/15 p-4 flex items-center justify-between gap-4">
-                    <div class="flex flex-col gap-1.5">
-                        <h3 class="text-sm font-semibold leading-snug">Bitcoin bu hafta 100k$ barajını geçer mi?</h3>
-                        <div class="flex items-center gap-3 text-xs text-white/40">
-                            <span>08.06.2026</span>
-                            <span>• Seçim: HAYIR</span>
-                        </div>
-                    </div>
-                    <div class="flex flex-col items-end gap-1.5 shrink-0">
-                        <span class="bg-[#FF006E]/15 text-[#FF006E] text-[10px] font-bold px-2 py-1 rounded-md">KAYBETTİ</span>
-                        <span class="text-sm font-bold text-[#FF006E]">-200 T</span>
-                    </div>
+        <div id="gecmis-ozet" class="tab-content">
+            <div id="gecmisListContainer">
+                <div class="empty-state">
+                    Sonuçlanmış lades geçmişiniz bulunmuyor.
                 </div>
             </div>
+        </div>
 
-        </section>
     </main>
 
     <script>
-        function switchTab(tab) {
-            const aktifBtn = document.getElementById('tab-aktif');
-            const gecmisBtn = document.getElementById('tab-gecmis');
-            const aktifContent = document.getElementById('content-aktif');
-            const gecmisContent = document.getElementById('content-gecmis');
+        // Sayfa yüklendiğinde çalışacak ana fonksiyon
+        document.addEventListener("DOMContentLoaded", () => {
+            loadUserProfile();
+            loadUserLadesHistory();
+        });
 
-            if (tab === 'aktif') {
-                aktifBtn.classList.add('tab-active', 'text-[#00F5D4]');
-                aktifBtn.classList.remove('text-white/50');
-                gecmisBtn.classList.remove('tab-active', 'text-[#00F5D4]');
-                gecmisBtn.classList.add('text-white/50');
+        // 3) Aktif Kullanıcı Bilgilerini Getirme Fonksiyonu
+        function loadUserProfile() {
+            // Dashboard'a giriş yapmış güncel kullanıcıyı localStorage veya sessionStorage'dan çekiyoruz
+            // Projenizde auth objesi neredeyse orayı bağlayabilirsiniz (Örn: auth.currentUser veya custom login verisi)
+            const currentUserEmail = localStorage.getItem("loggedInUserEmail") || "test@lades.com"; 
+            const currentUserTokens = localStorage.getItem("userTokens") || "2.000 Token";
+
+            // Arayüze yazdırma
+            document.getElementById("userEmail").innerText = currentUserEmail;
+            document.getElementById("userBalance").innerText = currentUserTokens;
+        }
+
+        // 1) Dashboard'a Geri Dönüş Fonksiyonu
+        function goToDashboard() {
+            window.location.href = "dashboard.html";
+        }
+
+        // 2) Çıkış Yapma Fonksiyonu
+        function logout() {
+            // Oturum verilerini temizleme (İsteğe bağlı)
+            // localStorage.removeItem("loggedInUserEmail"); 
+            alert("Çıkış yapılıyor...");
+            window.location.href = "index.html"; // veya giriş sayfanız hangisiyse
+        }
+
+        // Sekme Değiştirme Mantığı
+        function switchTab(event, tabId) {
+            const tabContents = document.querySelectorAll(".tab-content");
+            tabContents.forEach(content => content.classList.remove("active"));
+
+            const tabLinks = document.querySelectorAll(".tab-link");
+            tabLinks.forEach(link => link.classList.remove("active"));
+
+            document.getElementById(tabId).classList.add("active");
+            event.currentTarget.classList.add("active");
+        }
+
+        // 4 & 5) Dinamik Lades Verilerini Yükleme Fonksiyonu (Örnek Entegrasyon Altyapısı)
+        function loadUserLadesHistory() {
+            // Bu kısım normal şartlarda DB'den (Firebase vb.) kullanıcının katıldığı lades id'lerine göre süzülür.
+            // Örnek dinamik veri yapısı şöyledir (Veri geldiğinde boş durum kalkar ve listelenir):
+            
+            const userActiveLades = [
+                /* Eğer aktif lades varsa şunun gibi objeler push edilecek:
+                {
+                    title: "Bu akşamki Beşiktaş maçı üst biter mi?",
+                    evetYuzde: 65,
+                    hayirYuzde: 35,
+                    totalPool: "4500 T",
+                    userChoice: "EVET (250 T)"
+                } 
+                */
+            ];
+
+            const userPastLades = [];
+
+            // EĞER AKTİF LADES VARSA LİSTELE (Boşsa dokunma, default 'Bulunmuyor' yazısı kalır)
+            if (userActiveLades.length > 0) {
+                const aktifContainer = document.getElementById("aktifListContainer");
+                aktifContainer.innerHTML = ""; // Boş durum yazısını temizle
                 
-                aktifContent.classList.remove('hidden');
-                gecmisContent.classList.add('hidden');
-            } else {
-                gecmisBtn.classList.add('tab-active', 'text-[#00F5D4]');
-                gecmisBtn.classList.remove('text-white/50');
-                aktifBtn.classList.remove('tab-active', 'text-[#00F5D4]');
-                aktifBtn.classList.add('text-white/50');
-                
-                gecmisContent.classList.remove('hidden');
-                aktifContent.classList.add('hidden');
+                userActiveLades.forEach(item => {
+                    aktifContainer.innerHTML += `
+                        <div class="lades-card">
+                            <div class="lades-title">${item.title}</div>
+                            <div class="lades-progress-bar">
+                                <div class="progress-evet" style="width: ${item.evetYuzde}%">EVET %${item.evetYuzde}</div>
+                                <div class="progress-hayir" style="width: ${item.hayirYuzde}%">HAYIR %${item.hayirYuzde}</div>
+                            </div>
+                            <div class="lades-meta">
+                                <div class="pool-info">Toplam Havuz: ${item.totalPool}</div>
+                                <div class="user-bet">Tarafınız: ${item.userChoice}</div>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+
+            // EĞER GEÇMİŞ LADES VARSA LİSTELE
+            if (userPastLades.length > 0) {
+                const gecmisContainer = document.getElementById("gecmisListContainer");
+                gecmisContainer.innerHTML = ""; // Boş durum yazısını temizle
+
+                userPastLades.forEach(item => {
+                    gecmisContainer.innerHTML += `
+                        <div class="lades-card">
+                            <div class="lades-title">${item.title}</div>
+                            <div class="lades-meta">
+                                <div class="pool-info">Toplam Havuz: ${item.totalPool}</div>
+                                <div class="status-badge ${item.status === 'Kazandı' ? 'status-win' : 'status-lose'}">${item.status}</div>
+                            </div>
+                        </div>
+                    `;
+                });
             }
         }
     </script>
