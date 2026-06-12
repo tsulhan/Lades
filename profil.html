@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Profilim - LADES</title>
-    <!-- Google Fonts & FontAwesome Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -86,7 +85,6 @@
             flex: 1;
         }
 
-        /* Kullanıcı Kartı */
         .user-card {
             text-align: center;
             margin-bottom: 30px;
@@ -197,7 +195,6 @@
             box-shadow: 0 0 10px var(--accent-cyan);
         }
 
-        /* Tab İçerikleri */
         .tab-content {
             display: none;
         }
@@ -206,7 +203,6 @@
             display: block;
         }
 
-        /* Boş Durum Tasarımı */
         .empty-state {
             text-align: center;
             padding: 40px 20px;
@@ -215,7 +211,7 @@
             line-height: 1.6;
         }
 
-        /* Dinamik Lades Kart Tasarımı */
+        /* Lades Listeleri */
         .lades-card {
             background-color: var(--card-bg);
             border: 1px solid var(--border-color);
@@ -292,7 +288,6 @@
 </head>
 <body>
 
-    <!-- Üst Navbar Bölümü -->
     <nav class="navbar">
         <button class="nav-btn" onclick="goToDashboard()" title="Dashboard'a Dön">
             <i class="fa-solid fa-chevron-left"></i>
@@ -303,10 +298,7 @@
         </button>
     </nav>
 
-    <!-- Ana Profil Alanı -->
     <main class="profile-container">
-        
-        <!-- Kullanıcı Bilgileri -->
         <div class="user-card">
             <div class="avatar-container">
                 <i class="fa-solid fa-user"></i>
@@ -314,107 +306,148 @@
             <div class="user-email" id="userEmail">Yükleniyor...</div>
         </div>
 
-        <!-- Bakiye Bilgisi -->
         <div class="balance-box">
             <div class="balance-label">
                 <div class="coin-icon">T</div>
                 BAKİYE
             </div>
-            <div class="balance-amount" id="userBalance">0 Token</div>
+            <div class="balance-amount" id="userBalance">Yükleniyor...</div>
         </div>
 
-        <!-- Sekme Seçimi (Tabs) -->
         <div class="tabs-nav">
             <button class="tab-link active" onclick="switchTab(event, 'aktif-ladesler')">AKTİF LADESLERİM</button>
             <button class="tab-link" onclick="switchTab(event, 'gecmis-ozet')">GEÇMİŞ / ÖZET</button>
         </div>
 
-        <!-- 1) Aktif Ladesler Sekmesi -->
         <div id="aktif-ladesler" class="tab-content active">
             <div id="aktifListContainer">
                 <div class="empty-state">Aktif katıldığınız lades bulunmuyor.</div>
             </div>
         </div>
 
-        <!-- 2) Geçmiş / Özet Sekmesi -->
         <div id="gecmis-ozet" class="tab-content">
             <div id="gecmisListContainer">
                 <div class="empty-state">Sonuçlanmış lades geçmişiniz bulunmuyor.</div>
             </div>
         </div>
-
     </main>
 
-    <!-- Firebase SDK Entegrasyonu (Uygulama Firebase veritabanı kullanıyorsa aktifleşir) -->
     <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-database-compat.js"></script>
 
     <script>
+        // FİRÊBASE AYARLARI
+        const firebaseConfig = {
+            databaseURL: "https://lades-app-2027-default-rtdb.firebaseio.com" // Kendi Firebase URL'ini buraya yazabilirsin
+        };
+        
+        // Başlatma kontrolü
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const database = firebase.database();
+
         document.addEventListener("DOMContentLoaded", () => {
-            loadUserProfile();
+            initProfile();
         });
 
-        // KULLANICIYA ÖZEL VERİLERİ BULMA VE GERÇEK ZAMANLI EŞLEŞTİRME
-        function loadUserProfile() {
-            // 1. Giriş yapmış güncel kullanıcının mailini çek
-            const activeUserEmail = localStorage.getItem("loggedInUserEmail") || 
-                                    localStorage.getItem("currentUser") || 
-                                    localStorage.getItem("userEmail");
+        function initProfile() {
+            // Giriş yapan aktif kullanıcının mailini dashboard'un yazdığı tüm olası local slotlardan oku
+            const email = localStorage.getItem("loggedInUserEmail") || 
+                          localStorage.getItem("currentUser") || 
+                          localStorage.getItem("userEmail");
 
-            if (!activeUserEmail) {
-                // Güvenlik Duvarı: Eğer hiçbir kullanıcı oturumu yoksa login sayfasına atar
-                window.location.replace("login.html");
+            if (!email) {
+                window.location.replace("index.html");
                 return;
             }
 
-            document.getElementById("userEmail").innerText = activeUserEmail;
+            document.getElementById("userEmail").innerText = email;
+            
+            // Firebase anahtarı için noktaları alt tire yapıyoruz (tsulhan@gmail.com -> tsulhan@gmail_com)
+            const userKey = email.replace(/\./g, "_");
 
-            // 2. KULLANICI BAZLI TOKEn/BAKİYE EŞLEŞTİRME SİSTEMİ
-            // Firebase veya LocalStorage tabanlı kullanıcılar listesini tara
-            let usersData = {};
-            try {
-                usersData = JSON.parse(localStorage.getItem("users")) || {};
-            } catch(e) {
-                usersData = {};
-            }
-
-            // E-posta adresindeki geçersiz karakterleri temizleyerek bir ID oluşturma (Örn: Firebase key uyumluluğu için)
-            const userKey = activeUserEmail.replace(/[.$#[\]]/g, "_");
-
-            let currentTokens = null;
-
-            // Eğer veritabanında bu kullanıcıya ait nesne varsa tokenını çek
-            if (usersData[userKey] && usersData[userKey].tokens !== undefined) {
-                currentTokens = usersData[userKey].tokens;
-            } else if (localStorage.getItem(`tokens_${activeUserEmail}`)) {
-                currentTokens = localStorage.getItem(`tokens_${activeUserEmail}`);
-            }
-
-            // Görsel doğrulama algoritması (Eğer veritabanı kaydı henüz oluşmadıysa görsellere göre kesinleştirme)
-            if (currentTokens === null) {
-                if (activeUserEmail === "tsulhan@gmail.com") {
-                    currentTokens = "6.000"; // image_878759.png'deki gerçek değeriniz
-                } else if (activeUserEmail === "test@lades.com") {
-                    currentTokens = "1.500";
+            // 1. ADIM: GERÇEK ZAMANLI BAKİYE VE KULLANICI VERİSİ OKUMA
+            database.ref(`users/${userKey}`).on('value', (snapshot) => {
+                const userData = snapshot.val();
+                if (userData && userData.tokens !== undefined) {
+                    const tokenCount = Number(userData.tokens);
+                    document.getElementById("userBalance").innerText = tokenCount.toLocaleString('tr-TR') + " Token";
                 } else {
-                    currentTokens = "1.000"; // Yeni kayıtlar için varsayılan taban bakiye
+                    document.getElementById("userBalance").innerText = "0 Token";
                 }
+            });
+
+            // 2. ADIM: PAZARLARI (LADESLERİ) VE KULLANICININ YATIRDIĞI TAHMİNLERİ DOĞRUDAN FİLTRELEME
+            database.ref('markets').on('value', (snapshot) => {
+                const markets = snapshot.val();
+                fetchUserBets(email, markets);
+            });
+        }
+
+        function fetchUserBets(userEmail, markets) {
+            const aktifContainer = document.getElementById("aktifListContainer");
+            const gecmisContainer = document.getElementById("gecmisListContainer");
+
+            let aktifHTML = "";
+            let gecmisHTML = "";
+
+            if (markets) {
+                Object.keys(markets).forEach(marketId => {
+                    const market = markets[marketId];
+                    
+                    // Kullanıcının bu ladese yaptığı yatırımı kontrol et (Firebase 'bets' veya market içindeki nesne)
+                    let userBet = null;
+                    if (market.bets) {
+                        // Email karakter eşleşmesine göre kuponu bul
+                        const safeEmailKey = userEmail.replace(/\./g, "_");
+                        userBet = market.bets[safeEmailKey] || market.bets[userEmail];
+                    }
+
+                    // Eğer kullanıcı bu ladese oynamışsa listele
+                    if (userBet || (market.userEmail === userEmail && market.userBetAmount)) {
+                        const betAmount = userBet ? (userBet.amount || userBet) : market.userBetAmount;
+                        const betChoice = userBet ? (userBet.choice || userBet.type) : market.userBetChoice;
+
+                        // Oran hesaplama güvenliği
+                        const totalPool = market.totalPool || market.pool || 0;
+                        const evetYuzde = market.evetYuzde !== undefined ? market.evetYuzde : 50;
+                        const hayirYuzde = market.hayirYuzde !== undefined ? market.hayirYuzde : 50;
+
+                        if (market.status === "ACTIVE" || !market.status) {
+                            aktifHTML += `
+                                <div class="lades-card">
+                                    <div class="lades-title">${market.question}</div>
+                                    <div class="lades-progress-bar">
+                                        <div class="progress-evet" style="width: ${evetYuzde}%">EVET %${evetYuzde}</div>
+                                        <div class="progress-hayir" style="width: ${hayirYuzde}%">HAYIR %${hayirYuzde}</div>
+                                    </div>
+                                    <div class="lades-meta">
+                                        <div class="pool-info">Toplam Hacim: ${Number(totalPool).toLocaleString('tr-TR')} Token</div>
+                                        <div class="user-bet">Tarafınız: ${betChoice} (${Number(betAmount).toLocaleString('tr-TR')} T)</div>
+                                    </div>
+                                </div>
+                            `;
+                        } else if (market.status === "FINISHED") {
+                            const isWin = market.result === betChoice;
+                            gecmisHTML += `
+                                <div class="lades-card">
+                                    <div class="lades-title">${market.question}</div>
+                                    <div class="lades-meta">
+                                        <div class="pool-info">Toplam Havuz: ${Number(totalPool).toLocaleString('tr-TR')} Token</div>
+                                        <div class="status-badge ${isWin ? 'status-win' : 'status-lose'}">
+                                            ${isWin ? 'Kazandı' : 'Kaybetti'} (${Number(betAmount).toLocaleString('tr-TR')} T)
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        }
+                    }
+                });
             }
 
-            // Sayı formatlaması yap (Örn: 6000 -> 6.000 Token)
-            let formattedTokens = currentTokens.toString();
-            if (!formattedTokens.includes("Token")) {
-                if (!isNaN(formattedTokens)) {
-                    formattedTokens = Number(formattedTokens).toLocaleString('tr-TR') + " Token";
-                } else {
-                    formattedTokens = formattedTokens + " Token";
-                }
-            }
-
-            document.getElementById("userBalance").innerText = formattedTokens;
-
-            // Kullanıcının kişisel geçmiş ladeslerini yükle
-            loadUserLadesHistory(activeUserEmail);
+            aktifContainer.innerHTML = aktifHTML || `<div class="empty-state">Aktif katıldığınız lades bulunmuyor.</div>`;
+            gecmisContainer.innerHTML = gecmisHTML || `<div class="empty-state">Sonuçlanmış lades geçmişiniz bulunmuyor.</div>`;
         }
 
         function goToDashboard() {
@@ -422,9 +455,8 @@
         }
 
         function logout() {
-            localStorage.removeItem("loggedInUserEmail");
-            localStorage.removeItem("currentUser");
-            window.location.replace("login.html"); 
+            localStorage.clear();
+            window.location.replace("index.html"); 
         }
 
         function switchTab(event, tabId) {
@@ -436,88 +468,6 @@
 
             document.getElementById(tabId).classList.add("active");
             event.currentTarget.classList.add("active");
-        }
-
-        // Giriş yapan kullanıcıya ait kupon ve lades geçmişini süzme
-        function loadUserLadesHistory(userEmail) {
-            const aktifContainer = document.getElementById("aktifListContainer");
-            const gecmisContainer = document.getElementById("gecmisListContainer");
-
-            let appMarkets = [];
-            try {
-                appMarkets = JSON.parse(localStorage.getItem('markets')) || [];
-            } catch(e) {
-                appMarkets = [];
-            }
-
-            // Eğer veritabanı henüz boşsa kullanıcı bazlı temiz arayüz simülasyonu sağla
-            if (appMarkets.length === 0) {
-                if (userEmail === "tsulhan@gmail.com") {
-                    // tsulhan@gmail.com kullanıcısının şu an aktif oynadığı lades yoksa boş dursun veya test verisi basılsın
-                    appMarkets = [
-                        {
-                            id: "m1",
-                            question: "bedo padele başlar mı?",
-                            status: "ACTIVE",
-                            evetYuzde: 44, // image_878759.png'deki güncel oranlar
-                            hayirYuzde: 56,
-                            totalPool: "4.500",
-                            userBetAmount: "500",
-                            userBetChoice: "HAYIR"
-                        }
-                    ];
-                } else {
-                    appMarkets = [
-                        {
-                            id: "m2",
-                            question: "bedo padele başlar mı?",
-                            status: "ACTIVE",
-                            evetYuzde: 80,
-                            hayirYuzde: 20,
-                            totalPool: "2.500",
-                            userBetAmount: "250",
-                            userBetChoice: "EVET"
-                        }
-                    ];
-                }
-            }
-
-            let aktifHTML = "";
-            let gecmisHTML = "";
-
-            appMarkets.forEach(market => {
-                if (market.status === "ACTIVE") {
-                    aktifHTML += `
-                        <div class="lades-card">
-                            <div class="lades-title">${market.question}</div>
-                            <div class="lades-progress-bar">
-                                <div class="progress-evet" style="width: ${market.evetYuzde}%">EVET %${market.evetYuzde}</div>
-                                <div class="progress-hayir" style="width: ${market.hayirYuzde}%">HAYIR %${market.hayirYuzde}</div>
-                            </div>
-                            <div class="lades-meta">
-                                <div class="pool-info">Toplam Hacim: ${market.totalPool} Token</div>
-                                <div class="user-bet">Tarafınız: ${market.userBetChoice} (${market.userBetAmount} T)</div>
-                            </div>
-                        </div>
-                    `;
-                } else if (market.status === "FINISHED") {
-                    const isWin = market.result === market.userBetChoice;
-                    gecmisHTML += `
-                        <div class="lades-card">
-                            <div class="lades-title">${market.question}</div>
-                            <div class="lades-meta">
-                                <div class="pool-info">Toplam Havuz: ${market.totalPool} Token</div>
-                                <div class="status-badge ${isWin ? 'status-win' : 'status-lose'}">
-                                    ${isWin ? 'Kazandı' : 'Kaybetti'} (${market.userBetAmount} T)
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                }
-            });
-
-            if (aktifHTML !== "") { aktifContainer.innerHTML = aktifHTML; }
-            if (gecmisHTML !== "") { gecmisContainer.innerHTML = gecmisHTML; }
         }
     </script>
 </body>
