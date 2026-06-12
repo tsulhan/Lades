@@ -92,6 +92,10 @@
             transition: 0.3s;
             padding: 8px;
             border-radius: 50px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .icon-btn:hover {
@@ -550,26 +554,6 @@
             color: #94a3b8;
         }
 
-        /* Yeni Eklenen Profil Alanı CSS Stilleri */
-        .profile-card-group {
-            text-align: left;
-            margin-bottom: 18px;
-        }
-        .profile-card-label {
-            display: block;
-            font-size: 11px;
-            color: #64748b;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
-            margin-bottom: 4px;
-        }
-        .profile-card-value {
-            color: white;
-            font-size: 15px;
-            font-weight: 600;
-        }
-
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(8px); }
             to { opacity: 1; transform: translateY(0); }
@@ -653,9 +637,9 @@
                 <i class="fa-solid fa-user-shield"></i>
             </button>
 
-            <button class="icon-btn" onclick="openMyProfileModal()" title="Profilim">
+            <a href="profil.html" class="icon-btn" title="Profilim">
                 <i class="fa-solid fa-user"></i>
-            </button>
+            </a>
 
             <button class="icon-btn btn-logout" onclick="logout()" title="Çıkış Yap">
                 <i class="fa-solid fa-right-from-bracket"></i>
@@ -836,77 +820,7 @@
         </div>
     </div>
 
-    <div id="my-profile-modal" class="modal-overlay" style="display: none !important;">
-        <div class="modal" style="max-width: 420px;">
-            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 22px; border-bottom: 1px solid #1c2541; padding-bottom: 12px;">
-                <h3 style="color: #24ffff; margin: 0; font-size: 20px; font-weight: 700;">👤 Profil Bilgilerim</h3>
-            </div>
-            
-            <div style="margin-bottom: 25px;">
-                <div class="profile-card-group">
-                    <span class="profile-card-label">E-Posta Adresi</span>
-                    <span id="profile-card-email" class="profile-card-value">-</span>
-                </div>
-                
-                <div class="profile-card-group">
-                    <span class="profile-card-label">Hesap Yetki Tipi</span>
-                    <span id="profile-card-role" class="profile-card-value" style="text-transform: uppercase;">-</span>
-                </div>
-                
-                <div class="profile-card-group" style="margin-bottom: 5px;">
-                    <span class="profile-card-label">Hesap Bakiyesi</span>
-                    <span style="color: #22c55e; font-weight: 800; font-size: 17px; display: flex; align-items: center; gap: 6px;">
-                        💰 <span id="profile-card-tokens">0</span> TOKEN
-                    </span>
-                </div>
-            </div>
-
-            <div class="modal-buttons">
-                <button class="btn-modal btn-cancel" onclick="closeMyProfileModal()" style="width: 100%; font-weight: 700;">Kapat</button>
-            </div>
-        </div>
-    </div>
-
     <script src="src/js/core.js"></script>
     <script src="src/js/app.js"></script>
-
-    <script>
-        function openMyProfileModal() {
-            // Giriş kontrolündeki currentUser anahtarından e-postayı okuyoruz
-            const activeUserEmail = localStorage.getItem('currentUser');
-            const profileEmailElement = document.getElementById('profile-card-email');
-            const profileRoleElement = document.getElementById('profile-card-role');
-            const profileTokensElement = document.getElementById('profile-card-tokens');
-            const myModal = document.getElementById('my-profile-modal');
-
-            if (activeUserEmail) {
-                profileEmailElement.innerText = activeUserEmail;
-                
-                // Rol kontrolü: Admin butonunun görünürlük durumuna veya e-postaya göre dinamik belirleme
-                const adminBtn = document.getElementById('admin-panel-btn');
-                if ((adminBtn && adminBtn.style.display !== 'none') || activeUserEmail.toLowerCase() === 'test@lades.com') {
-                    profileRoleElement.innerText = 'Yönetici (Admin)';
-                    profileRoleElement.style.color = '#ff4aa2';
-                } else {
-                    profileRoleElement.innerText = 'Standart Kullanıcı';
-                    profileRoleElement.style.color = '#24ffff';
-                }
-            }
-
-            // Üst barda yer alan anlık token değerini çekip modal içine aktarıyoruz
-            const liveTokenBalance = document.getElementById('token-balance');
-            if (liveTokenBalance) {
-                profileTokensElement.innerText = liveTokenBalance.innerText;
-            }
-
-            // Tasarımdaki [style*="display: flex"] kuralını tetiklemek için attribute değiştiriyoruz
-            myModal.setAttribute('style', 'display: flex !important;');
-        }
-
-        function closeMyProfileModal() {
-            const myModal = document.getElementById('my-profile-modal');
-            myModal.setAttribute('style', 'display: none !important;');
-        }
-    </script>
 </body>
 </html>
