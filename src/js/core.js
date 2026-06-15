@@ -2,6 +2,9 @@
 // LADES CORE.JS - SABİT ALTYAPİ VE UTILITY MOTORU
 // ======================================================
 
+// Global Firebase Veritabanı Değişkeni
+let db;
+
 function fbRef(path) { return db.ref(path); }
 function fbGet(path) { return fbRef(path).once("value").then(snapshot => snapshot.val()); }
 function fbSet(path, value) { return fbRef(path).set(value); }
@@ -30,16 +33,24 @@ function safeParse(key, fallback) {
 function safeSave(key, value) { localStorage.setItem(key, JSON.stringify(value)); }
 
 const DEFAULT_USERS = {
-    "tsulhan@gmail.com": { email: "tsulhan@gmail.com", password: "1234", balance: 10000, isAdmin: true },
+    "tsulhan@gmail.com": { email: "tsulhan@gmail.com", password: "1234", balance: 3600, isAdmin: true },
     "test@lades.com": { email: "test@lades.com", password: "1234", balance: 1000, isAdmin: false },
     "nehir@lades.com": { email: "nehir@lades.com", password: "1234", balance: 500, isAdmin: false }
 };
 
 const DEFAULT_INVITE_CODES = { code1: "LADES2026", code2: "VIPUX" };
 
-// GÜNCELLENEN BOOTSTRAP MOTORU (SABİTLEME KALDIRILDI)
+// GÜNCELLENEN BOOTSTRAP MOTORU (OTOMATİK BAĞLANTI SAKLIDIR)
 async function bootstrapFirebase() {
-    if (typeof db === "undefined" || !db) { console.error("Firebase bağlantısı yok."); return; }
+    // Eğer global db henüz tanımlanmadıysa, yüklü olan Firebase instance'ından eşitlemeyi dene
+    if (typeof db === "undefined" || !db) {
+        if (typeof firebase !== "undefined" && firebase.apps && firebase.apps.length > 0) {
+            db = firebase.database();
+        } else {
+            console.error("Firebase kütüphaneleri veya instance bulunamadı. Bağlantı yok.");
+            return;
+        }
+    }
 
     const modalEl = document.getElementById("bet-modal");
     if (modalEl) { modalEl.style.display = "none"; }
@@ -69,7 +80,7 @@ async function bootstrapFirebase() {
             });
             if (obj["tsulhan@gmail,com"]) {
                 obj["tsulhan@gmail,com"].isAdmin = true;
-                if (typeof obj["tsulhan@gmail,com"].balance !== "number") obj["tsulhan@gmail,com"].balance = 10000;
+                if (typeof obj["tsulhan@gmail,com"].balance !== "number") obj["tsulhan@gmail,com"].balance = 3600;
             }
             await fbSet("ladesUsers", obj);
         } else {
