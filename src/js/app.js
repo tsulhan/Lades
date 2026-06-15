@@ -952,21 +952,6 @@ async function setTokensManual(email, currentBalance) {
     await renderAdminPanel();
 }
 
-async function hardResetDatabase() {
-    if (confirm("Tüm verileri sıfırlamak istiyor musunuz?")) {
-        localStorage.clear();
-        if (typeof db !== "undefined" && db) {
-            await fbSet("ladesUsers", {});
-            await fbSet("inviteCodes", {});
-            await fbSet("adminRequests", {});
-            await fbSet("customMarkets", {});
-            await fbSet("betHistory", {});
-        }
-        alert("Veritabanı sıfırlandı!");
-        window.location.reload();
-    }
-}
-
 // ------------------------------------------------------
 // MODAL FONKSİYONLARI
 // ------------------------------------------------------
