@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <script>
-        // KESİN GİRİŞ KONTROLÜ
+        // Kesin Giriş Kontrolü
         const user = localStorage.getItem('currentUser');
         if (!user || user === 'null' || user === 'undefined' || user.trim() === '') {
             localStorage.removeItem('currentUser');
@@ -131,7 +131,6 @@
             border-radius: 24px;
             width: 100%;
             text-align: center;
-            animation: fadeIn 0.4s ease;
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
 
@@ -238,11 +237,6 @@
             font-size: 14px;
             font-weight: 700;
             color: #f8fafc;
-        }
-
-        .lades-meta {
-            font-size: 12px;
-            color: #64748b;
         }
 
         .lades-side {
@@ -382,7 +376,7 @@
             </div>
 
             <div id="tab-content" class="tabs-content">
-                <div class="empty-state"><i class="fa-solid fa-spinner fa-spin"></i> Veriler yükleniyor...</div>
+                <div class="empty-state"><i class="fa-solid fa-spinner fa-spin"></i> Veriler kontrol ediliyor...</div>
             </div>
 
             <a href="dashboard.html" class="btn-back">
@@ -396,103 +390,87 @@
 
     <script>
         let currentActiveTab = 'active';
-        let allUserLadesData = []; 
+        let allUserLadesData = [];
+        let syncInterval = null;
 
         document.addEventListener("DOMContentLoaded", () => {
             const currentUser = localStorage.getItem('currentUser');
-            
-            if (currentUser) {
-                document.getElementById('user-email-badge').innerText = currentUser;
-                document.getElementById('profile-email-text').innerText = currentUser;
+            if (!currentUser) return;
 
-                const userKey = currentUser.replace(/\./g, '_');
+            document.getElementById('user-email-badge').innerText = currentUser;
+            document.getElementById('profile-email-text').innerText = currentUser;
+
+            const userKey = currentUser.replace(/\./g, '_');
+
+            // HİBRİT TAKİP: app.js'in veritabanı veya local hafıza yapılarını dinler
+            // Çakışma yaratmadan veriyi yakalar.
+            if (typeof db !== 'undefined') {
                 
-                if (typeof db !== 'undefined') {
-                    // 1. Üst Bakiye Senkronizasyonu
-                    db.ref('users/' + userKey).on('value', (snapshot) => {
-                        const userData = snapshot.val();
-                        if (userData) {
-                            const currentTokens = userData.tokens || userData.token || 0;
-                            document.getElementById('token-balance').innerText = Number(currentTokens).toLocaleString('tr-TR');
-                        }
-                    });
+                // Üst bakiye senkronizasyonu için app.js elementlerini koru
+                db.ref('users/' + userKey).on('value', (snapshot) => {
+                    const userData = snapshot.val();
+                    if (userData) {
+                        const currentTokens = userData.tokens || userData.token || 0;
+                        document.getElementById('token-balance').innerText = Number(currentTokens).toLocaleString('tr-TR');
+                    }
+                });
 
-                    // 2. GELİŞMİŞ VE GÜVENLİ HİBRİT PROTOKOL
-                    // Hem genel lades listesini hem de alt kırılımları tarar
-                    db.ref('ladesler').on('value', (snapshot) => {
-                        allUserLadesData = [];
-                        const ladesler = snapshot.val();
-                        
-                        if (ladesler) {
-                            Object.keys(ladesler).forEach(ladesId => {
-                                const lades = ladesler[ladesId];
-                                let userParticipation = null;
-
-                                // Senaryo A: Lades kartının içinde participants/oyuncular düğümü var mı?
-                                if (lades.participants && (lades.participants[userKey] || lades.participants[currentUser])) {
-                                    userParticipation = lades.participants[userKey] || lades.participants[currentUser];
-                                } 
-                                // Senaryo B: Doğrudan lades objesi içine userKey ile mi gömülmüş?
-                                else if (lades[userKey]) {
-                                    userParticipation = lades[userKey];
-                                }
-                                // Senaryo C: Alternatif 'bets' objesi kontrolü
-                                else if (lades.bets && lades.bets[userKey]) {
-                                    userParticipation = lades.bets[userKey];
-                                }
-
-                                // Eğer kullanıcı bu ladese bir şekilde katıldıysa listeye ekle
-                                if (userParticipation) {
-                                    const status = lades.status || ((lades.isOpen === false || lades.isClosed === true) ? 'closed' : 'open');
-                                    const investedAmount = userParticipation.invested || userParticipation.amount || 300; // Fallback 300
-                                    const selectedSide = userParticipation.side || userParticipation.choice || '';
-
-                                    allUserLadesData.push({
-                                        id: ladesId,
-                                        title: lades.title || 'Lades Bahsi',
-                                        status: status, 
-                                        invested: investedAmount,
-                                        side: selectedSide,
-                                        result: userParticipation.result || 0,
-                                        date: lades.endTime || lades.date || 'Aktif Veri'
-                                    });
-                                }
-                            });
-                        }
-
-                        // Eğer üstteki taramadan bir şey çıkmadıysa yedek olarak 'user_lades' veya 'user_bets' düğümünü de sorgula
-                        if (allUserLadesData.length === 0) {
-                            fetchFallbackNodes(userKey);
-                        } else {
-                            renderLadesList();
-                        }
-                    });
-
-                } else {
-                    showEmptyState();
-                }
+                // Doğrudan ana 'ladesler' ağacını bir kez bağla
+                db.ref('ladesler').on('value', (snapshot) => {
+                    processSnapshot(snapshot.val(), currentUser, userKey);
+                });
             }
+
+            // Garanti Döngüsü: Eğer asenkron bir kilitlenme veya gecikme olursa,
+            // app.js üzerindeki global değişkenleri (ladesListesi vb.) her 1 saniyede bir tarar.
+            syncInterval = setInterval(() => {
+                // app.js içindeki muhtemel global lades listelerini kontrol et
+                let appData = window.ladesler || window.ladesListesi || window.allLades;
+                if (appData && allUserLadesData.length === 0) {
+                    processSnapshot(appData, currentUser, userKey);
+                }
+            }, 1000);
         });
 
-        // Yedek Dinleyici: Eğer ana şemadan bağımsız izole bir düğüm varsa orayı tarar
-        function fetchFallbackNodes(userKey) {
-            db.ref('user_lades/' + userKey).once('value', (snapshot) => {
-                const data = snapshot.val();
-                if (data) {
-                    Object.keys(data).forEach(id => {
-                        allUserLadesData.push({
-                            id: id,
-                            title: data[id].title || 'Lades Bahsi',
-                            status: data[id].status || 'open',
-                            invested: data[id].invested || 300,
-                            side: data[id].side || '',
-                            result: data[id].result || 0,
-                            date: data[id].date || ''
-                        });
+        // Gelen veriyi tarayıp sadece giriş yapan kullanıcıya ait olanları ayıklayan fonksiyon
+        function processSnapshot(ladesler, currentUser, userKey) {
+            if (!ladesler) return;
+            
+            allUserLadesData = [];
+            
+            Object.keys(ladesler).forEach(ladesId => {
+                const lades = ladesler[ladesId];
+                let userParticipation = null;
+
+                // Tüm olası veri şeması modellerini tara (Veri sızıntısını önler)
+                if (lades.participants) {
+                    if (lades.participants[userKey]) userParticipation = lades.participants[userKey];
+                    else if (lades.participants[currentUser]) userParticipation = lades.participants[currentUser];
+                } else if (lades.bets && lades.bets[userKey]) {
+                    userParticipation = lades.bets[userKey];
+                } else if (lades[userKey]) {
+                    userParticipation = lades[userKey];
+                }
+
+                // Kullanıcı katılmışsa listeye ekle
+                if (userParticipation) {
+                    const status = lades.status || ((lades.isOpen === false || lades.isClosed === true || lades.completed === true) ? 'closed' : 'open');
+                    const investedAmount = userParticipation.invested || userParticipation.amount || 300; 
+                    const selectedSide = userParticipation.side || userParticipation.choice || 'Belirsiz';
+
+                    allUserLadesData.push({
+                        id: ladesId,
+                        title: lades.title || 'Lades Bahsi',
+                        status: status,
+                        invested: investedAmount,
+                        side: selectedSide,
+                        result: userParticipation.result || 0,
+                        date: lades.endTime || lades.date || ''
                     });
                 }
-                renderLadesList();
             });
+
+            renderLadesList();
         }
 
         function switchTab(tabName) {
@@ -569,6 +547,7 @@
         }
 
         function logout() {
+            if(syncInterval) clearInterval(syncInterval);
             localStorage.removeItem('currentUser');
             window.location.replace('login.html');
         }
