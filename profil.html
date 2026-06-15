@@ -16,6 +16,7 @@
         }
     </script>
 
+    <!-- Firebase Kütüphaneleri -->
     <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-database-compat.js"></script>
     <script src="src/js/firebase.js"></script>
@@ -116,7 +117,7 @@
         main {
             flex: 1;
             padding: 40px;
-            max-width: 600px;
+            max-width: 650px;
             width: 100%;
             margin: 0 auto;
             display: flex;
@@ -127,7 +128,7 @@
         .profile-container {
             background: #0b132b;
             border: 1px solid #1c2541;
-            padding: 40px;
+            padding: 35px;
             border-radius: 24px;
             width: 100%;
             text-align: center;
@@ -136,58 +137,155 @@
         }
 
         .profile-avatar {
-            width: 90px;
-            height: 90px;
+            width: 80px;
+            height: 80px;
             background: rgba(36, 255, 255, 0.1);
             border: 2px solid #24ffff;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 40px;
+            font-size: 36px;
             color: #24ffff;
-            margin: 0 auto 20px auto;
+            margin: 0 auto 15px auto;
             box-shadow: 0 0 20px rgba(36, 255, 255, 0.2);
         }
 
         .profile-container h2 {
-            font-size: 24px;
+            font-size: 22px;
             font-weight: 800;
-            margin-bottom: 5px;
+            margin-bottom: 4px;
             color: #fff;
         }
 
         .profile-container .email-text {
             color: #64748b;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 500;
-            margin-bottom: 30px;
+            margin-bottom: 25px;
         }
 
-        .info-card {
+        /* TAB DIZAYNI */
+        .tabs-header {
+            display: flex;
+            background: #030814;
+            border: 1px solid #1c2541;
+            border-radius: 14px;
+            padding: 6px;
+            margin-bottom: 20px;
+            gap: 5px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 12px;
+            background: transparent;
+            border: none;
+            color: #64748b;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            border-radius: 10px;
+            transition: 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .tab-btn:hover {
+            color: #fff;
+        }
+
+        .tab-btn.active {
+            background: #1c2541;
+            color: #24ffff;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .tabs-content {
             background: #030814;
             border: 1px solid #1c2541;
             border-radius: 16px;
             padding: 20px;
-            margin-bottom: 30px;
+            margin-bottom: 25px;
+            min-height: 200px;
+            max-height: 320px;
+            overflow-y: auto;
+            text-align: left;
+        }
+
+        /* Liste Elemanları */
+        .lades-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px;
+            border-bottom: 1px solid #1c2541;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .lades-item:last-child {
+            border-bottom: none;
+        }
+
+        .lades-info {
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 4px;
         }
 
-        .info-card .label {
-            font-size: 12px;
-            text-transform: uppercase;
-            color: #64748b;
+        .lades-title {
+            font-size: 14px;
             font-weight: 700;
-            letter-spacing: 1px;
+            color: #f8fafc;
         }
 
-        .info-card .value {
-            font-size: 32px;
+        .lades-meta {
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        .lades-amount {
+            font-size: 14px;
             font-weight: 800;
+            padding: 6px 12px;
+            border-radius: 20px;
+        }
+
+        .amount-active {
+            background: rgba(36, 255, 255, 0.08);
             color: #24ffff;
-            text-shadow: 0 0 10px rgba(36, 255, 255, 0.3);
+            border: 1px solid rgba(36, 255, 255, 0.2);
+        }
+
+        .amount-win {
+            background: rgba(34, 197, 94, 0.1);
+            color: #4ade80;
+            border: 1px solid rgba(34, 197, 94, 0.2);
+        }
+
+        .amount-lose {
+            background: rgba(239, 68, 68, 0.1);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #475569;
+            height: 150px;
+            gap: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .empty-state i {
+            font-size: 28px;
         }
 
         .btn-back {
@@ -214,21 +312,21 @@
             border-color: #334155;
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(8px); }
-            to { opacity: 1; transform: translateY(0); }
+        /* Scrollbar Özelleştirme */
+        .tabs-content::-webkit-scrollbar {
+            width: 6px;
+        }
+        .tabs-content::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .tabs-content::-webkit-scrollbar-thumb {
+            background: #1c2541;
+            border-radius: 10px;
         }
 
-        @media (max-width: 600px) {
-            header {
-                padding: 20px;
-            }
-            main {
-                padding: 20px;
-            }
-            .profile-container {
-                padding: 25px;
-            }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
         }
     </style>
 </head>
@@ -238,7 +336,6 @@
         <a href="dashboard.html" class="logo">⚡ LADES</a>
         <div class="header-center">
             <div id="user-email-badge" class="user-email-badge">yükleniyor...</div>
-            
             <div class="token-bag">💰 <span id="token-balance">0</span> TOKEN</div>
 
             <a href="profil.html" class="icon-btn active" title="Profilim">
@@ -259,9 +356,19 @@
             <h2>Kullanıcı Profili</h2>
             <div id="profile-email-text" class="email-text">yükleniyor...</div>
 
-            <div class="info-card">
-                <span class="label">Mevcut Toplam Bakiye</span>
-                <span id="profile-token-display" class="value">...</span>
+            <!-- TAB BUTONLARI -->
+            <div class="tabs-header">
+                <button class="tab-btn active" onclick="switchTab('active')">
+                    <i class="fa-solid fa-bolt"></i> Aktif Ladesler
+                </button>
+                <button class="tab-btn" onclick="switchTab('history')">
+                    <i class="fa-solid fa-clock-rotate-left"></i> Geçmiş
+                </button>
+            </div>
+
+            <!-- TAB İÇERİK ALANI -->
+            <div id="tab-content" class="tabs-content">
+                <div class="empty-state"><i class="fa-solid fa-spinner fa-spin"></i> Veriler yükleniyor...</div>
             </div>
 
             <a href="dashboard.html" class="btn-back">
@@ -274,45 +381,130 @@
     <script src="src/js/app.js"></script>
 
     <script>
+        let currentActiveTab = 'active';
+        let allUserLadesData = []; // Kullanıcının tüm lades verilerini tutacak
+
         document.addEventListener("DOMContentLoaded", () => {
             const currentUser = localStorage.getItem('currentUser');
             
             if (currentUser) {
-                // E-posta alanlarını yerleştir
                 document.getElementById('user-email-badge').innerText = currentUser;
                 document.getElementById('profile-email-text').innerText = currentUser;
 
-                // Firebase Realtime Database Canlı Dinleyicisi (on value)
-                // E-posta adresindeki noktaları alt tireye çeviriyoruz (Örn: isim.soyisim@gmail.com -> isim_soyisim@gmail_com)
                 const userKey = currentUser.replace(/\./g, '_');
                 
                 if (typeof db !== 'undefined') {
+                    // 1. Üst Bakiye Senkronizasyonu
                     db.ref('users/' + userKey).on('value', (snapshot) => {
                         const userData = snapshot.val();
                         if (userData) {
-                            // Veritabanındaki token veya tokens key'ini kontrol et
                             const currentTokens = userData.tokens || userData.token || 0;
-                            
-                            // Hem sağ üst köşedeki hem de profil ortasındaki büyük token değerini eşzamanlı güncelle
                             document.getElementById('token-balance').innerText = currentTokens;
-                            document.getElementById('profile-token-display').innerText = Number(currentTokens).toLocaleString('tr-TR') + " 💰";
                         }
                     });
-                } else {
-                    // Eğer core.js/app.js dosyaları Firebase'i zaten başlatıp global bir dinleyici kuruyorsa,
-                    // yerel saklama alanındaki değişiklikleri yakalamak için bir fallback tetikleyelim.
-                    setInterval(() => {
-                        const globalTokenElement = document.getElementById('token-balance');
-                        const localDisplayElement = document.getElementById('profile-token-display');
-                        if (globalTokenElement && localDisplayElement && globalTokenElement.innerText !== "0") {
-                            localDisplayElement.innerText = globalTokenElement.innerText + " 💰";
+
+                    // 2. Kullanıcının Katıldığı Ladesleri Canlı Dinleme
+                    db.ref('user_lades/' + userKey).on('value', (snapshot) => {
+                        allUserLadesData = [];
+                        const data = snapshot.val();
+                        
+                        if (data) {
+                            Object.keys(data).forEach(id => {
+                                allUserLadesData.push({
+                                    id: id,
+                                    title: data[id].title || 'Lades Bahsi',
+                                    status: data[id].status, // 'open' veya 'closed'
+                                    invested: data[id].invested || 0,
+                                    result: data[id].result || 0, // Kazanılan/kaybedilen net miktar veya total bakiye farkı
+                                    date: data[id].date || ''
+                                });
+                            });
                         }
-                    }, 500);
+                        // Listeyi mevcut aktif taba göre güncelle
+                        renderLadesList();
+                    });
+                } else {
+                    // Fallback Emülasyonu (Veritabanı yoksa test için boş durum gösterir)
+                    showEmptyState();
                 }
             }
         });
 
-        // Çıkış Yap Fonksiyonu
+        // Sekme Değiştirme Fonksiyonu
+        function switchTab(tabName) {
+            currentActiveTab = tabName;
+            
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            if(tabName === 'active') {
+                document.querySelectorAll('.tab-btn')[0].classList.add('active');
+            } else {
+                document.querySelectorAll('.tab-btn')[1].classList.add('active');
+            }
+            
+            renderLadesList();
+        }
+
+        // Listeyi Ekrana Basma Fonksiyonu
+        function renderLadesList() {
+            const contentArea = document.getElementById('tab-content');
+            contentArea.innerHTML = '';
+
+            // Seçilen taba göre filtrele (open = Aktif, closed = Geçmiş)
+            const filtered = allUserLadesData.filter(item => {
+                return currentActiveTab === 'active' ? item.status === 'open' : item.status === 'closed';
+            });
+
+            if (filtered.length === 0) {
+                showEmptyState();
+                return;
+            }
+
+            filtered.forEach(item => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'lades-item';
+
+                let amountBadge = '';
+                if (currentActiveTab === 'active') {
+                    amountBadge = `<span class="lades-amount amount-active">${item.invested} TOKEN</span>`;
+                } else {
+                    // Geçmiş ladeslerde kazanç/kayıp durumu kontrolü
+                    if (item.result > 0) {
+                        amountBadge = `<span class="lades-amount amount-win">+${item.result} TOKEN</span>`;
+                    } else if (item.result < 0) {
+                        amountBadge = `<span class="lades-amount amount-lose">${item.result} TOKEN</span>`;
+                    } else {
+                        amountBadge = `<span class="lades-amount amount-lose">-${item.invested} TOKEN</span>`;
+                    }
+                }
+
+                itemDiv.innerHTML = `
+                    <div class="lades-info">
+                        <span class="lades-title">${item.title}</span>
+                        <span class="lades-meta">${item.date || 'Yakın Zaman'}</span>
+                    </div>
+                    ${amountBadge}
+                `;
+                contentArea.appendChild(itemDiv);
+            });
+        }
+
+        function showEmptyState() {
+            const contentArea = document.getElementById('tab-content');
+            if (currentActiveTab === 'active') {
+                contentArea.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fa-solid fa-gamepad" style="color: #1c2541;"></i>
+                        <span>Şu an katıldığınız aktif bir lades bulunmuyor.</span>
+                    </div>`;
+            } else {
+                contentArea.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fa-solid fa-folder-open" style="color: #1c2541;"></i>
+                        <span>Geçmişe ait sonuçlanmış bir lades kaydı yok.</span>
+                    </div>`;
+            }
+        }
+
         function logout() {
             localStorage.removeItem('currentUser');
             window.location.replace('login.html');
