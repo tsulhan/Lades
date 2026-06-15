@@ -855,7 +855,7 @@ async function renderAdminPanel() {
                     <td style="padding:8px 0; font-size:13px; color:#ff4aa2; font-family:monospace;">${u.password || "1234"}</td>
                     <td style="padding:8px 0; font-size:13px; color:#24ffff; font-weight:bold;">${(u.balance || 0).toLocaleString("tr-TR")}</td>
                     <td style="padding:8px 0; text-align:right;">
-                        <button onclick="setTokensManual('${u.email}', ${u.balance || 0})" style="background:#ff4aa2; color:white; border:none; padding:4px 10px; border-radius:4px; font-size:11px; cursor:pointer; font-weight:500;">✏️ Düzenle</button>
+                        <button onclick="setTokensManual('${u.email}', ${u.balance || 0})" style="background:#ff4aa2; color:white; border:none; padding:4px 10px; border-radius:4px; font-size:11px; cursor:pointer; font-weight:500;">✏️ Token</button>
                         ${deleteButtonHTML}
                     </td>
                 </tr>`;
