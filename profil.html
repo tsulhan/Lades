@@ -107,7 +107,7 @@
         main {
             flex: 1;
             padding: 40px 20px;
-            max-width: 950px; /* Genişlik 650px'den 950px'e çıkarılarak ferahlatıldı */
+            max-width: 950px;
             width: 100%;
             margin: 0 auto;
             display: flex;
@@ -118,32 +118,68 @@
         .profile-container {
             background: #0b132b;
             border: 1px solid #1c2541;
-            padding: 40px; /* İç boşluklar biraz daha genişletildi */
+            padding: 40px;
             border-radius: 24px;
             width: 100%;
-            text-align: center;
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
 
+        /* YENİ ÜST HİZALAMA ALANI */
+        .profile-top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(28, 37, 65, 0.6);
+        }
+
+        .profile-user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            text-align: left;
+        }
+
         .profile-avatar {
-            width: 80px;
-            height: 80px;
+            width: 64px;
+            height: 64px;
             background: rgba(36, 255, 255, 0.1);
             border: 2px solid #24ffff;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 36px;
+            font-size: 28px;
             color: #24ffff;
-            margin: 0 auto 15px auto;
         }
 
         .username-display {
-            font-size: 22px;
+            font-size: 20px;
             font-weight: 800;
             color: #fff;
-            margin-bottom: 30px;
+        }
+
+        /* İŞARETLEDİĞİNİZ YERE EKLENEN YENİ BUTON STİLİ */
+        .btn-back-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(36, 255, 255, 0.05);
+            border: 1px solid rgba(36, 255, 255, 0.2);
+            color: #24ffff;
+            padding: 10px 20px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 700;
+            transition: 0.2s ease;
+        }
+
+        .btn-back-header:hover {
+            background: rgba(36, 255, 255, 0.15);
+            border-color: #24ffff;
+            box-shadow: 0 0 12px rgba(36, 255, 255, 0.2);
         }
 
         .tabs-header {
@@ -178,19 +214,18 @@
             background: #030814;
             border: 1px solid #1c2541;
             border-radius: 16px;
-            padding: 24px; /* Kartların etrafındaki boşluk artırıldı */
-            margin-bottom: 30px;
+            padding: 24px;
+            margin-bottom: 10px;
             min-height: 250px;
-            max-height: 550px; /* Daha fazla kartı aynı anda görmek için limit yükseltildi */
+            max-height: 550px;
             overflow-y: auto;
             text-align: left;
         }
 
-        /* app.js Çıktısıyla Tam Uyumlu Premium Kart Tasarımı */
         .user-bet-card {
             background: rgba(255, 255, 255, 0.02);
             border: 1px solid #1c2541;
-            padding: 20px 24px; /* Geniş ekrana özel iç boşluklar */
+            padding: 20px 24px;
             border-radius: 14px;
             margin-bottom: 14px;
             display: flex;
@@ -258,39 +293,12 @@
         .result-win { color: #4ade80; font-weight: 700; }
         .result-lose { color: #f87171; font-weight: 700; }
 
-        .btn-back {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            width: 100%;
-            padding: 16px;
-            border-radius: 50px;
-            border: 1px solid #1c2541;
-            background: rgba(255, 255, 255, 0.02);
-            color: #94a3b8;
-            font-weight: 700;
-            font-size: 15px;
-            cursor: pointer;
-            text-decoration: none;
-            transition: 0.2s;
-        }
-
-        .btn-back:hover {
-            color: white;
-            background: rgba(255, 255, 255, 0.05);
-            border-color: #64748b;
-        }
-
-        /* ======================================================
-           RESPONSIVE (MOBİL) UYUMLULUK KATMANI
-           ====================================================== */
         @media (max-width: 768px) {
             header {
                 padding: 15px 20px;
             }
             .user-email-badge {
-                display: none; /* Mobilde e-posta alanını gizleyerek yer açıyoruz */
+                display: none;
             }
             main {
                 padding: 15px 10px;
@@ -299,10 +307,18 @@
                 padding: 20px 15px;
                 border-radius: 16px;
             }
+            .profile-top-bar {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+            .btn-back-header {
+                width: 100%;
+                justify-content: center;
+            }
             .tabs-content {
                 padding: 12px;
             }
-            /* Mobilde kart içeriğini alt alta getirerek taşmayı önlüyoruz */
             .user-bet-card {
                 flex-direction: column;
                 align-items: flex-start;
@@ -340,8 +356,17 @@
 
     <main>
         <div class="profile-container">
-            <div class="profile-avatar"><i class="fa-solid fa-user-astronaut"></i></div>
-            <div id="profile-username" class="username-display">...</div>
+            
+            <div class="profile-top-bar">
+                <div class="profile-user-info">
+                    <div class="profile-avatar"><i class="fa-solid fa-user-astronaut"></i></div>
+                    <div id="profile-username" class="username-display">...</div>
+                </div>
+                
+                <a href="dashboard.html" class="btn-back-header">
+                    <i class="fa-solid fa-arrow-left"></i> Dashboard'a Dön
+                </a>
+            </div>
 
             <div class="tabs-header">
                 <button id="tab-active-btn" class="tab-btn active" onclick="toggleProfileTab('active')">Aktif Ladesler</button>
@@ -360,7 +385,6 @@
                 </div>
             </div>
 
-            <a href="dashboard.html" class="btn-back"><i class="fa-solid fa-arrow-left"></i> Dashboard'a Geri Dön</a>
         </div>
     </main>
 
@@ -378,7 +402,7 @@
             const userCleanKey = currentUser.replace(/\./g, ',');
 
             if (typeof db !== 'undefined') {
-                // Üst Bar Bakiye Takibi (ladesUsers üzerinden gerçek zamanlı senkronizasyon)
+                // Üst Bar Bakiye Takibi
                 fbRef(`ladesUsers/${userCleanKey}`).on("value", (snapshot) => {
                     const userVal = snapshot.val();
                     if (userVal) {
