@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <script>
+        // Giriş Kontrolü
         const user = localStorage.getItem('currentUser');
         if (!user || user === 'null' || user === 'undefined' || user.trim() === '') {
             localStorage.removeItem('currentUser');
@@ -20,34 +21,247 @@
     <script src="src/js/firebase.js"></script>
 
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
-        body { background: #030814; color: white; min-height: 100vh; display: flex; flex-direction: column; }
-        header { display: flex; justify-content: space-between; align-items: center; padding: 20px 40px; background: #0b132b; border-bottom: 1px solid #1c2541; }
-        .logo { font-size: 24px; font-weight: 800; color: #24ffff; text-shadow: 0 0 10px #24ffff; text-decoration: none; }
-        .header-center { display: flex; align-items: center; gap: 20px; }
-        .user-email-badge { background: rgba(255, 255, 255, 0.05); border: 1px solid #1c2541; padding: 10px 18px; border-radius: 30px; font-size: 13px; font-weight: 600; color: #94a3b8; }
-        .token-bag { background: rgba(36, 255, 255, 0.1); border: 1px solid #24ffff; padding: 10px 20px; border-radius: 30px; font-weight: 700; color: #24ffff; box-shadow: 0 0 10px rgba(36, 255, 255, 0.2); }
-        .icon-btn { background: transparent; border: none; color: #888; font-size: 20px; cursor: pointer; transition: 0.3s; padding: 8px; border-radius: 50px; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; }
-        .icon-btn:hover, .icon-btn.active { color: #24ffff; background: rgba(36, 255, 255, 0.05); }
-        .btn-logout { color: #ff4aa2; margin-left: 10px; }
-        main { flex: 1; padding: 40px; max-width: 650px; width: 100%; margin: 0 auto; display: flex; align-items: center; justify-content: center; }
-        .profile-container { background: #0b132b; border: 1px solid #1c2541; padding: 35px; border-radius: 24px; width: 100%; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .profile-avatar { width: 80px; height: 80px; background: rgba(36, 255, 255, 0.1); border: 2px solid #24ffff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 36px; color: #24ffff; margin: 0 auto 15px auto; }
-        .username-display { font-size: 20px; font-weight: 800; color: #fff; margin-bottom: 25px; }
-        .tabs-header { display: flex; background: #030814; border: 1px solid #1c2541; border-radius: 14px; padding: 6px; margin-bottom: 20px; gap: 5px; }
-        .tab-btn { flex: 1; padding: 12px; background: transparent; border: none; color: #64748b; font-size: 14px; font-weight: 700; cursor: pointer; border-radius: 10px; transition: 0.2s ease; }
-        .tab-btn.active { background: #1c2541; color: #24ffff; }
-        .tabs-content { background: #030814; border: 1px solid #1c2541; border-radius: 16px; padding: 15px; margin-bottom: 25px; min-height: 200px; max-height: 320px; overflow-y: auto; text-align: left; }
-        .lades-item { display: flex; justify-content: space-between; align-items: center; padding: 14px; border-bottom: 1px solid #1c2541; background: rgba(255, 255, 255, 0.01); margin-bottom: 8px; border-radius: 8px; }
-        .lades-info { display: flex; flex-direction: column; gap: 4px; }
-        .lades-title { font-size: 14px; font-weight: 700; color: #f8fafc; }
-        .lades-side { font-size: 11px; font-weight: 600; background: rgba(245, 158, 11, 0.1); color: #f59e0b; padding: 2px 8px; border-radius: 4px; border: 1px solid rgba(245, 158, 11, 0.2); width: fit-content; }
-        .lades-amount { font-size: 13px; font-weight: 800; padding: 6px 12px; border-radius: 20px; }
-        .amount-active { background: rgba(36, 255, 255, 0.08); color: #24ffff; border: 1px solid rgba(36, 255, 255, 0.2); }
-        .amount-win { background: rgba(34, 197, 94, 0.1); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.2); }
-        .amount-lose { background: rgba(239, 68, 68, 0.1); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.2); }
-        .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #475569; height: 160px; gap: 10px; font-size: 14px; font-weight: 600; text-align: center; }
-        .btn-back { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 16px; border-radius: 50px; border: 1px solid #1c2541; background: rgba(255, 255, 255, 0.02); color: #94a3b8; font-weight: 700; font-size: 15px; cursor: pointer; text-decoration: none; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background: #030814;
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 40px;
+            background: #0b132b;
+            border-bottom: 1px solid #1c2541;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 800;
+            color: #24ffff;
+            text-shadow: 0 0 10px #24ffff;
+            text-decoration: none;
+        }
+
+        .header-center {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .user-email-badge {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid #1c2541;
+            padding: 10px 18px;
+            border-radius: 30px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #94a3b8;
+        }
+
+        .token-bag {
+            background: rgba(36, 255, 255, 0.1);
+            border: 1px solid #24ffff;
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-weight: 700;
+            color: #24ffff;
+            box-shadow: 0 0 10px rgba(36, 255, 255, 0.2);
+        }
+
+        .icon-btn {
+            background: transparent;
+            border: none;
+            color: #888;
+            font-size: 20px;
+            cursor: pointer;
+            transition: 0.3s;
+            padding: 8px;
+            border-radius: 50px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .icon-btn:hover, .icon-btn.active {
+            color: #24ffff;
+            background: rgba(36, 255, 255, 0.05);
+        }
+
+        .btn-logout {
+            color: #ff4aa2;
+            margin-left: 10px;
+        }
+
+        main {
+            flex: 1;
+            padding: 40px;
+            max-width: 650px;
+            width: 100%;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .profile-container {
+            background: #0b132b;
+            border: 1px solid #1c2541;
+            padding: 35px;
+            border-radius: 24px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .profile-avatar {
+            width: 80px;
+            height: 80px;
+            background: rgba(36, 255, 255, 0.1);
+            border: 2px solid #24ffff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            color: #24ffff;
+            margin: 0 auto 15px auto;
+        }
+
+        .username-display {
+            font-size: 20px;
+            font-weight: 800;
+            color: #fff;
+            margin-bottom: 25px;
+        }
+
+        .tabs-header {
+            display: flex;
+            background: #030814;
+            border: 1px solid #1c2541;
+            border-radius: 14px;
+            padding: 6px;
+            margin-bottom: 20px;
+            gap: 5px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 12px;
+            background: transparent;
+            border: none;
+            color: #64748b;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            border-radius: 10px;
+            transition: 0.2s ease;
+        }
+
+        .tab-btn.active {
+            background: #1c2541;
+            color: #24ffff;
+        }
+
+        .tabs-content {
+            background: #030814;
+            border: 1px solid #1c2541;
+            border-radius: 16px;
+            padding: 15px;
+            margin-bottom: 25px;
+            min-height: 200px;
+            max-height: 400px;
+            overflow-y: auto;
+            text-align: left;
+        }
+
+        /* app.js Tasarım Kartı Uyumluluk Stilleri */
+        .user-bet-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid #1c2541;
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .bet-details h3 {
+            font-size: 15px;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 4px;
+        }
+
+        .bet-details p {
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        .badge-choice {
+            display: inline-block;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 4px;
+            text-transform: uppercase;
+            margin-top: 6px;
+        }
+
+        .badge-yes { background: rgba(34, 197, 94, 0.1); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.2); }
+        .badge-no { background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); }
+        .badge-draw { background: rgba(245, 158, 11, 0.1); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.2); }
+
+        .bet-stats {
+            display: flex;
+            gap: 15px;
+            text-align: right;
+            flex-shrink: 0;
+        }
+
+        .stat-box .lbl {
+            font-size: 11px;
+            color: #64748b;
+            margin-bottom: 2px;
+        }
+
+        .stat-box .val {
+            font-size: 13px;
+            font-weight: 800;
+        }
+
+        .result-win { color: #4ade80; font-weight: 700; }
+        .result-lose { color: #f87171; font-weight: 700; }
+
+        .btn-back {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            padding: 16px;
+            border-radius: 50px;
+            border: 1px solid #1c2541;
+            background: rgba(255, 255, 255, 0.02);
+            color: #94a3b8;
+            font-weight: 700;
+            font-size: 15px;
+            cursor: pointer;
+            text-decoration: none;
+        }
     </style>
 </head>
 <body>
@@ -68,12 +282,16 @@
             <div id="profile-username" class="username-display">...</div>
 
             <div class="tabs-header">
-                <button class="tab-btn active" onclick="switchTab('active')">Aktif Ladesler</button>
-                <button class="tab-btn" onclick="switchTab('history')">Geçmiş</button>
+                <button id="tab-active-btn" class="tab-btn active" onclick="toggleProfileTab('active')">Aktif Ladesler</button>
+                <button id="tab-past-btn" class="tab-btn" onclick="toggleProfileTab('past')">Geçmiş</button>
             </div>
 
-            <div id="tab-content" class="tabs-content">
-                <div class="empty-state"><i class="fa-solid fa-spinner fa-spin"></i> Veriler kontrol ediliyor...</div>
+            <div id="profile-active-bets" class="tabs-content">
+                <div style="text-align:center; color:#64748b; padding:30px; font-size:14px;"><i class="fa-solid fa-spinner fa-spin"></i> Yükleniyor...</div>
+            </div>
+
+            <div id="profile-past-bets" class="tabs-content" style="display: none;">
+                <div style="text-align:center; color:#64748b; padding:30px; font-size:14px;">Henüz sonuçlanan lades geçmişiniz yok.</div>
             </div>
 
             <a href="dashboard.html" class="btn-back"><i class="fa-solid fa-arrow-left"></i> Dashboard'a Geri Dön</a>
@@ -84,156 +302,49 @@
     <script src="src/js/app.js"></script>
 
     <script>
-        let currentActiveTab = 'active';
-        let allUserLadesData = [];
-
         document.addEventListener("DOMContentLoaded", () => {
             const currentUser = localStorage.getItem('currentUser');
             if (!currentUser) return;
 
+            // Header ve başlık alanlarını güncelle
             document.getElementById('user-email-badge').innerText = currentUser;
             document.getElementById('profile-username').innerText = currentUser;
 
-            const userKey = currentUser.replace(/\./g, '_');
-            console.log("==> PROFIL SAYFASI BAŞLADI <==");
-            console.log("Mevcut Kullanıcı:", currentUser);
-            console.log("Dönüştürülmüş Key:", userKey);
-
+            // Virgüle göre bakiye takibini başlat (app.js mantığı)
+            const userCleanKey = currentUser.replace(/\./g, ',');
             if (typeof db !== 'undefined') {
-                // Üst Bar Bakiye Takibi
-                db.ref('users/' + userKey).on('value', (snapshot) => {
-                    const userData = snapshot.val();
-                    if (userData) {
-                        const currentTokens = userData.tokens || userData.token || 0;
-                        document.getElementById('token-balance').innerText = Number(currentTokens).toLocaleString('tr-TR');
+                fbRef(`ladesUsers/${userCleanKey}`).on("value", (snapshot) => {
+                    const userVal = snapshot.val();
+                    if (userVal) {
+                        document.getElementById("token-balance").innerText = (userVal.balance || 0).toLocaleString("tr-TR");
                     }
                 });
+            }
 
-                // AGRESİF HİBRİT TARAYICI
-                db.ref('ladesler').on('value', (snapshot) => {
-                    const ladesler = snapshot.val();
-                    console.log("Firebase 'ladesler' düğümünden gelen ham veri:", ladesler);
-                    
-                    allUserLadesData = [];
-
-                    if (ladesler) {
-                        Object.keys(ladesler).forEach(id => {
-                            const l = ladesler[id];
-                            let katildiMi = false;
-                            let bulunanBahis = { side: 'Belirsiz', amount: 0, result: 0 };
-
-                            // 1. ADIM: Objenin içinde kullanıcının e-postası ya da key'i geçiyor mu?
-                            const hamYazi = JSON.stringify(l).toLowerCase();
-                            if (hamYazi.includes(currentUser.toLowerCase()) || hamYazi.includes(userKey.toLowerCase())) {
-                                katildiMi = true;
-
-                                // 2. ADIM: Derinlemesine tarayıp veriyi ayıkla
-                                function derinAra(obj) {
-                                    if (!obj || typeof obj !== 'object') return;
-
-                                    // Eğer aradığımız key doğrudan bu objenin bir alt elemanıysa
-                                    if (obj[userKey] || obj[currentUser] || obj[currentUser.toLowerCase()]) {
-                                        const veri = obj[userKey] || obj[currentUser] || obj[obj[currentUser.toLowerCase()]];
-                                        if(veri && typeof veri === 'object') {
-                                            bulunanBahis.side = veri.side || veri.choice || veri.secim || bulunanBahis.side;
-                                            bulunanBahis.amount = veri.amount || veri.invested || veri.miktar || bulunanBahis.amount;
-                                            bulunanBahis.result = veri.result || veri.kazanc || 0;
-                                        }
-                                        return;
-                                    }
-
-                                    // Tüm alt dalları tek tek gez
-                                    for (let k in obj) {
-                                        if (k.toLowerCase() === currentUser.toLowerCase() || k.toLowerCase() === userKey.toLowerCase()) {
-                                            if (typeof obj[k] === 'object') {
-                                                bulunanBahis.side = obj[k].side || obj[k].choice || bulunanBahis.side;
-                                                bulunanBahis.amount = obj[k].amount || obj[k].invested || bulunanBahis.amount;
-                                                bulunanBahis.result = obj[k].result || 0;
-                                            } else {
-                                                // Eğer direkt değer olarak yatırılan miktar yazıldıysa
-                                                bulunanBahis.amount = obj[k];
-                                            }
-                                        }
-                                        if (typeof obj[k] === 'object') {
-                                            derinAra(obj[k]);
-                                        }
-                                    }
-                                }
-                                derinAra(l);
-
-                                // Durum Tespiti
-                                let durum = 'open';
-                                if (l.status === 'closed' || l.status === 'finished' || l.isOpen === false || l.isClosed === true) {
-                                    durum = 'closed';
-                                }
-
-                                allUserLadesData.push({
-                                    id: id,
-                                    title: l.title || 'Lades Bahsi',
-                                    status: durum,
-                                    invested: bulunanBahis.amount || 300,
-                                    side: bulunanBahis.side,
-                                    result: bulunanBahis.result
-                                });
-                            }
-                        });
-                    }
-
-                    console.log("Kullanıcı için ayıklanan lades listesi:", allUserLadesData);
-                    renderLadesList();
-                });
-            } else {
-                console.error("HATA: Firebase 'db' nesnesi bulunamadı. core.js veya firebase.js yüklenememiş olabilir.");
+            // app.js içerisindeki profil başlatıcıyı tetikle
+            if (typeof initProfilePage === 'function') {
+                initProfilePage();
             }
         });
 
-        function switchTab(tabName) {
-            currentActiveTab = tabName;
-            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-            if(tabName === 'active') document.querySelectorAll('.tab-btn')[0].classList.add('active');
-            else document.querySelectorAll('.tab-btn')[1].classList.add('active');
-            renderLadesList();
-        }
+        // Aktif / Geçmiş Sekme Geçiş Mantığı
+        function toggleProfileTab(tabType) {
+            const activeContainer = document.getElementById("profile-active-bets");
+            const pastContainer = document.getElementById("profile-past-bets");
+            const activeBtn = document.getElementById("tab-active-btn");
+            const pastBtn = document.getElementById("tab-past-btn");
 
-        function renderLadesList() {
-            const contentArea = document.getElementById('tab-content');
-            contentArea.innerHTML = '';
-
-            const filtered = allUserLadesData.filter(item => {
-                return currentActiveTab === 'active' ? item.status === 'open' : item.status === 'closed';
-            });
-
-            if (filtered.length === 0) {
-                contentArea.innerHTML = `
-                    <div class="empty-state">
-                        <i class="fa-solid fa-gamepad" style="font-size: 24px; color: #1c2541;"></i>
-                        <span>Katılım sağladığınız veri bulunamadı.</span>
-                    </div>`;
-                return;
+            if (tabType === 'active') {
+                activeContainer.style.display = "block";
+                pastContainer.style.display = "none";
+                activeBtn.classList.add("active");
+                pastBtn.classList.remove("active");
+            } else {
+                activeContainer.style.display = "none";
+                pastContainer.style.display = "block";
+                activeBtn.classList.remove("active");
+                pastBtn.classList.add("active");
             }
-
-            filtered.forEach(item => {
-                const itemDiv = document.createElement('div');
-                itemDiv.className = 'lades-item';
-
-                let amountBadge = '';
-                if (currentActiveTab === 'active') {
-                    amountBadge = `<span class="lades-amount amount-active">${item.invested} TOKEN</span>`;
-                } else {
-                    if (item.result > 0) amountBadge = `<span class="lades-amount amount-win">+${item.result} TOKEN</span>`;
-                    else if (item.result < 0) amountBadge = `<span class="lades-amount amount-lose">${item.result} TOKEN</span>`;
-                    else amountBadge = `<span class="lades-amount amount-lose">-${item.invested} TOKEN</span>`;
-                }
-
-                itemDiv.innerHTML = `
-                    <div class="lades-info">
-                        <span class="lades-title">${item.title}</span>
-                        <div class="lades-side">Tarafınız: ${item.side.toUpperCase()}</div>
-                    </div>
-                    <div>${amountBadge}</div>
-                `;
-                contentArea.appendChild(itemDiv);
-            });
         }
 
         function logout() {
