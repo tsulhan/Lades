@@ -16,7 +16,6 @@
         }
     </script>
 
-    <!-- Firebase Kütüphaneleri -->
     <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-database-compat.js"></script>
     <script src="src/js/firebase.js"></script>
@@ -246,8 +245,26 @@
             color: #64748b;
         }
 
+        .lades-side {
+            font-size: 11px;
+            font-weight: 600;
+            background: rgba(245, 158, 11, 0.1);
+            color: #f59e0b;
+            padding: 2px 8px;
+            border-radius: 4px;
+            border: 1px solid rgba(245, 158, 11, 0.2);
+            width: fit-content;
+        }
+
+        .lades-right-zone {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 6px;
+        }
+
         .lades-amount {
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 800;
             padding: 6px 12px;
             border-radius: 20px;
@@ -312,7 +329,6 @@
             border-color: #334155;
         }
 
-        /* Scrollbar Özelleştirme */
         .tabs-content::-webkit-scrollbar {
             width: 6px;
         }
@@ -356,7 +372,6 @@
             <h2>Kullanıcı Profili</h2>
             <div id="profile-email-text" class="email-text">yükleniyor...</div>
 
-            <!-- TAB BUTONLARI -->
             <div class="tabs-header">
                 <button class="tab-btn active" onclick="switchTab('active')">
                     <i class="fa-solid fa-bolt"></i> Aktif Ladesler
@@ -366,7 +381,6 @@
                 </button>
             </div>
 
-            <!-- TAB İÇERİK ALANI -->
             <div id="tab-content" class="tabs-content">
                 <div class="empty-state"><i class="fa-solid fa-spinner fa-spin"></i> Veriler yükleniyor...</div>
             </div>
@@ -382,7 +396,7 @@
 
     <script>
         let currentActiveTab = 'active';
-        let allUserLadesData = []; // Kullanıcının tüm lades verilerini tutacak
+        let allUserLadesData = []; 
 
         document.addEventListener("DOMContentLoaded", () => {
             const currentUser = localStorage.getItem('currentUser');
@@ -399,59 +413,105 @@
                         const userData = snapshot.val();
                         if (userData) {
                             const currentTokens = userData.tokens || userData.token || 0;
-                            document.getElementById('token-balance').innerText = currentTokens;
+                            document.getElementById('token-balance').innerText = Number(currentTokens).toLocaleString('tr-TR');
                         }
                     });
 
-                    // 2. Kullanıcının Katıldığı Ladesleri Canlı Dinleme
-                    db.ref('user_lades/' + userKey).on('value', (snapshot) => {
+                    // 2. GELİŞMİŞ VE GÜVENLİ HİBRİT PROTOKOL
+                    // Hem genel lades listesini hem de alt kırılımları tarar
+                    db.ref('ladesler').on('value', (snapshot) => {
                         allUserLadesData = [];
-                        const data = snapshot.val();
+                        const ladesler = snapshot.val();
                         
-                        if (data) {
-                            Object.keys(data).forEach(id => {
-                                allUserLadesData.push({
-                                    id: id,
-                                    title: data[id].title || 'Lades Bahsi',
-                                    status: data[id].status, // 'open' veya 'closed'
-                                    invested: data[id].invested || 0,
-                                    result: data[id].result || 0, // Kazanılan/kaybedilen net miktar veya total bakiye farkı
-                                    date: data[id].date || ''
-                                });
+                        if (ladesler) {
+                            Object.keys(ladesler).forEach(ladesId => {
+                                const lades = ladesler[ladesId];
+                                let userParticipation = null;
+
+                                // Senaryo A: Lades kartının içinde participants/oyuncular düğümü var mı?
+                                if (lades.participants && (lades.participants[userKey] || lades.participants[currentUser])) {
+                                    userParticipation = lades.participants[userKey] || lades.participants[currentUser];
+                                } 
+                                // Senaryo B: Doğrudan lades objesi içine userKey ile mi gömülmüş?
+                                else if (lades[userKey]) {
+                                    userParticipation = lades[userKey];
+                                }
+                                // Senaryo C: Alternatif 'bets' objesi kontrolü
+                                else if (lades.bets && lades.bets[userKey]) {
+                                    userParticipation = lades.bets[userKey];
+                                }
+
+                                // Eğer kullanıcı bu ladese bir şekilde katıldıysa listeye ekle
+                                if (userParticipation) {
+                                    const status = lades.status || ((lades.isOpen === false || lades.isClosed === true) ? 'closed' : 'open');
+                                    const investedAmount = userParticipation.invested || userParticipation.amount || 300; // Fallback 300
+                                    const selectedSide = userParticipation.side || userParticipation.choice || '';
+
+                                    allUserLadesData.push({
+                                        id: ladesId,
+                                        title: lades.title || 'Lades Bahsi',
+                                        status: status, 
+                                        invested: investedAmount,
+                                        side: selectedSide,
+                                        result: userParticipation.result || 0,
+                                        date: lades.endTime || lades.date || 'Aktif Veri'
+                                    });
+                                }
                             });
                         }
-                        // Listeyi mevcut aktif taba göre güncelle
-                        renderLadesList();
+
+                        // Eğer üstteki taramadan bir şey çıkmadıysa yedek olarak 'user_lades' veya 'user_bets' düğümünü de sorgula
+                        if (allUserLadesData.length === 0) {
+                            fetchFallbackNodes(userKey);
+                        } else {
+                            renderLadesList();
+                        }
                     });
+
                 } else {
-                    // Fallback Emülasyonu (Veritabanı yoksa test için boş durum gösterir)
                     showEmptyState();
                 }
             }
         });
 
-        // Sekme Değiştirme Fonksiyonu
+        // Yedek Dinleyici: Eğer ana şemadan bağımsız izole bir düğüm varsa orayı tarar
+        function fetchFallbackNodes(userKey) {
+            db.ref('user_lades/' + userKey).once('value', (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    Object.keys(data).forEach(id => {
+                        allUserLadesData.push({
+                            id: id,
+                            title: data[id].title || 'Lades Bahsi',
+                            status: data[id].status || 'open',
+                            invested: data[id].invested || 300,
+                            side: data[id].side || '',
+                            result: data[id].result || 0,
+                            date: data[id].date || ''
+                        });
+                    });
+                }
+                renderLadesList();
+            });
+        }
+
         function switchTab(tabName) {
             currentActiveTab = tabName;
-            
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
             if(tabName === 'active') {
                 document.querySelectorAll('.tab-btn')[0].classList.add('active');
             } else {
                 document.querySelectorAll('.tab-btn')[1].classList.add('active');
             }
-            
             renderLadesList();
         }
 
-        // Listeyi Ekrana Basma Fonksiyonu
         function renderLadesList() {
             const contentArea = document.getElementById('tab-content');
             contentArea.innerHTML = '';
 
-            // Seçilen taba göre filtrele (open = Aktif, closed = Geçmiş)
             const filtered = allUserLadesData.filter(item => {
-                return currentActiveTab === 'active' ? item.status === 'open' : item.status === 'closed';
+                return currentActiveTab === 'active' ? (item.status === 'open' || item.status === 'active') : (item.status === 'closed' || item.status === 'finished');
             });
 
             if (filtered.length === 0) {
@@ -467,7 +527,6 @@
                 if (currentActiveTab === 'active') {
                     amountBadge = `<span class="lades-amount amount-active">${item.invested} TOKEN</span>`;
                 } else {
-                    // Geçmiş ladeslerde kazanç/kayıp durumu kontrolü
                     if (item.result > 0) {
                         amountBadge = `<span class="lades-amount amount-win">+${item.result} TOKEN</span>`;
                     } else if (item.result < 0) {
@@ -477,12 +536,16 @@
                     }
                 }
 
+                const sideBadge = item.side ? `<div class="lades-side">Tarafınız: ${item.side.toUpperCase()}</div>` : '';
+
                 itemDiv.innerHTML = `
                     <div class="lades-info">
                         <span class="lades-title">${item.title}</span>
-                        <span class="lades-meta">${item.date || 'Yakın Zaman'}</span>
+                        ${sideBadge}
                     </div>
-                    ${amountBadge}
+                    <div class="lades-right-zone">
+                        ${amountBadge}
+                    </div>
                 `;
                 contentArea.appendChild(itemDiv);
             });
