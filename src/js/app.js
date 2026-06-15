@@ -101,7 +101,7 @@ async function handleRegister() {
     await fbSet(`ladesUsers/${newUserKey}`, {
         email,
         password,
-        balance: 0,
+        balance: 3600,
         isAdmin: false
     });
 
@@ -110,7 +110,7 @@ async function handleRegister() {
         await fbRemove(`inviteCodes/${inviteKey}`);
     }
 
-    alert("Kayıt başarılı! Başlangıç bakiyeniz: 0 TOKEN Lütfen Yöneticiye Danışın");
+    alert("Kayıt başarılı! Başlangıç bakiyeniz: 3600 TOKEN");
     window.location.href = "login.html";
 }
 
