@@ -2,60 +2,68 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kayıt Ol - LADES</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-database-compat.js"></script>
     <style>
-        body { background: #030814; color: white; display: flex; justify-content: center; align-items: center; min-height: 100vh; font-family: sans-serif; }
-        .container { background: #0b132b; padding: 40px; border-radius: 24px; width: 400px; text-align: center; border: 1px solid #1c2541; }
-        input { width: 100%; padding: 15px; margin: 10px 0; border-radius: 12px; background: #030814; border: 1px solid #1c2541; color: white; }
-        button { width: 100%; padding: 15px; border-radius: 50px; border: none; background: #ff4aa2; color: white; cursor: pointer; font-weight: bold; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background: #030814; color: white; min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px; }
+        .register-container { background: #0b132b; border: 1px solid #1c2541; padding: 40px; border-radius: 24px; width: 100%; max-width: 450px; text-align: center; }
+        .logo-icon { font-size: 45px; color: #ff4aa2; margin-bottom: 15px; }
+        .form-group { margin-bottom: 18px; text-align: left; }
+        .form-group label { display: block; margin-bottom: 8px; color: #94a3b8; font-size: 13px; font-weight: 600; }
+        .invite-row { display: flex; gap: 10px; }
+        input { width: 100%; padding: 16px; border-radius: 12px; border: 1px solid #1c2541; background: #030814; color: white; }
+        .btn-request-code { background: rgba(36, 255, 255, 0.1); border: 1px solid #24ffff; color: #24ffff; padding: 0 15px; border-radius: 12px; cursor: pointer; }
+        .btn-register { width: 100%; padding: 16px; border-radius: 50px; border: none; background: #ff4aa2; color: white; font-weight: 800; cursor: pointer; margin-top: 15px; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h2>LADES KAYIT</h2>
-        <input type="text" id="reg-code" placeholder="Davet Kodu">
-        <button id="btnCode">KOD İSTE</button>
-        <input type="email" id="reg-email" placeholder="E-posta">
-        <input type="password" id="reg-pass" placeholder="Şifre">
-        <button id="btnReg">KAYIT OL</button>
+    <div class="register-container">
+        <div class="logo-icon">⚡</div>
+        <h2>KAYIT OL</h2>
+        <div class="form-group">
+            <label>Davet Kodu</label>
+            <div class="invite-row">
+                <input type="text" id="reg-code" placeholder="Örn: LADES2026">
+                <button type="button" class="btn-request-code" id="btnCode">KOD İSTE</button>
+            </div>
+        </div>
+        <div class="form-group"><label>E-posta</label><input type="email" id="reg-email" placeholder="ornek@domain.com"></div>
+        <div class="form-group"><label>Şifre</label><input type="password" id="reg-pass" placeholder="••••••••"></div>
+        <button class="btn-register" id="btnReg">KAYIT OL ⚡</button>
     </div>
 
     <script>
-        // SİSTEME ÖZEL VERİTABANI URL'Sİ İLE BAĞLANTI
-        const firebaseConfig = {
-            databaseURL: "https://lades-f33dd-default-rtdb.firebaseio.com/"
-        };
+        const db = firebase.initializeApp({ databaseURL: "https://lades-f33dd-default-rtdb.firebaseio.com/" }).database();
 
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
-        }
-        const db = firebase.database();
-
-        // 1. KOD İSTE (Bildirim Gönderme)
+        // KOD İSTE
         document.getElementById('btnCode').addEventListener('click', async () => {
             const email = document.getElementById('reg-email').value;
-            if(!email) { alert("Lütfen önce E-posta yazın!"); return; }
-            
-            try {
-                // Veritabanına adminRequests düğümüne yazıyoruz
-                await db.ref("adminRequests/" + Date.now()).set({ 
-                    email: email, 
-                    note: email + " kod istiyor", 
-                    status: "Bekliyor",
-                    time: new Date().toISOString()
-                });
-                alert("Yöneticiye bildirim gönderildi!");
-            } catch(e) { 
-                console.error(e);
-                alert("Hata: " + e.message); 
-            }
+            if(!email) return alert("E-posta girin!");
+            await db.ref("adminRequests/" + Date.now()).set({ email, status: "Bekliyor", note: email + " kod istiyor" });
+            alert("Yöneticiye bildirim gönderildi!");
         });
 
-        // 2. KAYIT OL (Gelecek Aşama)
+        // KAYIT OL
         document.getElementById('btnReg').addEventListener('click', async () => {
-            alert("Kayıt mantığını bu sayfaya entegre ediyoruz...");
+            const code = document.getElementById('reg-code').value;
+            const email = document.getElementById('reg-email').value;
+            const pass = document.getElementById('reg-pass').value;
+
+            const snap = await db.ref("invitations").once("value");
+            const invites = Object.values(snap.val() || {});
+            const valid = invites.find(i => i.code === code && i.status === "Aktif");
+
+            if(!valid) return alert("Geçersiz davet kodu!");
+
+            await db.ref("users/" + email.replace(/\./g, "_")).set({ email, pass, tokens: 3600, role: "user" });
+            await db.ref("invitations/" + valid.id).update({ status: "Kullanıldı" });
+            
+            alert("Kayıt başarılı!");
+            window.location.href = "login.html";
         });
     </script>
 </body>
