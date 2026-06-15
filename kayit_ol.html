@@ -2,11 +2,11 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <title>Kayıt Ol</title>
+    <title>Kayıt Ol - LADES</title>
     <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-database-compat.js"></script>
     <style>
-        body { background: #030814; color: white; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        body { background: #030814; color: white; display: flex; justify-content: center; align-items: center; min-height: 100vh; font-family: sans-serif; }
         .container { background: #0b132b; padding: 40px; border-radius: 24px; width: 400px; text-align: center; border: 1px solid #1c2541; }
         input { width: 100%; padding: 15px; margin: 10px 0; border-radius: 12px; background: #030814; border: 1px solid #1c2541; color: white; }
         button { width: 100%; padding: 15px; border-radius: 50px; border: none; background: #ff4aa2; color: white; cursor: pointer; font-weight: bold; }
@@ -15,34 +15,47 @@
 <body>
     <div class="container">
         <h2>LADES KAYIT</h2>
-        <input type="text" id="code" placeholder="Davet Kodu">
+        <input type="text" id="reg-code" placeholder="Davet Kodu">
         <button id="btnCode">KOD İSTE</button>
-        <input type="email" id="email" placeholder="E-posta">
-        <input type="password" id="pass" placeholder="Şifre">
+        <input type="email" id="reg-email" placeholder="E-posta">
+        <input type="password" id="reg-pass" placeholder="Şifre">
         <button id="btnReg">KAYIT OL</button>
     </div>
 
     <script>
-        const app = firebase.initializeApp({ databaseURL: "https://lades-app-default-rtdb.firebaseio.com/" });
+        // SİSTEME ÖZEL VERİTABANI URL'Sİ İLE BAĞLANTI
+        const firebaseConfig = {
+            databaseURL: "https://lades-f33dd-default-rtdb.firebaseio.com/"
+        };
+
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
         const db = firebase.database();
 
-        // Butonları JavaScript ile dinliyoruz (HTML'deki onclick yerine)
+        // 1. KOD İSTE (Bildirim Gönderme)
         document.getElementById('btnCode').addEventListener('click', async () => {
-            const email = document.getElementById('email').value;
-            if(!email) { alert("E-posta gir!"); return; }
+            const email = document.getElementById('reg-email').value;
+            if(!email) { alert("Lütfen önce E-posta yazın!"); return; }
             
             try {
+                // Veritabanına adminRequests düğümüne yazıyoruz
                 await db.ref("adminRequests/" + Date.now()).set({ 
                     email: email, 
                     note: email + " kod istiyor", 
-                    status: "Bekliyor" 
+                    status: "Bekliyor",
+                    time: new Date().toISOString()
                 });
                 alert("Yöneticiye bildirim gönderildi!");
-            } catch(e) { alert("Hata: " + e.message); }
+            } catch(e) { 
+                console.error(e);
+                alert("Hata: " + e.message); 
+            }
         });
 
-        document.getElementById('btnReg').addEventListener('click', () => {
-            alert("Kayıt mantığı burada devreye girecek.");
+        // 2. KAYIT OL (Gelecek Aşama)
+        document.getElementById('btnReg').addEventListener('click', async () => {
+            alert("Kayıt mantığını bu sayfaya entegre ediyoruz...");
         });
     </script>
 </body>
