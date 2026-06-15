@@ -101,7 +101,7 @@ async function handleRegister() {
     await fbSet(`ladesUsers/${newUserKey}`, {
         email,
         password,
-        balance: 0,
+        balance: 3600, // Başlangıç düzeltmesi senkronize edildi
         isAdmin: false
     });
 
@@ -110,7 +110,7 @@ async function handleRegister() {
         await fbRemove(`inviteCodes/${inviteKey}`);
     }
 
-    alert("Kayıt başarılı! Başlangıç bakiyeniz: 0 TOKEN");
+    alert("Kayıt başarılı! Başlangıç bakiyeniz: 3600 TOKEN");
     window.location.href = "login.html";
 }
 
@@ -191,7 +191,6 @@ function filterCategory(categoryName) {
         }
     });
 
-    // Kategori değiştiğinde veritabanından güncel veriyi çekip grid'i yeniden tetikliyoruz
     if (typeof fbGet === "function") {
         fbGet("customMarkets").then(marketsObj => {
             renderMarketGrid(marketsObj || {});
@@ -311,6 +310,7 @@ function generateMarketCardHTML(market, isActive) {
 
     const safeTitle = (market.title || "").replace(/'/g, "\\'");
     const isSpor = market.category === "Spor";
+    const currentUserEmail = localStorage.getItem("currentUser");
     
     let actionContent = "";
 
@@ -357,8 +357,26 @@ function generateMarketCardHTML(market, isActive) {
         `;
     }
 
+    // ADMİN (TSULHAN@GMAIL.COM) İÇİN SAĞ ÜST KÖŞEYE SİLME ÇARPI BUTONU EKLEME
+    let adminDeleteHTML = "";
+    if (currentUserEmail === "tsulhan@gmail.com") {
+        adminDeleteHTML = `
+            <button onclick="deleteMarketCompletely('${market.id}', '${safeTitle}')" 
+                    style="position: absolute; top: 12px; right: 12px; background: rgba(239, 68, 68, 0.12); 
+                           border: 1px solid rgba(239, 68, 68, 0.25); color: #f87171; width: 26px; height: 26px; 
+                           border-radius: 50%; cursor: pointer; display: flex; align-items: center; 
+                           justify-content: center; font-size: 11px; transition: 0.2s; z-index: 10;"
+                    onmouseover="this.style.background='rgba(239, 68, 68, 0.3)'; this.style.color='white';"
+                    onmouseout="this.style.background='rgba(239, 68, 68, 0.12)'; this.style.color='#f87171';"
+                    title="Bu Ladesi ve Tüm Kullanıcı Bahislerini Kalıcı Olarak Sil">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        `;
+    }
+
     return `
-        <div class="market-card" style="${!isActive ? 'opacity: 0.9; border-color: #1c2541; background: #060b19;' : ''}">
+        <div class="market-card" style="position: relative; ${!isActive ? 'opacity: 0.9; border-color: #1c2541; background: #060b19;' : ''}">
+            ${adminDeleteHTML}
             <div class="market-info">
                 <div style="display:flex; gap:8px; align-items:center; margin-bottom:6px;">
                     <span class="category-badge">${market.category || "Genel"}</span>
@@ -370,6 +388,52 @@ function generateMarketCardHTML(market, isActive) {
             ${actionContent}
         </div>
     `;
+}
+
+// ------------------------------------------------------
+// ADMİN: LADESİ DASHBOARD ÜZERİNDEN VE HAFIZADAN TAMAMEN SİLME
+// ------------------------------------------------------
+async function deleteMarketCompletely(marketId, marketTitle) {
+    const confirmation = confirm(`"${marketTitle}" isimli ladesi ve bu ladese yapılmış TÜM KULLANICI BAHİSLERİNİ veritabanından kalıcı olarak silmek istediğinize emin misiniz?\n\nBu işlem geri alınamaz!`);
+    
+    if (!confirmation) return;
+    if (typeof db === "undefined" || !db) {
+        alert("Firebase bağlantısı yok!");
+        return;
+    }
+
+    try {
+        // 1. Ana pazar kaydını sil
+        await db.ref(`customMarkets/${marketId}`).remove();
+
+        // 2. Bahis geçmişinden bu markete ait bütün kullanıcı kayıtlarını temizle
+        const betHistorySnapshot = await db.ref("betHistory").once("value");
+        const allHistories = betHistorySnapshot.val();
+
+        if (allHistories) {
+            const deletePromises = [];
+            Object.keys(allHistories).forEach(historyKey => {
+                const bet = allHistories[historyKey];
+                // Yapıya göre hem düz alt düğüm hem de kullanıcı kırılımlı geçmiş kontrolü
+                if (bet && bet.marketId === marketId) {
+                    deletePromises.push(db.ref(`betHistory/${historyKey}`).remove());
+                } else if (bet && typeof bet === "object") {
+                    // Eğer kullanıcı kırılımlı ise içini tara
+                    if (bet[marketId]) {
+                        deletePromises.push(db.ref(`betHistory/${historyKey}/${marketId}`).remove());
+                    }
+                }
+            });
+            if (deletePromises.length > 0) {
+                await Promise.all(deletePromises);
+            }
+        }
+
+        alert("Lades ve ilgili tüm bahis verileri başarıyla temizlendi!");
+    } catch (error) {
+        console.error("Silme hatası:", error);
+        alert("Hata oluştu: " + error.message);
+    }
 }
 
 function updateUI() { /* core.js dinleyicileri devraldı */ }
@@ -575,7 +639,6 @@ fn_closeAdminPanel = function() {
     const modal = document.getElementById("admin-modal");
     if (modal) modal.style.display = "none";
 }
-// global haritaya eşle
 if (typeof closeAdminPanel === "undefined") { window.closeAdminPanel = fn_closeAdminPanel; }
 
 async function generateInviteCode() {
@@ -843,6 +906,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
     startRealtimeListeners();
 });
+
 // ------------------------------------------------------
 // PROFİL SAYFASI ÖZEL MOTORU
 // ------------------------------------------------------
@@ -858,7 +922,6 @@ async function initProfilePage() {
 
     if (typeof db === "undefined" || !db) return;
 
-    // Gerçek zamanlı bakiye güncellemesi için dinleyici
     const userCleanKey = currentUserEmail.replace(/\./g, ',');
     fbRef(`ladesUsers/${userCleanKey}`).on("value", (snapshot) => {
         const user = snapshot.val();
@@ -868,7 +931,6 @@ async function initProfilePage() {
         }
     });
 
-    // Kullanıcının tüm geçmiş işlemlerini ve pazar durumlarını çekelim
     try {
         const [marketsSnap, historySnap] = await Promise.all([
             fbGet("customMarkets"),
@@ -893,12 +955,10 @@ function renderProfileBets(currentUserEmail, markets, history) {
     activeContainer.innerHTML = "";
     pastContainer.innerHTML = "";
 
-    // Kullanıcıya ait tüm bahisleri ayıklayalım ve tarihe göre sıralayalım
     const allBets = Object.values(history)
         .filter(b => b && b.email === currentUserEmail)
         .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
 
-    // Aynı markete birden fazla yatırım yapıldıysa bunları görsel olarak gruplayalım
     let activeCount = 0;
     let pastCount = 0;
 
@@ -911,21 +971,19 @@ function renderProfileBets(currentUserEmail, markets, history) {
 
     allBets.forEach(bet => {
         const market = markets[bet.marketId];
-        if (!market) return; // Eğer pazar silindiyse pas geç
+        if (!market) return;
 
         const yesPool = market.yesPool || 0;
         const noPool = market.noPool || 0;
         const drawPool = market.drawPool || 0;
         const totalPool = market.category === "Spor" ? (yesPool + noPool + drawPool) : (yesPool + noPool);
 
-        // Tercih rozetini hazırla
         let choiceBadge = "";
         if (bet.choice === "YES") choiceBadge = `<span class="badge-choice badge-yes">EVET YATIRDI</span>`;
         if (bet.choice === "NO") choiceBadge = `<span class="badge-choice badge-no">HAYIR YATIRDI</span>`;
         if (bet.choice === "DRAW") choiceBadge = `<span class="badge-choice badge-draw">BERABERLİK YATIRDI</span>`;
 
         if (market.status === "Aktif") {
-            // AKTİF LADES KARTI
             activeCount++;
             activeContainer.innerHTML += `
                 <div class="user-bet-card">
@@ -947,20 +1005,15 @@ function renderProfileBets(currentUserEmail, markets, history) {
                 </div>
             `;
         } else {
-            // SONUÇLANMIŞ / GEÇMİŞ LADES KARTI
             pastCount++;
-
-            // Kazanç algoritmasını simüle et veya göster
             let resultHTML = "";
             let winningChoice = "";
 
-            // Kazanan tarafı belirle
             if (yesPool >= noPool && yesPool >= drawPool) winningChoice = "YES";
             else if (noPool >= yesPool && noPool >= drawPool) winningChoice = "NO";
             else if (drawPool >= yesPool && drawPool >= noPool) winningChoice = "DRAW";
 
             if (bet.choice === winningChoice) {
-                // Kazandıysa oran hesaplama: (Benim Yatırımım / Kazanan Havuz) * Toplam Havuz
                 const winningPool = winningChoice === "YES" ? yesPool : (winningChoice === "NO" ? noPool : drawPool);
                 const winAmount = Math.round((bet.amount / winningPool) * totalPool);
                 resultHTML = `<span class="result-win">+${winAmount.toLocaleString("tr-TR")} Token Kazandın 🏆</span>`;
