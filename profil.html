@@ -8,7 +8,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <script>
-        // Giriş Kontrolü
         const user = localStorage.getItem('currentUser');
         if (!user || user === 'null' || user === 'undefined' || user.trim() === '') {
             localStorage.removeItem('currentUser');
@@ -21,245 +20,34 @@
     <script src="src/js/firebase.js"></script>
 
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Inter', sans-serif;
-        }
-
-        body {
-            background: #030814;
-            color: white;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 20px 40px;
-            background: #0b132b;
-            border-bottom: 1px solid #1c2541;
-        }
-
-        .logo {
-            font-size: 24px;
-            font-weight: 800;
-            color: #24ffff;
-            text-shadow: 0 0 10px #24ffff;
-            text-decoration: none;
-        }
-
-        .header-center {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-        }
-
-        .user-email-badge {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid #1c2541;
-            padding: 10px 18px;
-            border-radius: 30px;
-            font-size: 13px;
-            font-weight: 600;
-            color: #94a3b8;
-        }
-
-        .token-bag {
-            background: rgba(36, 255, 255, 0.1);
-            border: 1px solid #24ffff;
-            padding: 10px 20px;
-            border-radius: 30px;
-            font-weight: 700;
-            color: #24ffff;
-            box-shadow: 0 0 10px rgba(36, 255, 255, 0.2);
-        }
-
-        .icon-btn {
-            background: transparent;
-            border: none;
-            color: #888;
-            font-size: 20px;
-            cursor: pointer;
-            transition: 0.3s;
-            padding: 8px;
-            border-radius: 50px;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .icon-btn:hover, .icon-btn.active {
-            color: #24ffff;
-            background: rgba(36, 255, 255, 0.05);
-        }
-
-        .btn-logout {
-            color: #ff4aa2;
-            margin-left: 10px;
-        }
-
-        main {
-            flex: 1;
-            padding: 40px;
-            max-width: 650px;
-            width: 100%;
-            margin: 0 auto;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .profile-container {
-            background: #0b132b;
-            border: 1px solid #1c2541;
-            padding: 35px;
-            border-radius: 24px;
-            width: 100%;
-            text-align: center;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        }
-
-        .profile-avatar {
-            width: 80px;
-            height: 80px;
-            background: rgba(36, 255, 255, 0.1);
-            border: 2px solid #24ffff;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 36px;
-            color: #24ffff;
-            margin: 0 auto 15px auto;
-        }
-
-        .username-display {
-            font-size: 20px;
-            font-weight: 800;
-            color: #fff;
-            margin-bottom: 25px;
-        }
-
-        .tabs-header {
-            display: flex;
-            background: #030814;
-            border: 1px solid #1c2541;
-            border-radius: 14px;
-            padding: 6px;
-            margin-bottom: 20px;
-            gap: 5px;
-        }
-
-        .tab-btn {
-            flex: 1;
-            padding: 12px;
-            background: transparent;
-            border: none;
-            color: #64748b;
-            font-size: 14px;
-            font-weight: 700;
-            cursor: pointer;
-            border-radius: 10px;
-            transition: 0.2s ease;
-        }
-
-        .tab-btn.active {
-            background: #1c2541;
-            color: #24ffff;
-        }
-
-        .tabs-content {
-            background: #030814;
-            border: 1px solid #1c2541;
-            border-radius: 16px;
-            padding: 15px;
-            margin-bottom: 25px;
-            min-height: 200px;
-            max-height: 320px;
-            overflow-y: auto;
-            text-align: left;
-        }
-
-        .lades-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 14px;
-            border-bottom: 1px solid #1c2541;
-            background: rgba(255, 255, 255, 0.01);
-            margin-bottom: 8px;
-            border-radius: 8px;
-        }
-
-        .lades-info {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-
-        .lades-title {
-            font-size: 14px;
-            font-weight: 700;
-            color: #f8fafc;
-        }
-
-        .lades-side {
-            font-size: 11px;
-            font-weight: 600;
-            background: rgba(245, 158, 11, 0.1);
-            color: #f59e0b;
-            padding: 2px 8px;
-            border-radius: 4px;
-            border: 1px solid rgba(245, 158, 11, 0.2);
-            width: fit-content;
-        }
-
-        .lades-amount {
-            font-size: 13px;
-            font-weight: 800;
-            padding: 6px 12px;
-            border-radius: 20px;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background: #030814; color: white; min-height: 100vh; display: flex; flex-direction: column; }
+        header { display: flex; justify-content: space-between; align-items: center; padding: 20px 40px; background: #0b132b; border-bottom: 1px solid #1c2541; }
+        .logo { font-size: 24px; font-weight: 800; color: #24ffff; text-shadow: 0 0 10px #24ffff; text-decoration: none; }
+        .header-center { display: flex; align-items: center; gap: 20px; }
+        .user-email-badge { background: rgba(255, 255, 255, 0.05); border: 1px solid #1c2541; padding: 10px 18px; border-radius: 30px; font-size: 13px; font-weight: 600; color: #94a3b8; }
+        .token-bag { background: rgba(36, 255, 255, 0.1); border: 1px solid #24ffff; padding: 10px 20px; border-radius: 30px; font-weight: 700; color: #24ffff; box-shadow: 0 0 10px rgba(36, 255, 255, 0.2); }
+        .icon-btn { background: transparent; border: none; color: #888; font-size: 20px; cursor: pointer; transition: 0.3s; padding: 8px; border-radius: 50px; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; }
+        .icon-btn:hover, .icon-btn.active { color: #24ffff; background: rgba(36, 255, 255, 0.05); }
+        .btn-logout { color: #ff4aa2; margin-left: 10px; }
+        main { flex: 1; padding: 40px; max-width: 650px; width: 100%; margin: 0 auto; display: flex; align-items: center; justify-content: center; }
+        .profile-container { background: #0b132b; border: 1px solid #1c2541; padding: 35px; border-radius: 24px; width: 100%; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .profile-avatar { width: 80px; height: 80px; background: rgba(36, 255, 255, 0.1); border: 2px solid #24ffff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 36px; color: #24ffff; margin: 0 auto 15px auto; }
+        .username-display { font-size: 20px; font-weight: 800; color: #fff; margin-bottom: 25px; }
+        .tabs-header { display: flex; background: #030814; border: 1px solid #1c2541; border-radius: 14px; padding: 6px; margin-bottom: 20px; gap: 5px; }
+        .tab-btn { flex: 1; padding: 12px; background: transparent; border: none; color: #64748b; font-size: 14px; font-weight: 700; cursor: pointer; border-radius: 10px; transition: 0.2s ease; }
+        .tab-btn.active { background: #1c2541; color: #24ffff; }
+        .tabs-content { background: #030814; border: 1px solid #1c2541; border-radius: 16px; padding: 15px; margin-bottom: 25px; min-height: 200px; max-height: 320px; overflow-y: auto; text-align: left; }
+        .lades-item { display: flex; justify-content: space-between; align-items: center; padding: 14px; border-bottom: 1px solid #1c2541; background: rgba(255, 255, 255, 0.01); margin-bottom: 8px; border-radius: 8px; }
+        .lades-info { display: flex; flex-direction: column; gap: 4px; }
+        .lades-title { font-size: 14px; font-weight: 700; color: #f8fafc; }
+        .lades-side { font-size: 11px; font-weight: 600; background: rgba(245, 158, 11, 0.1); color: #f59e0b; padding: 2px 8px; border-radius: 4px; border: 1px solid rgba(245, 158, 11, 0.2); width: fit-content; }
+        .lades-amount { font-size: 13px; font-weight: 800; padding: 6px 12px; border-radius: 20px; }
         .amount-active { background: rgba(36, 255, 255, 0.08); color: #24ffff; border: 1px solid rgba(36, 255, 255, 0.2); }
         .amount-win { background: rgba(34, 197, 94, 0.1); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.2); }
         .amount-lose { background: rgba(239, 68, 68, 0.1); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.2); }
-
-        .empty-state {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            color: #475569;
-            height: 160px;
-            gap: 10px;
-            font-size: 14px;
-            font-weight: 600;
-            text-align: center;
-        }
-
-        .btn-back {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            width: 100%;
-            padding: 16px;
-            border-radius: 50px;
-            border: 1px solid #1c2541;
-            background: rgba(255, 255, 255, 0.02);
-            color: #94a3b8;
-            font-weight: 700;
-            font-size: 15px;
-            cursor: pointer;
-            text-decoration: none;
-        }
+        .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #475569; height: 160px; gap: 10px; font-size: 14px; font-weight: 600; text-align: center; }
+        .btn-back { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 16px; border-radius: 50px; border: 1px solid #1c2541; background: rgba(255, 255, 255, 0.02); color: #94a3b8; font-weight: 700; font-size: 15px; cursor: pointer; text-decoration: none; }
     </style>
 </head>
 <body>
@@ -307,9 +95,12 @@
             document.getElementById('profile-username').innerText = currentUser;
 
             const userKey = currentUser.replace(/\./g, '_');
+            console.log("==> PROFIL SAYFASI BAŞLADI <==");
+            console.log("Mevcut Kullanıcı:", currentUser);
+            console.log("Dönüştürülmüş Key:", userKey);
 
             if (typeof db !== 'undefined') {
-                // Üst Bar Bakiye Senkronizasyonu
+                // Üst Bar Bakiye Takibi
                 db.ref('users/' + userKey).on('value', (snapshot) => {
                     const userData = snapshot.val();
                     if (userData) {
@@ -318,67 +109,81 @@
                     }
                 });
 
-                // Gelişmiş Derin Veri Tarayıcı (Deep Scanner)
+                // AGRESİF HİBRİT TARAYICI
                 db.ref('ladesler').on('value', (snapshot) => {
                     const ladesler = snapshot.val();
+                    console.log("Firebase 'ladesler' düğümünden gelen ham veri:", ladesler);
+                    
                     allUserLadesData = [];
 
                     if (ladesler) {
-                        Object.keys(ladesler).forEach(ladesId => {
-                            const lades = ladesler[ladesId];
-                            let hasParticipated = false;
-                            let extractedBet = { side: 'Belirsiz', amount: 300, result: 0 };
+                        Object.keys(ladesler).forEach(id => {
+                            const l = ladesler[id];
+                            let katildiMi = false;
+                            let bulunanBahis = { side: 'Belirsiz', amount: 0, result: 0 };
 
-                            // Kural 1: Nesneyi stringe çevirip kullanıcının varlığını kontrol et
-                            const stringified = JSON.stringify(lades).toLowerCase();
-                            const lookForRaw = currentUser.toLowerCase();
-                            const lookForClean = userKey.toLowerCase();
+                            // 1. ADIM: Objenin içinde kullanıcının e-postası ya da key'i geçiyor mu?
+                            const hamYazi = JSON.stringify(l).toLowerCase();
+                            if (hamYazi.includes(currentUser.toLowerCase()) || hamYazi.includes(userKey.toLowerCase())) {
+                                katildiMi = true;
 
-                            if (stringified.includes(lookForRaw) || stringified.includes(lookForClean)) {
-                                hasParticipated = true;
-
-                                // Kural 2: Veri yapısı nerede olursa olsun derinlemesine kazı ve eşleşeni çıkar
-                                function searchDeep(obj) {
+                                // 2. ADIM: Derinlemesine tarayıp veriyi ayıkla
+                                function derinAra(obj) {
                                     if (!obj || typeof obj !== 'object') return;
-                                    
-                                    // Eğer anahtar kelime direkt kullanıcının key'i ise
-                                    if (obj[userKey] || obj[currentUser]) {
-                                        const match = obj[userKey] || obj[currentUser];
-                                        extractedBet.side = match.side || match.choice || extractedBet.side;
-                                        extractedBet.amount = match.amount || match.invested || extractedBet.amount;
-                                        extractedBet.result = match.result || 0;
+
+                                    // Eğer aradığımız key doğrudan bu objenin bir alt elemanıysa
+                                    if (obj[userKey] || obj[currentUser] || obj[currentUser.toLowerCase()]) {
+                                        const veri = obj[userKey] || obj[currentUser] || obj[obj[currentUser.toLowerCase()]];
+                                        if(veri && typeof veri === 'object') {
+                                            bulunanBahis.side = veri.side || veri.choice || veri.secim || bulunanBahis.side;
+                                            bulunanBahis.amount = veri.amount || veri.invested || veri.miktar || bulunanBahis.amount;
+                                            bulunanBahis.result = veri.result || veri.kazanc || 0;
+                                        }
                                         return;
                                     }
 
-                                    // Klasik dizi veya alt objeleri tara
-                                    for (let key in obj) {
-                                        if (key.toLowerCase() === lookForRaw || key.toLowerCase() === lookForClean) {
-                                            extractedBet.side = obj[key].side || obj[key].choice || extractedBet.side;
-                                            extractedBet.amount = obj[key].amount || obj[key].invested || extractedBet.amount;
-                                            extractedBet.result = obj[key].result || 0;
+                                    // Tüm alt dalları tek tek gez
+                                    for (let k in obj) {
+                                        if (k.toLowerCase() === currentUser.toLowerCase() || k.toLowerCase() === userKey.toLowerCase()) {
+                                            if (typeof obj[k] === 'object') {
+                                                bulunanBahis.side = obj[k].side || obj[k].choice || bulunanBahis.side;
+                                                bulunanBahis.amount = obj[k].amount || obj[k].invested || bulunanBahis.amount;
+                                                bulunanBahis.result = obj[k].result || 0;
+                                            } else {
+                                                // Eğer direkt değer olarak yatırılan miktar yazıldıysa
+                                                bulunanBahis.amount = obj[k];
+                                            }
                                         }
-                                        if (typeof obj[key] === 'object') {
-                                            searchDeep(obj[key]);
+                                        if (typeof obj[k] === 'object') {
+                                            derinAra(obj[k]);
                                         }
                                     }
                                 }
-                                searchDeep(lades);
+                                derinAra(l);
 
-                                const status = lades.status || ((lades.isOpen === false || lades.isClosed === true) ? 'closed' : 'open');
+                                // Durum Tespiti
+                                let durum = 'open';
+                                if (l.status === 'closed' || l.status === 'finished' || l.isOpen === false || l.isClosed === true) {
+                                    durum = 'closed';
+                                }
 
                                 allUserLadesData.push({
-                                    id: ladesId,
-                                    title: lades.title || 'Lades Bahsi',
-                                    status: status,
-                                    invested: extractedBet.amount,
-                                    side: extractedBet.side,
-                                    result: extractedBet.result
+                                    id: id,
+                                    title: l.title || 'Lades Bahsi',
+                                    status: durum,
+                                    invested: bulunanBahis.amount || 300,
+                                    side: bulunanBahis.side,
+                                    result: bulunanBahis.result
                                 });
                             }
                         });
                     }
+
+                    console.log("Kullanıcı için ayıklanan lades listesi:", allUserLadesData);
                     renderLadesList();
                 });
+            } else {
+                console.error("HATA: Firebase 'db' nesnesi bulunamadı. core.js veya firebase.js yüklenememiş olabilir.");
             }
         });
 
@@ -395,14 +200,14 @@
             contentArea.innerHTML = '';
 
             const filtered = allUserLadesData.filter(item => {
-                return currentActiveTab === 'active' ? (item.status === 'open' || item.status === 'active') : (item.status === 'closed' || item.status === 'finished');
+                return currentActiveTab === 'active' ? item.status === 'open' : item.status === 'closed';
             });
 
             if (filtered.length === 0) {
                 contentArea.innerHTML = `
                     <div class="empty-state">
                         <i class="fa-solid fa-gamepad" style="font-size: 24px; color: #1c2541;"></i>
-                        <span>Bu sekmede listelenecek lades verisi bulunamadı.</span>
+                        <span>Katılım sağladığınız veri bulunamadı.</span>
                     </div>`;
                 return;
             }
