@@ -74,7 +74,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-database-compat.js"></script>
 
     <script>
-        // Realtime Database Bağlantısını kuruyoruz
+        // Veritabanı URL'sini buraya bağlıyoruz
         const firebaseConfig = {
             databaseURL: "https://lades-app-default-rtdb.firebaseio.com/"
         };
@@ -83,11 +83,11 @@
             firebase.initializeApp(firebaseConfig);
         }
         
-        // Global db nesnesi (app.js'nin çalışması için kritik çapa)
+        // app.js'nin global kapsamda (window) aradığı veritabanı değişkeni
         var db = firebase.database();
         window.db = db;
 
-        // app.js'nin kullandığı yardımcı core/firebase fonksiyonları buraya kopyalandı
+        // app.js dosyanızın içindeki asenkron metotların patlamadan çalışması için gereken köprü fonksiyonlar
         window.fbGet = async function(path) {
             const snap = await db.ref(path).once("value");
             return snap.val();
