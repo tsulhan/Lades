@@ -110,7 +110,7 @@ async function handleRegister() {
         await fbRemove(`inviteCodes/${inviteKey}`);
     }
 
-    alert("Kayıt başarılı! Başlangıç bakiyeniz: 3600 TOKEN");
+    alert("Kayıt başarılı! Başlangıç bakiyeniz: 0 TOKEN Lütfen Yöneticiye Danışın");
     window.location.href = "login.html";
 }
 
