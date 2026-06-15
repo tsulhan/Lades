@@ -79,7 +79,7 @@
         .tab-content { display: none; }
         .tab-content.active { display: block; }
 
-        /* app.js'in Ürettiği Kupon Kartlarının CSS Giydirmeleri */
+        /* Kart ve Dinamik İçerik CSS Giydirmeleri */
         .user-bet-card {
             background-color: var(--card-bg); 
             border: 1px solid var(--border-color); 
@@ -102,7 +102,7 @@
         .stat-box .lbl { font-size: 0.75rem; color: var(--text-muted); font-weight: 500; }
         .stat-box .val { font-size: 0.95rem; font-weight: 700; white-space: nowrap; }
 
-        /* Rozetler (app.js Sınıfları) */
+        /* Rozetler */
         .badge-choice {
             display: inline-block; padding: 4px 10px; border-radius: 6px; 
             font-size: 0.75rem; font-weight: 700; letter-spacing: 0.5px; margin-top: 4px;
@@ -133,8 +133,8 @@
         <div class="balance-box">
             <div class="balance-label"><i class="fa-solid fa-coins"></i> MEVCUT BAKİYE</div>
             <div class="balance-amount-wrapper">
-                <span id="profile-token-balance">0</span>
-                <span style="font-size: 0.85rem; color: var(--text-muted); font-weight: 500;">TOKEN</span>
+                <span id="profile-token-balance">Yükleniyor...</span>
+                <span style="font-size: 0.85rem; color: var(--text-muted); font-weight: 500;">Token</span>
             </div>
         </div>
 
@@ -156,16 +156,16 @@
     <script src="src/js/app.js"></script>
 
     <script>
-        // Sayfa DOM ve Firebase bağlantıları hazır olunca motoru başlat
+        // Sayfa tamamen yüklendiğinde ve app.js scriptleri çalıştığında motoru tetikle
         document.addEventListener("DOMContentLoaded", () => {
-            // app.js'deki initProfilePage fonksiyonunun tamamen hazır olması için ufak bir bekleme payı
+            // Firebase nesnelerinin ve init fonksiyonunun oturması için ufak bir gecikme payı bırakıyoruz
             setTimeout(() => {
                 if (typeof initProfilePage === "function") {
                     initProfilePage();
                 } else {
-                    console.error("initProfilePage fonksiyonu bulunamadı. Lütfen app.js yolunu kontrol edin.");
+                    console.error("Hata: app.js içindeki initProfilePage fonksiyonuna erişilemedi.");
                 }
-            }, 500);
+            }, 300);
         });
 
         // Tab Değiştirme Fonksiyonu
