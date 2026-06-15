@@ -33,49 +33,6 @@
         .footer-links a { color: #24ffff; text-decoration: none; font-weight: 600; }
         .footer-links a:hover { text-decoration: underline; }
     </style>
-
-    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-database-compat.js"></script>
-
-    <script>
-        const firebaseConfig = {
-            databaseURL: "https://lades-app-default-rtdb.firebaseio.com/"
-        };
-        
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
-        }
-        
-        // Değişkenleri hem global (window) hem de direkt isimleriyle var olarak tanımlıyoruz
-        var db = firebase.database();
-        window.db = db;
-
-        window.fbGet = async function(path) {
-            const snap = await firebase.database().ref(path).once("value");
-            return snap.val();
-        };
-        var fbGet = window.fbGet;
-
-        window.fbSet = async function(path, data) {
-            return firebase.database().ref(path).set(data);
-        };
-        var fbSet = window.fbSet;
-
-        window.fbRemove = async function(path) {
-            return firebase.database().ref(path).remove();
-        };
-        var fbRemove = window.fbRemove;
-
-        window.objectValuesToArray = function(obj) {
-            return obj ? Object.values(obj) : [];
-        };
-        var objectValuesToArray = window.objectValuesToArray;
-
-        window.uniqueId = function(prefix = "id") {
-            return prefix + "_" + Date.now() + "_" + Math.random().toString(36).substring(2, 7);
-        };
-        var uniqueId = window.uniqueId;
-    </script>
 </head>
 <body>
 
@@ -87,7 +44,7 @@
             <label>Davet Kodu</label>
             <div class="invite-row">
                 <input type="text" id="reg-invite-code" placeholder="Örn: LADES2026">
-                <button type="button" class="btn-request-code" onclick="requestInviteCode()">KOD İSTE</button>
+                <button type="button" class="btn-request-code" onclick="pageRequestInviteCode()">KOD İSTE</button>
             </div>
         </div>
         
@@ -106,13 +63,125 @@
             <input type="password" id="reg-password-confirm" placeholder="••••••••">
         </div>
         
-        <button class="btn-register" onclick="handleRegister()">KAYIT OL ⚡</button>
+        <button class="btn-register" onclick="pageHandleRegister()">KAYIT OL ⚡</button>
         
         <div class="footer-links">
             Hesabınız var mı? <a href="login.html">Giriş Yapın</a>
         </div>
     </div>
 
-    <script src="src/js/app.js" defer></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-database-compat.js"></script>
+
+    <script>
+        // Firebase Veritabanı Bağlantısı
+        const firebaseConfig = {
+            databaseURL: "https://lades-app-default-rtdb.firebaseio.com/"
+        };
+        
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const pageDb = firebase.database();
+
+        // 1. KOD İSTE BUTONU FONKSİYONU
+        async function pageRequestInviteCode() {
+            const email = document.getElementById("reg-email")?.value.trim();
+            
+            if (!email) {
+                alert("Lütfen önce E-posta Adresi alanını doldurun!");
+                return;
+            }
+
+            try {
+                // app.js'deki mantıkla benzersiz bir talep ID'si üretiyoruz
+                const reqId = "req_" + Date.now() + "_" + Math.random().toString(36).substring(2, 7);
+                
+                // Tam istediğin bildirim yapısı: Talebi yapan e-posta ve mesajı veritabanına yazıyoruz
+                await pageDb.ref("adminRequests/" + reqId).set({
+                    id: reqId,
+                    email: email,
+                    note: `${email} e-posta adresine sahip kişi kod istiyor.`,
+                    status: "Bekliyor",
+                    timestamp: Date.now()
+                });
+
+                alert("Davet kodu talebi yöneticiye başarıyla iletildi!");
+            } catch (error) {
+                console.error("Talep hatası:", error);
+                alert("Talep gönderilirken bir hata oluştu: " + error.message);
+            }
+        }
+
+        // 2. KAYIT OL BUTONU FONKSİYONU
+        async function pageHandleRegister() {
+            const inviteCode = document.getElementById("reg-invite-code")?.value.trim();
+            const email = document.getElementById("reg-email")?.value.trim();
+            const password = document.getElementById("reg-password")?.value;
+            const passwordConfirm = document.getElementById("reg-password-confirm")?.value;
+
+            // Form Kontrolleri
+            if (!inviteCode || !email || !password || !passwordConfirm) {
+                alert("Lütfen tüm alanları doldurun!");
+                return;
+            }
+
+            if (password !== passwordConfirm) {
+                alert("Şifreler uyuşmuyor!");
+                return;
+            }
+
+            try {
+                // Firebase'den mevcut aktif davet kodlarını ve kullanıcıları asenkron çekiyoruz
+                const inviteCodesSnap = await pageDb.ref("invitations").once("value");
+                const usersSnap = await pageDb.ref("users").once("value");
+
+                const inviteData = inviteCodesSnap.val() ? Object.values(inviteCodesSnap.val()) : [];
+                const usersData = usersSnap.val() ? Object.values(usersSnap.val()) : [];
+
+                // Sadece yönetici tarafından yaratılan geçerli/aktif kodları filtreliyoruz
+                const activeCodes = inviteData.filter(c => c && c.code === inviteCode && c.status === "Aktif");
+
+                if (activeCodes.length === 0) {
+                    alert("Geçersiz veya kullanılmış bir davet kodu girdiniz!");
+                    return;
+                }
+
+                // E-posta adresi sistemde daha önce kayıtlı mı kontrolü
+                const isEmailExists = usersData.some(u => u && u.email && u.email.toLowerCase() === email.toLowerCase());
+                if (isEmailExists) {
+                    alert("Bu e-posta adresiyle daha önce kayıt olunmuş!");
+                    return;
+                }
+
+                // E-posta adresini Firebase key formatına uygun hale getirmek için noktayı alt tire yapıyoruz
+                const safeEmailKey = email.replace(/\./g, "_");
+                const targetCodeObj = activeCodes[0];
+
+                // Yeni Kullanıcı Datası (app.js formatınla milim milim aynı: 3600 token başlangıçlı)
+                const newUser = {
+                    email: email,
+                    password: password,
+                    tokens: 3600,
+                    correctGuesses: 0,
+                    totalGuesses: 0,
+                    role: "user",
+                    usedInviteCode: inviteCode,
+                    registerDate: new Date().toISOString()
+                };
+
+                // Veritabanı Güncellemeleri: Kullanıcıyı ekle ve kullanılan davet kodunun durumunu pasife çek
+                await pageDb.ref("users/" + safeEmailKey).set(newUser);
+                await pageDb.ref("invitations/" + targetCodeObj.id).update({ status: "Kullanıldı" });
+
+                alert("Kayıt işleminiz başarıyla tamamlandı! Giriş sayfasına yönlendiriliyorsunuz.");
+                window.location.href = "login.html";
+
+            } catch (error) {
+                console.error("Kayıt hatası:", error);
+                alert("Kayıt sırasında bir hata meydana geldi: " + error.message);
+            }
+        }
+    </script>
 </body>
 </html>
