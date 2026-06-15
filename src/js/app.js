@@ -1,5 +1,5 @@
 // ======================================================
-// LADES APP.JS - TÜM İŞ MANTIĞI VE YÖNETİCİ ÖZELLİKLERİ
+// LADES APP.JS - TÜM İŞ MANTIĞI VE GÜVENLİ YÖNETİCİ ÖZELLİKLERİ
 // ======================================================
 
 // GLOBAL DURUM
@@ -237,7 +237,6 @@ function startRealtimeListeners() {
         renderMarketGrid(marketsObj);
     });
 
-    // Liderlik tablosu verilerini realtime (canlı) olarak dinle ve güncelle
     fbRef("ladesUsers").on("value", (snapshot) => {
         const usersObj = snapshot.val() || {};
         renderLeaderboard(usersObj);
@@ -427,7 +426,7 @@ function generateMarketCardHTML(market, isActive) {
                            justify-content: center; font-size: 11px; transition: 0.2s; z-index: 10;"
                     onmouseover="this.style.background='rgba(239, 68, 68, 0.3)'; this.style.color='white';"
                     onmouseout="this.style.background='rgba(239, 68, 68, 0.12)'; this.style.color='#f87171';"
-                    title="Bu Ladesi ve Tüm Kullanıcı Bahislerini Kalıcı Olarak Sil">
+                    title="Bu Ladesi Sil ve Paraları İade Et">
                 <i class="fa-solid fa-xmark"></i>
             </button>
         `;
@@ -450,10 +449,10 @@ function generateMarketCardHTML(market, isActive) {
 }
 
 // ------------------------------------------------------
-// ADMİN: LADESİ DASHBOARD ÜZERİNDEN VE HAFIZADAN TAMAMEN SİLME
+// ADMİN: LADESİ SİLME VE KULLANICI TOKENLARINI İADE ETME MOTORU
 // ------------------------------------------------------
 async function deleteMarketCompletely(marketId, marketTitle) {
-    const confirmation = confirm(`"${marketTitle}" isimli ladesi ve bu ladese yapılmış TÜM KULLANICI BAHİSLERİNİ veritabanından kalıcı olarak silmek istediğinize emin misiniz?\n\nBu işlem geri alınamaz!`);
+    const confirmation = confirm(`"${marketTitle}" isimli ladesi silmek istediğinize emin misiniz?\n\n⚠️ BU İŞLEM: \n1- Ladesi tamamen kaldırır.\n2- Bu ladese oynayan TÜM KULLANICILARIN tokenlarını hesaplarına İADE eder!`);
     
     if (!confirmation) return;
     if (typeof db === "undefined" || !db) {
@@ -462,32 +461,54 @@ async function deleteMarketCompletely(marketId, marketTitle) {
     }
 
     try {
-        await db.ref(`customMarkets/${marketId}`).remove();
+        const [betHistorySnapshot, usersSnapshot] = await Promise.all([
+            db.ref("betHistory").once("value"),
+            db.ref("ladesUsers").once("value")
+        ]);
 
-        const betHistorySnapshot = await db.ref("betHistory").once("value");
-        const allHistories = betHistorySnapshot.val();
+        const allHistories = betHistorySnapshot.val() || {};
+        const allUsers = usersSnapshot.val() || {};
 
-        if (allHistories) {
-            const deletePromises = [];
-            Object.keys(allHistories).forEach(historyKey => {
-                const bet = allHistories[historyKey];
-                if (bet && bet.marketId === marketId) {
-                    deletePromises.push(db.ref(`betHistory/${historyKey}`).remove());
-                } else if (bet && typeof bet === "object") {
-                    if (bet[marketId]) {
-                        deletePromises.push(db.ref(`betHistory/${historyKey}/${marketId}`).remove());
+        const deletePromises = [];
+        const userUpdates = { ...allUsers }; 
+        let refundedTokenCount = 0;
+        let affectedUsersCount = 0;
+
+        Object.keys(allHistories).forEach(historyKey => {
+            const bet = allHistories[historyKey];
+            
+            if (bet && bet.marketId === marketId) {
+                const userEmail = bet.email;
+                const betAmount = parseInt(bet.amount || 0);
+
+                if (userEmail && betAmount > 0) {
+                    const userCleanKey = userEmail.replace(/\./g, ',');
+                    
+                    if (userUpdates[userCleanKey]) {
+                        userUpdates[userCleanKey].balance = (parseInt(userUpdates[userCleanKey].balance) || 0) + betAmount;
+                        refundedTokenCount += betAmount;
+                        affectedUsersCount++;
                     }
                 }
-            });
-            if (deletePromises.length > 0) {
-                await Promise.all(deletePromises);
+                deletePromises.push(db.ref(`betHistory/${historyKey}`).remove());
             }
+        });
+
+        if (affectedUsersCount > 0) {
+            await db.ref("ladesUsers").set(userUpdates);
         }
 
-        alert("Lades ve ilgili tüm bahis verileri başarıyla temizlendi!");
+        if (deletePromises.length > 0) {
+            await Promise.all(deletePromises);
+        }
+
+        await db.ref(`customMarkets/${marketId}`).remove();
+
+        alert(`⚡ Lades başarıyla silindi!\n\nKatılım Sağlayan: ${affectedUsersCount} kullanıcı\nİade Edilen Toplam: ${refundedTokenCount.toLocaleString("tr-TR")} Token hesaplara geri yüklendi.`);
+        
     } catch (error) {
-        console.error("Silme hatası:", error);
-        alert("Hata oluştu: " + error.message);
+        console.error("Lades silme ve iade hatası:", error);
+        alert("İşlem sırasında bir hata oluştu: " + error.message);
     }
 }
 
@@ -855,7 +876,7 @@ async function renderAdminPanel() {
                     <td style="padding:8px 0; font-size:13px; color:#ff4aa2; font-family:monospace;">${u.password || "1234"}</td>
                     <td style="padding:8px 0; font-size:13px; color:#24ffff; font-weight:bold;">${(u.balance || 0).toLocaleString("tr-TR")}</td>
                     <td style="padding:8px 0; text-align:right;">
-                        <button onclick="setTokensManual('${u.email}', ${u.balance || 0})" style="background:#ff4aa2; color:white; border:none; padding:4px 10px; border-radius:4px; font-size:11px; cursor:pointer; font-weight:500;">✏️ Token</button>
+                        <button onclick="setTokensManual('${u.email}', ${u.balance || 0})" style="background:#ff4aa2; color:white; border:none; padding:4px 10px; border-radius:4px; font-size:11px; cursor:pointer; font-weight:500;">✏️ Düzenle</button>
                         ${deleteButtonHTML}
                     </td>
                 </tr>`;
