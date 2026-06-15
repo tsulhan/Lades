@@ -1,5 +1,5 @@
 // ======================================================
-// LADES APP.JS - TÜM İŞ MANTIĞI VE LIDERLIK TABLOSU ENTEGRASYONU
+// LADES APP.JS - TÜM İŞ MANTIĞI VE YÖNETİCİ ÖZELLİKLERİ
 // ======================================================
 
 // GLOBAL DURUM
@@ -251,7 +251,6 @@ function renderLeaderboard(usersObj) {
     const leaderboardList = document.getElementById("leaderboard-list");
     if (!leaderboardList) return;
 
-    // Nesne yapısındaki kullanıcıları diziye dök ve bakiyelerine göre büyükten küçüğe sırala
     const sortedUsers = Object.values(usersObj)
         .filter(u => u && u.email)
         .sort((a, b) => (b.balance || 0) - (a.balance || 0));
@@ -270,12 +269,10 @@ function renderLeaderboard(usersObj) {
         const rank = index + 1;
         let rankDisplay = rank;
 
-        // İlk 3 podyum oyuncusu için premium emojiler
         if (rank === 1) rankDisplay = "🥇";
         else if (rank === 2) rankDisplay = "🥈";
         else if (rank === 3) rankDisplay = "🥉";
 
-        // Güvenlik ve Gizlilik: Kullanıcı e-postalarını maskeleme (tsulhan@gmail.com -> tsul***@gmail.com)
         const maskedEmail = maskUserEmail(user.email);
 
         leaderboardList.innerHTML += `
@@ -290,7 +287,6 @@ function renderLeaderboard(usersObj) {
     });
 }
 
-// E-posta adreslerini maskeleyen yardımcı fonksiyon
 function maskUserEmail(email) {
     if (!email || !email.includes("@")) return email;
     const parts = email.split("@");
@@ -759,6 +755,9 @@ async function finalizeLades(marketId, winningChoice) {
     await renderAdminPanel();
 }
 
+// ------------------------------------------------------
+// ADMIN PANELİ LİSTELEME MOTORU (GÜNCEL KULLANICI SİLME DAHİL)
+// ------------------------------------------------------
 async function renderAdminPanel() {
     if (typeof db === "undefined" || !db) return;
 
@@ -845,16 +844,48 @@ async function renderAdminPanel() {
     if (usersTable && usersSnap) {
         usersTable.innerHTML = "";
         Object.values(usersSnap).forEach(u => {
+            const isSelf = u.email === "tsulhan@gmail.com";
+            const deleteButtonHTML = isSelf 
+                ? `<span style="color:#64748b; font-size:11px; padding:4px 10px;">🔒 Korumalı</span>`
+                : `<button onclick="deleteUserCompletely('${u.email}')" style="background:rgba(239, 68, 68, 0.15); color:#ef4444; border:1px solid rgba(239, 68, 68, 0.3); padding:4px 10px; border-radius:4px; font-size:11px; cursor:pointer; font-weight:600; margin-left:6px; transition:0.2s;" onmouseover="this.style.background='#ef4444'; this.style.color='white';" onmouseout="this.style.background='rgba(239, 68, 68, 0.15)'; this.style.color='#ef4444';">🗑️ Kullanıcıyı Sil</button>`;
+
             usersTable.innerHTML += `
                 <tr style="border-bottom:1px solid #1c2541;">
                     <td style="padding:8px 0; font-size:13px;">${u.email} ${u.isAdmin || u.email === "tsulhan@gmail.com" ? "👑" : ""}</td>
                     <td style="padding:8px 0; font-size:13px; color:#ff4aa2; font-family:monospace;">${u.password || "1234"}</td>
                     <td style="padding:8px 0; font-size:13px; color:#24ffff; font-weight:bold;">${(u.balance || 0).toLocaleString("tr-TR")}</td>
                     <td style="padding:8px 0; text-align:right;">
-                        <button onclick="setTokensManual('${u.email}', ${u.balance || 0})" style="background:#ff4aa2; color:white; border:none; padding:4px 10px; border-radius:4px; font-size:11px; cursor:pointer; font-weight:500;">✏️ Token Düzenle</button>
+                        <button onclick="setTokensManual('${u.email}', ${u.balance || 0})" style="background:#ff4aa2; color:white; border:none; padding:4px 10px; border-radius:4px; font-size:11px; cursor:pointer; font-weight:500;">✏️ Düzenle</button>
+                        ${deleteButtonHTML}
                     </td>
                 </tr>`;
         });
+    }
+}
+
+// ------------------------------------------------------
+// KULLANICIYI VERİTABANINDAN KALICI OLARAK SİLME FONKSİYONU
+// ------------------------------------------------------
+async function deleteUserCompletely(email) {
+    if (!email) return;
+
+    const confirmation = confirm(`"${email}" kullanıcısını sistemden TAMAMEN silmek istediğinize emin misiniz?\n\nBu işlem geri alınamaz ve kullanıcının hesabı kalıcı olarak kapatılır!`);
+    if (!confirmation) return;
+
+    if (typeof db === "undefined" || !db) {
+        alert("Firebase bağlantısı yok!");
+        return;
+    }
+
+    try {
+        const userCleanKey = email.replace(/\./g, ',');
+        await db.ref(`ladesUsers/${userCleanKey}`).remove();
+        
+        alert(`"${email}" kullanıcısı başarıyla her yerden silindi!`);
+        await renderAdminPanel();
+    } catch (error) {
+        console.error("Kullanıcı silme hatası:", error);
+        alert("Kullanıcı silinirken bir hata oluştu: " + error.message);
     }
 }
 
@@ -901,7 +932,7 @@ async function setTokensManual(email, currentBalance) {
     
     const targetBalance = parseInt(targetValueStr);
     if (isNaN(targetBalance) || targetBalance < 0) {
-        alert("Lütfen geçerli ve 0'dan büyük bir bakiye giriniz!");
+        alert("Lütfen geçerli bir bakiye giriniz!");
         return;
     }
     
@@ -915,7 +946,7 @@ async function setTokensManual(email, currentBalance) {
         const [userKey, userObj] = userEntry;
         userObj.balance = targetBalance; 
         await fbSet(`ladesUsers/${userKey}`, userObj);
-        alert(`Başarılı! ${email} kullanıcısının bakiyesi ${targetBalance.toLocaleString("tr-TR")} Token olarak güncellendi.`);
+        alert(`Başarılı! Bakiyesi ${targetBalance.toLocaleString("tr-TR")} Token olarak güncellendi.`);
     }
 
     await renderAdminPanel();
