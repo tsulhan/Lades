@@ -101,7 +101,7 @@ async function handleRegister() {
     await fbSet(`ladesUsers/${newUserKey}`, {
         email,
         password,
-        balance: 3600, // Başlangıç düzeltmesi senkronize edildi
+        balance: 3600,
         isAdmin: false
     });
 
@@ -357,7 +357,6 @@ function generateMarketCardHTML(market, isActive) {
         `;
     }
 
-    // ADMİN (TSULHAN@GMAIL.COM) İÇİN SAĞ ÜST KÖŞEYE SİLME ÇARPI BUTONU EKLEME
     let adminDeleteHTML = "";
     if (currentUserEmail === "tsulhan@gmail.com") {
         adminDeleteHTML = `
@@ -403,10 +402,8 @@ async function deleteMarketCompletely(marketId, marketTitle) {
     }
 
     try {
-        // 1. Ana pazar kaydını sil
         await db.ref(`customMarkets/${marketId}`).remove();
 
-        // 2. Bahis geçmişinden bu markete ait bütün kullanıcı kayıtlarını temizle
         const betHistorySnapshot = await db.ref("betHistory").once("value");
         const allHistories = betHistorySnapshot.val();
 
@@ -414,11 +411,9 @@ async function deleteMarketCompletely(marketId, marketTitle) {
             const deletePromises = [];
             Object.keys(allHistories).forEach(historyKey => {
                 const bet = allHistories[historyKey];
-                // Yapıya göre hem düz alt düğüm hem de kullanıcı kırılımlı geçmiş kontrolü
                 if (bet && bet.marketId === marketId) {
                     deletePromises.push(db.ref(`betHistory/${historyKey}`).remove());
                 } else if (bet && typeof bet === "object") {
-                    // Eğer kullanıcı kırılımlı ise içini tara
                     if (bet[marketId]) {
                         deletePromises.push(db.ref(`betHistory/${historyKey}/${marketId}`).remove());
                     }
@@ -436,7 +431,7 @@ async function deleteMarketCompletely(marketId, marketTitle) {
     }
 }
 
-function updateUI() { /* core.js dinleyicileri devraldı */ }
+function updateUI() { }
 
 // ------------------------------------------------------
 // TOKEN TALEBİ / LADES OLUŞTURMA / BAHİS
@@ -781,6 +776,7 @@ async function renderAdminPanel() {
         `).join(" ");
     }
 
+    // GÜNCELLENEN KISIM: YÖNETİCİ PANELİ KULLANICI LİSTESİ BUTON METNİ VE FONKSİYON BAĞLANTISI
     const usersTable = document.getElementById("admin-users-list");
     const usersSnap = await fbGet("ladesUsers");
     if (usersTable && usersSnap) {
@@ -792,7 +788,7 @@ async function renderAdminPanel() {
                     <td style="padding:8px 0; font-size:13px; color:#ff4aa2; font-family:monospace;">${u.password || "1234"}</td>
                     <td style="padding:8px 0; font-size:13px; color:#24ffff; font-weight:bold;">${(u.balance || 0).toLocaleString("tr-TR")}</td>
                     <td style="padding:8px 0; text-align:right;">
-                        <button onclick="addTokensManual('${u.email}')" style="background:#ff4aa2; color:white; border:none; padding:3px 8px; border-radius:4px; font-size:11px; cursor:pointer;">+ Token Yükle</button>
+                        <button onclick="setTokensManual('${u.email}', ${u.balance || 0})" style="background:#ff4aa2; color:white; border:none; padding:4px 10px; border-radius:4px; font-size:11px; cursor:pointer; font-weight:500;">✏️ Token Düzenle</button>
                     </td>
                 </tr>`;
         });
@@ -835,10 +831,18 @@ async function approveToken(reqId, email, amount) {
     await renderAdminPanel();
 }
 
-async function addTokensManual(email) {
-    const amt = prompt(`${email} için yüklenecek miktar:`);
-    const amount = parseInt(amt);
-    if (isNaN(amount) || amount <= 0) return;
+// GÜNCELLENEN KISIM: EKLEME YAPMAK YERİNE DOĞRUDAN SET EDEN (EŞİTLEYEN) YENİ FONKSİYON MANTIĞI
+async function setTokensManual(email, currentBalance) {
+    const targetValueStr = prompt(`${email} kullanıcısının YENİ TOPLAM bakiyesi kaç token olsun?\n(Şu anki bakiye: ${currentBalance.toLocaleString("tr-TR")})`);
+    
+    if (targetValueStr === null) return; // İptal edildiğinde çıkış yap
+    
+    const targetBalance = parseInt(targetValueStr);
+    if (isNaN(targetBalance) || targetBalance < 0) {
+        alert("Lütfen geçerli ve 0'dan büyük bir bakiye giriniz!");
+        return;
+    }
+    
     if (typeof db === "undefined" || !db) return;
 
     const usersSnap = await fbGet("ladesUsers");
@@ -847,11 +851,11 @@ async function addTokensManual(email) {
 
     if (userEntry) {
         const [userKey, userObj] = userEntry;
-        userObj.balance = (userObj.balance || 0) + amount;
+        userObj.balance = targetBalance; // Toplama yok, direkt yeni girilen sayıyı set ediyor
         await fbSet(`ladesUsers/${userKey}`, userObj);
+        alert(`Başarılı! ${email} kullanıcısının bakiyesi ${targetBalance.toLocaleString("tr-TR")} Token olarak güncellendi.`);
     }
 
-    alert("Yüklendi!");
     await renderAdminPanel();
 }
 
