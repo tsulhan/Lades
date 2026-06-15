@@ -74,14 +74,20 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-database-compat.js"></script>
 
     <script>
-        // Eğer db nesnesi daha önce projenin başka yerinde tanımlanmadıysa burada ayağa kaldırıyoruz
-        if (typeof firebase !== 'undefined' && !firebase.apps.length) {
-            const firebaseConfig = {
-                databaseURL: "https://lades-app-default-rtdb.firebaseio.com/" 
-            };
+        // Projenin ortak veritabanı ayarlarını buraya güvenli çapa olarak atıyoruz.
+        // Böylece app.js devreye girmeden önce db ve veritabanı kesinlikle hazır olur.
+        const firebaseConfig = {
+            databaseURL: "https://lades-app-default-rtdb.firebaseio.com/"
+        };
+        
+        if (!firebase.apps.length) {
             firebase.initializeApp(firebaseConfig);
-            window.db = firebase.database();
         }
+        
+        // Hem yerel değişkene hem tarayıcının global penceresine (window) tanımlıyoruz.
+        // app.js hangisinden okursa okusun asla 'undefined' hatası almayacak.
+        var db = firebase.database();
+        window.db = db;
     </script>
 
     <script src="src/js/app.js"></script>
