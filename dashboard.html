@@ -449,6 +449,78 @@
             transform: translateY(-1px);
         }
 
+        /* Liderlik Tablosu Tasarım Stilleri */
+        .leaderboard-wrapper {
+            background: #0b132b;
+            border: 1px solid #1c2541;
+            border-radius: 24px;
+            padding: 35px;
+            max-width: 750px;
+            margin: 0 auto;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .leaderboard-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 10px;
+        }
+
+        .leaderboard-header h2 {
+            font-weight: 800;
+            font-size: 24px;
+            color: #fff;
+        }
+
+        .leaderboard-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 25px;
+        }
+
+        .leaderboard-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #030814;
+            border: 1px solid #1c2541;
+            padding: 16px 24px;
+            border-radius: 16px;
+            font-size: 15px;
+            transition: 0.2s ease;
+        }
+
+        .leaderboard-row:hover {
+            border-color: rgba(36, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.01);
+        }
+
+        .leaderboard-user {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .leaderboard-rank {
+            font-size: 18px;
+            font-weight: 800;
+            min-width: 30px;
+        }
+
+        .leaderboard-email {
+            font-weight: 600;
+        }
+
+        .leaderboard-balance {
+            font-weight: 800;
+            color: #24ffff;
+            font-family: monospace;
+            font-size: 16px;
+            text-shadow: 0 0 10px rgba(36, 255, 255, 0.2);
+        }
+
         .admin-modal-overlay {
             display: none;
             position: fixed;
@@ -648,9 +720,10 @@
     </header>
 
     <div class="tabs-container">
-        <button class="tab-button active" onclick="switchTab('mevcut-ladesler')">Mevcut Ladesler</button>
-        <button class="tab-button" onclick="switchTab('gecmis-ladesler')">Geçmiş Ladesler</button>
-        <button class="tab-button" onclick="switchTab('lades-yarat')">Yarat</button>
+        <button id="tab-btn-mevcut-ladesler" class="tab-button active" onclick="switchTab('mevcut-ladesler')">Mevcut Ladesler</button>
+        <button id="tab-btn-gecmis-ladesler" class="tab-button" onclick="switchTab('gecmis-ladesler')">Geçmiş Ladesler</button>
+        <button id="tab-btn-lades-yarat" class="tab-button" onclick="switchTab('lades-yarat')">Yarat</button>
+        <button id="tab-btn-liderlik-tablosu" class="tab-button" onclick="switchTab('liderlik-tablosu')">🏆 Liderlik Tablosu</button>
     </div>
 
     <main>
@@ -752,6 +825,22 @@
                 </div>
 
                 <button class="btn-submit" onclick="createNewMarket()">LADES YARAT ⚡</button>
+            </div>
+        </div>
+
+        <div id="liderlik-tablosu" class="tab-content">
+            <div class="leaderboard-wrapper">
+                <div class="leaderboard-header">
+                    <i class="fa-solid fa-trophy" style="color: #24ffff; font-size: 26px; text-shadow: 0 0 10px #24ffff;"></i>
+                    <h2>En Büyük Balinalar</h2>
+                </div>
+                <p style="color: #64748b; font-size: 14px;">Platformun en yüksek bakiye ve doğru tahmine sahip top oyuncuları listesi.</p>
+                
+                <div id="leaderboard-list" class="leaderboard-list">
+                    <div style="text-align: center; color: #64748b; font-size: 14px; padding: 30px;">
+                        <i class="fa-solid fa-spinner fa-spin"></i> Sıralama listesi hazırlanıyor...
+                    </div>
+                </div>
             </div>
         </div>
     </main>

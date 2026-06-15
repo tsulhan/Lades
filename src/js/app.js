@@ -1,5 +1,5 @@
 // ======================================================
-// LADES APP.JS - SADECE İŞ MANTIĞI (GÜNCEL FİLTRELİ SÜRÜM)
+// LADES APP.JS - TÜM İŞ MANTIĞI VE LIDERLIK TABLOSU ENTEGRASYONU
 // ======================================================
 
 // GLOBAL DURUM
@@ -236,6 +236,70 @@ function startRealtimeListeners() {
         const marketsObj = snapshot.val() || {};
         renderMarketGrid(marketsObj);
     });
+
+    // Liderlik tablosu verilerini realtime (canlı) olarak dinle ve güncelle
+    fbRef("ladesUsers").on("value", (snapshot) => {
+        const usersObj = snapshot.val() || {};
+        renderLeaderboard(usersObj);
+    });
+}
+
+// ------------------------------------------------------
+// LİDERLİK TABLOSU MOTORU (LEADERBOARD RENDER)
+// ------------------------------------------------------
+function renderLeaderboard(usersObj) {
+    const leaderboardList = document.getElementById("leaderboard-list");
+    if (!leaderboardList) return;
+
+    // Nesne yapısındaki kullanıcıları diziye dök ve bakiyelerine göre büyükten küçüğe sırala
+    const sortedUsers = Object.values(usersObj)
+        .filter(u => u && u.email)
+        .sort((a, b) => (b.balance || 0) - (a.balance || 0));
+
+    if (sortedUsers.length === 0) {
+        leaderboardList.innerHTML = `
+            <div style="text-align:center; color:#64748b; padding:30px; font-size:14px;">
+                Henüz kayıtlı kullanıcı bulunamadı.
+            </div>`;
+        return;
+    }
+
+    leaderboardList.innerHTML = "";
+
+    sortedUsers.forEach((user, index) => {
+        const rank = index + 1;
+        let rankDisplay = rank;
+
+        // İlk 3 podyum oyuncusu için premium emojiler
+        if (rank === 1) rankDisplay = "🥇";
+        else if (rank === 2) rankDisplay = "🥈";
+        else if (rank === 3) rankDisplay = "🥉";
+
+        // Güvenlik ve Gizlilik: Kullanıcı e-postalarını maskeleme (tsulhan@gmail.com -> tsul***@gmail.com)
+        const maskedEmail = maskUserEmail(user.email);
+
+        leaderboardList.innerHTML += `
+            <div class="leaderboard-row">
+                <div class="leaderboard-user">
+                    <span class="leaderboard-rank">${rankDisplay}</span>
+                    <span class="leaderboard-email">${maskedEmail}</span>
+                </div>
+                <div class="leaderboard-balance">${(user.balance || 0).toLocaleString("tr-TR")} Token</div>
+            </div>
+        `;
+    });
+}
+
+// E-posta adreslerini maskeleyen yardımcı fonksiyon
+function maskUserEmail(email) {
+    if (!email || !email.includes("@")) return email;
+    const parts = email.split("@");
+    const name = parts[0];
+    const domain = parts[1];
+    if (name.length <= 4) {
+        return name.substring(0, 1) + "***@" + domain;
+    }
+    return name.substring(0, 4) + "***@" + domain;
 }
 
 // ------------------------------------------------------
@@ -776,7 +840,6 @@ async function renderAdminPanel() {
         `).join(" ");
     }
 
-    // GÜNCELLENEN KISIM: YÖNETİCİ PANELİ KULLANICI LİSTESİ BUTON METNİ VE FONKSİYON BAĞLANTISI
     const usersTable = document.getElementById("admin-users-list");
     const usersSnap = await fbGet("ladesUsers");
     if (usersTable && usersSnap) {
@@ -831,11 +894,10 @@ async function approveToken(reqId, email, amount) {
     await renderAdminPanel();
 }
 
-// GÜNCELLENEN KISIM: EKLEME YAPMAK YERİNE DOĞRUDAN SET EDEN (EŞİTLEYEN) YENİ FONKSİYON MANTIĞI
 async function setTokensManual(email, currentBalance) {
     const targetValueStr = prompt(`${email} kullanıcısının YENİ TOPLAM bakiyesi kaç token olsun?\n(Şu anki bakiye: ${currentBalance.toLocaleString("tr-TR")})`);
     
-    if (targetValueStr === null) return; // İptal edildiğinde çıkış yap
+    if (targetValueStr === null) return; 
     
     const targetBalance = parseInt(targetValueStr);
     if (isNaN(targetBalance) || targetBalance < 0) {
@@ -851,7 +913,7 @@ async function setTokensManual(email, currentBalance) {
 
     if (userEntry) {
         const [userKey, userObj] = userEntry;
-        userObj.balance = targetBalance; // Toplama yok, direkt yeni girilen sayıyı set ediyor
+        userObj.balance = targetBalance; 
         await fbSet(`ladesUsers/${userKey}`, userObj);
         alert(`Başarılı! ${email} kullanıcısının bakiyesi ${targetBalance.toLocaleString("tr-TR")} Token olarak güncellendi.`);
     }
