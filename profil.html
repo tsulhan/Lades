@@ -155,29 +155,41 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
 
+    <script>
+        // ÖNEMLİ: Dashboard sayfasında yer alan firebaseConfig nesnesini birebir buraya yapıştır!
+        const firebaseConfig = {
+            apiKey: "AIzaSy...", 
+            authDomain: "lades...",
+            databaseURL: "https://lades...",
+            projectId: "lades...",
+            storageBucket: "lades...",
+            messagingSenderId: "...",
+            appId: "..."
+        };
+
+        // Global db nesnesini core.js ve app.js okumadan önce burada yaratıyoruz
+        var db;
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        db = firebase.database();
+    </script>
+
     <script src="core.js"></script>
     <script src="app.js"></script>
 
     <script>
-        // Sayfa DOM yapısı tamamen hazır olduğunda motoru ateşle
         window.addEventListener("DOMContentLoaded", () => {
-            // Önce core.js içindeki yeni bootstrap fonksiyonunu tetikliyoruz
+            // Firebase zaten yukarıda kurulduğu için direkt fonksiyonları ateşleyebiliriz
             if (typeof bootstrapFirebase === "function") {
                 bootstrapFirebase();
             }
 
-            // Firebase bağlantısının oturması için çok kısa bir an bekleyip profil sayfasını dolduruyoruz
             setTimeout(() => {
                 if (typeof initProfilePage === "function") {
-                    try {
-                        initProfilePage();
-                    } catch (err) {
-                        console.error("Profil verileri basılırken hata oluştu:", err);
-                    }
-                } else {
-                    console.error("Hata: app.js içindeki initProfilePage fonksiyonuna erişilemedi.");
+                    initProfilePage();
                 }
-            }, 300);
+            }, 200);
         });
 
         // Tab Değiştirme Fonksiyonu
