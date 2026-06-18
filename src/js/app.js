@@ -818,6 +818,13 @@ async function confirmBet() {
         return;
     }
 
+    // ✅ MAKSİMUM BAHİS KONTROLÜ
+    const MAX_BET = 5000;
+    if (amount > MAX_BET) {
+        alert(`❌ Bir ladese maksimum ${MAX_BET.toLocaleString("tr-TR")} Token yatırabilirsiniz!`);
+        return;
+    }
+
     const userKey = currentUserEmail.replace(/\./g, ',');
     const currentUser = await fbGet(`ladesUsers/${userKey}`);
 
@@ -831,16 +838,41 @@ async function confirmBet() {
         return;
     }
 
+    // ✅ MEVCUT HAVUZU KONTROL ET (Minimum bahis için)
     const target = await fbGet(`customMarkets/${activeMarketId}`);
-
     if (!target) {
         alert("Lades bulunamadı!");
         return;
     }
 
+    // Mevcut havuzu hesapla
+    const yesPool = target.yesPool || 0;
+    const noPool = target.noPool || 0;
+    const drawPool = target.drawPool || 0;
+    const currentPool = target.category === "Spor" 
+        ? (yesPool + noPool + drawPool) 
+        : (yesPool + noPool);
+
+    // ✅ MİNİMUM BAHİS: Havuzun %10'u (en az 10 Token)
+    const MIN_BET_PERCENT = 0.10; // %10
+    let minBet = Math.max(10, Math.floor(currentPool * MIN_BET_PERCENT));
+    
+    // Eğer havuz boşsa (ilk bahis), minimum 10 Token olsun
+    if (currentPool === 0) {
+        minBet = 10;
+    }
+
+    if (amount < minBet) {
+        alert(`❌ Bu ladese minimum bahis miktarı: ${minBet.toLocaleString("tr-TR")} Token\n` +
+              `(Mevcut havuzun %10'u: ${Math.floor(currentPool * MIN_BET_PERCENT).toLocaleString("tr-TR")} Token)`);
+        return;
+    }
+
+    // Bahis işlemini gerçekleştir
     currentUser.balance = parseInt(currentUser.balance) - amount;
     await fbSet(`ladesUsers/${userKey}`, currentUser);
 
+    // Havuzu güncelle
     if (activeChoice === "YES") {
         target.yesPool = (target.yesPool || 0) + amount;
     } else if (activeChoice === "NO") {
@@ -851,6 +883,7 @@ async function confirmBet() {
 
     await fbSet(`customMarkets/${activeMarketId}`, target);
 
+    // Bahis geçmişine ekle
     const historyKey = uniqueId("history");
     await fbSet(`betHistory/${historyKey}`, {
         id: historyKey,
@@ -861,6 +894,7 @@ async function confirmBet() {
         createdAt: Date.now()
     });
 
+    alert(`✅ ${amount.toLocaleString("tr-TR")} Token başarıyla yatırıldı!`);
     closeModal();
 }
 
@@ -899,46 +933,112 @@ async function finalizeLades(marketId, winningChoice) {
     const markets = marketsSnap || {};
     const market = markets[marketId];
 
-    if (!market) return;
+    if (!market) {
+        alert("❌ Lades bulunamadı!");
+        return;
+    }
 
+    // 1. Havuzları al
     const yesPool = market.yesPool || 0;
     const noPool = market.noPool || 0;
     const drawPool = market.drawPool || 0;
 
-    const totalPool = market.category === "Spor" ? (yesPool + noPool + drawPool) : (yesPool + noPool);
-    let winningPool = winningChoice === "YES" ? yesPool : (winningChoice === "NO" ? noPool : drawPool);
+    // 2. Toplam havuzu hesapla
+    const totalPool = market.category === "Spor" 
+        ? (yesPool + noPool + drawPool) 
+        : (yesPool + noPool);
 
+    // 3. Kazanan havuzu belirle
+    let winningPool = 0;
+    let winningChoiceName = "";
+    
+    if (winningChoice === "YES") {
+        winningPool = yesPool;
+        winningChoiceName = "EVET";
+    } else if (winningChoice === "NO") {
+        winningPool = noPool;
+        winningChoiceName = "HAYIR";
+    } else if (winningChoice === "DRAW") {
+        winningPool = drawPool;
+        winningChoiceName = "BERABERLİK";
+    }
+
+    // 4. Eğer kazanan havuz boşsa veya toplam havuz 0'sa
     if (totalPool === 0 || winningPool === 0) {
-        alert("Havuz boş veya kazanan seçeneğe bahis yapılmamış. Lades kapatıldı.");
+        alert(`⚠️ ${winningChoiceName} havuzu boş veya toplam havuz 0. Lades kapatıldı ama dağıtım yapılmadı.`);
         market.status = "Sonuçlandı";
         await fbSet(`customMarkets/${marketId}`, market);
         return;
     }
 
+    // 5. Bahis geçmişini ve kullanıcıları al
     const historySnap = await fbGet("betHistory");
     const history = historySnap || {};
     const usersSnap = await fbGet("ladesUsers");
     const users = usersSnap || {};
 
-    const winners = Object.values(history).filter(h => h.marketId === marketId && h.choice === winningChoice);
+    // 6. Kazananları bul
+    const winners = Object.values(history).filter(
+        h => h.marketId === marketId && h.choice === winningChoice
+    );
+
+    if (winners.length === 0) {
+        alert(`⚠️ ${winningChoiceName} seçeneğine bahis yapan kimse yok. Lades kapatıldı.`);
+        market.status = "Sonuçlandı";
+        await fbSet(`customMarkets/${marketId}`, market);
+        return;
+    }
+
+    // ✅ 7. BASİT ORANSAL DAĞITIM (Komisyon ve ağırlıklandırma YOK)
+    let totalDistributed = 0;
+    const distributionResults = [];
 
     winners.forEach(winner => {
         const userEntry = Object.entries(users).find(([key, u]) => u.email === winner.email);
         if (!userEntry) return;
 
         const [userKey, userObj] = userEntry;
-        const userShareRatio = winner.amount / winningPool;
-        const rewardAmount = Math.round(userShareRatio * totalPool);
+        
+        // ✅ Basit oransal hesaplama: (Kullanıcının yatırımı / Kazanan havuz) × Toplam havuz
+        const userShare = winner.amount / winningPool;
+        let rewardAmount = Math.floor(userShare * totalPool);
+
+        // En az 1 Token alsın (0 olmasın)
+        if (rewardAmount === 0) rewardAmount = 1;
 
         userObj.balance = (userObj.balance || 0) + rewardAmount;
         users[userKey] = userObj;
+        totalDistributed += rewardAmount;
+
+        distributionResults.push({
+            email: winner.email,
+            amount: winner.amount,
+            reward: rewardAmount,
+            share: (userShare * 100).toFixed(2) + '%'
+        });
     });
 
-    market.status = "Sonuçlandı";
-    await fbSet(`customMarkets/${marketId}`, market);
+    // 8. Kullanıcıları güncelle
     await fbSet("ladesUsers", users);
 
-    alert(`🎉 Dağıtıldı! Toplam ${totalPool} Token kazananlara aktarıldı.`);
+    // 9. Ladesi sonuçlandır
+    market.status = "Sonuçlandı";
+    await fbSet(`customMarkets/${marketId}`, market);
+
+    // 10. Bilgi mesajı
+    const remainingTokens = totalPool - totalDistributed;
+    
+    let distributionDetails = distributionResults.map(r => 
+        `  • ${r.email}: ${r.amount} Token → ${r.reward} Token kazandı (${r.share})`
+    ).join('\n');
+
+    alert(`🎉 ${winningChoiceName} KAZANDI!\n\n` +
+          `📊 Toplam Havuz: ${totalPool.toLocaleString("tr-TR")} Token\n` +
+          `💰 Dağıtılan: ${totalDistributed.toLocaleString("tr-TR")} Token\n` +
+          `📦 Kalan: ${remainingTokens.toLocaleString("tr-TR")} Token (küsürat)\n` +
+          `👥 Kazanan Sayısı: ${winners.length}\n\n` +
+          `📋 DAĞITIM DETAYLARI:\n${distributionDetails}\n\n` +
+          `✅ Basit oransal dağıtım yapıldı!`);
 }
 
 // ------------------------------------------------------
