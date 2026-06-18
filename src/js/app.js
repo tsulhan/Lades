@@ -20,13 +20,6 @@ async function handleLogin() {
         return;
     }
 
-    // Özel Admin Kolay Giriş Koruması
-    if (emailValue === "tsulhan@gmail.com" && passwordValue === "1234") {
-        localStorage.setItem("currentUser", "tsulhan@gmail.com");
-        window.location.href = "dashboard.html";
-        return;
-    }
-
     if (typeof db === "undefined" || !db) {
         alert("Firebase bağlantısı kuruluyor, lütfen birkaç saniye sonra tekrar deneyin.");
         return;
@@ -101,7 +94,7 @@ async function handleRegister() {
     await fbSet(`ladesUsers/${newUserKey}`, {
         email,
         password,
-        balance: 3600,
+        balance: 0, // ✅ Başlangıç bakiyesi 0
         isAdmin: false
     });
 
@@ -110,7 +103,7 @@ async function handleRegister() {
         await fbRemove(`inviteCodes/${inviteKey}`);
     }
 
-    alert("Kayıt başarılı! Başlangıç bakiyeniz: 3600 TOKEN");
+    alert("✅ Kayıt başarılı! Başlangıç bakiyeniz: 0 TOKEN. Token talebi oluşturabilirsiniz.");
     window.location.href = "login.html";
 }
 
@@ -148,7 +141,7 @@ async function requestInviteCode() {
         createdAt: Date.now()
     });
 
-    alert("Davet kodu talebi yöneticiye iletildi!");
+    alert("✅ Davet kodu talebiniz yöneticiye iletildi! Yönetici onayladığında kodunuz hazır olacak.");
 }
 
 // ------------------------------------------------------
@@ -217,21 +210,16 @@ function startRealtimeListeners() {
             const balanceElement = document.getElementById("token-balance");
             if (balanceElement) balanceElement.innerText = balance.toLocaleString("tr-TR");
 
-            // ✅ YENİ: Token iste butonunu göster/gizle
+            // ✅ Token iste butonunu göster/gizle
             const tokenRequestBtn = document.getElementById("token-request-btn");
             if (tokenRequestBtn) {
-                // Bakiye 0 ise "İSTE" butonunu göster, değilse gizle
                 if (balance === 0) {
                     tokenRequestBtn.style.display = "inline-block";
-                    // Token bag'ine tıklanabilir olduğunu göster
-                    const tokenBag = document.getElementById("token-bag-container");
-                    if (tokenBag) tokenBag.style.opacity = "1";
                 } else {
                     tokenRequestBtn.style.display = "none";
                 }
             }
 
-            // Admin panel butonunu göster/gizle
             const adminBtn = document.getElementById("admin-panel-btn");
             if (adminBtn) {
                 if (user.isAdmin || currentUserEmail === "tsulhan@gmail.com") {
@@ -243,7 +231,6 @@ function startRealtimeListeners() {
         }
     });
 
-    // Diğer dinleyiciler (markets, leaderboard) aynen kalır...
     fbRef("customMarkets").on("value", (snapshot) => {
         const marketsObj = snapshot.val() || {};
         renderMarketGrid(marketsObj);
@@ -262,14 +249,15 @@ function renderLeaderboard(usersObj) {
     const leaderboardList = document.getElementById("leaderboard-list");
     if (!leaderboardList) return;
 
+    // ✅ Sadece bakiyesi 0'dan büyük olanları göster
     const sortedUsers = Object.values(usersObj)
-        .filter(u => u && u.email)
+        .filter(u => u && u.email && (u.balance || 0) > 0)
         .sort((a, b) => (b.balance || 0) - (a.balance || 0));
 
     if (sortedUsers.length === 0) {
         leaderboardList.innerHTML = `
             <div style="text-align:center; color:#64748b; padding:30px; font-size:14px;">
-                Henüz kayıtlı kullanıcı bulunamadı.
+                Henüz token kazanmış kullanıcı bulunmuyor. İlk kazanan sen ol! 🏆
             </div>`;
         return;
     }
@@ -428,9 +416,9 @@ function generateMarketCardHTML(market, isActive) {
         `;
     }
 
-    // ✅ YENİ: Admin silme butonu - HEM AKTİF HEM GEÇMİŞ için
+    // ✅ Admin silme butonu - HEM AKTİF HEM GEÇMİŞ için
     let adminDeleteHTML = "";
-    if (currentUserEmail === "tsulhan@gmail.com") {  // Sadece admin
+    if (currentUserEmail === "tsulhan@gmail.com") {
         if (isActive) {
             // ✅ AKTİF LADES: Token iadeli silme (kırmızı çarpı)
             adminDeleteHTML = `
@@ -447,7 +435,7 @@ function generateMarketCardHTML(market, isActive) {
                 </button>
             `;
         } else {
-            // ✅ GEÇMİŞ LADES: Temiz silme (gri çarpı - daha sade)
+            // ✅ GEÇMİŞ LADES: Temiz silme (gri çarpı)
             adminDeleteHTML = `
                 <button onclick="deleteMarketFromHistory('${market.id}', '${safeTitle}')" 
                         style="position: absolute; top: 12px; right: 12px; background: rgba(148, 163, 184, 0.1); 
@@ -483,15 +471,6 @@ function generateMarketCardHTML(market, isActive) {
 // ------------------------------------------------------
 // ADMİN: LADESİ SİLME VE KULLANICI TOKENLARINI İADE ETME MOTORU
 // ------------------------------------------------------
-// ------------------------------------------------------
-// AKTİF LADESİ SİLME VE TOKENLARI İADE ETME (SADECE ADMIN)
-// ------------------------------------------------------
-// ------------------------------------------------------
-// AKTİF LADESİ SİLME VE TOKENLARI İADE ETME (SADECE ADMIN)
-// ------------------------------------------------------
-// ------------------------------------------------------
-// AKTİF LADESİ SİLME VE TOKENLARI İADE ETME (GÜNCELLENDİ)
-// ------------------------------------------------------
 async function deleteMarketCompletely(marketId, marketTitle) {
     console.log("🔍 Silme işlemi başlatıldı - ID:", marketId);
     console.log("📝 Lades başlığı:", marketTitle);
@@ -519,13 +498,11 @@ async function deleteMarketCompletely(marketId, marketTitle) {
     if (!confirmation) return;
 
     try {
-        // Loading göstergesi
         const loadingMsg = document.createElement('div');
         loadingMsg.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#0b132b; padding:20px 40px; border-radius:12px; border:1px solid #24ffff; color:#24ffff; font-weight:bold; z-index:9999;';
         loadingMsg.innerHTML = '⏳ Lades siliniyor ve tokenlar iade ediliyor...';
         document.body.appendChild(loadingMsg);
 
-        // 1. Ladesin verisini al (kontrol için)
         const marketSnapshot = await db.ref(`customMarkets/${marketId}`).once("value");
         const marketData = marketSnapshot.val();
         
@@ -534,15 +511,13 @@ async function deleteMarketCompletely(marketId, marketTitle) {
             document.body.removeChild(loadingMsg);
             return;
         }
-        
-        console.log("✅ Lades verisi bulundu:", marketData);
 
-        // 2. Bahis geçmişini al
-        const betHistorySnapshot = await db.ref("betHistory").once("value");
+        const [betHistorySnapshot, usersSnapshot] = await Promise.all([
+            db.ref("betHistory").once("value"),
+            db.ref("ladesUsers").once("value")
+        ]);
+
         const allHistories = betHistorySnapshot.val() || {};
-        
-        // 3. Kullanıcıları al
-        const usersSnapshot = await db.ref("ladesUsers").once("value");
         const allUsers = usersSnapshot.val() || {};
 
         const deletePromises = [];
@@ -550,12 +525,10 @@ async function deleteMarketCompletely(marketId, marketTitle) {
         let refundedTokenCount = 0;
         let affectedUsersCount = 0;
 
-        // 4. Bu ladese ait bahisleri bul ve iade et
         Object.keys(allHistories).forEach(historyKey => {
             const bet = allHistories[historyKey];
             
             if (bet && bet.marketId === marketId) {
-                console.log("📊 Bahis bulundu:", bet);
                 const userEmail = bet.email;
                 const betAmount = parseInt(bet.amount || 0);
 
@@ -567,42 +540,28 @@ async function deleteMarketCompletely(marketId, marketTitle) {
                         userUpdates[userCleanKey].balance = currentBalance + betAmount;
                         refundedTokenCount += betAmount;
                         affectedUsersCount++;
-                        console.log(`💰 ${userEmail} -> ${betAmount} Token iade edildi`);
                     }
                 }
-                // Bahis kaydını sil
                 deletePromises.push(db.ref(`betHistory/${historyKey}`).remove());
             }
         });
 
-        // 5. Kullanıcı bakiyelerini güncelle
         if (affectedUsersCount > 0) {
-            console.log(`👥 ${affectedUsersCount} kullanıcıya ${refundedTokenCount} Token iade ediliyor...`);
             await db.ref("ladesUsers").set(userUpdates);
-            console.log("✅ Kullanıcı bakiyeleri güncellendi");
         }
 
-        // 6. Bahis geçmişini sil
         if (deletePromises.length > 0) {
-            console.log(`🗑️ ${deletePromises.length} bahis kaydı siliniyor...`);
             await Promise.all(deletePromises);
-            console.log("✅ Bahis geçmişi silindi");
         }
 
-        // 7. Ladesi sil
-        console.log(`🗑️ Lades siliniyor: ${marketId}`);
         await db.ref(`customMarkets/${marketId}`).remove();
-        console.log("✅ Lades silindi");
 
-        // Loading mesajını kaldır
         document.body.removeChild(loadingMsg);
 
-        // 8. Başarılı mesajı
         alert(`✅ "${marketTitle}" başarıyla silindi!\n\n` +
               `👥 Etkilenen Kullanıcı: ${affectedUsersCount}\n` +
               `💰 İade Edilen Toplam Token: ${refundedTokenCount.toLocaleString("tr-TR")}`);
         
-        // 9. Sayfayı yenile (verileri güncelle)
         setTimeout(() => {
             location.reload();
         }, 1000);
@@ -611,7 +570,77 @@ async function deleteMarketCompletely(marketId, marketTitle) {
         console.error("❌ Lades silme ve iade hatası:", error);
         alert("❌ İşlem sırasında bir hata oluştu: " + error.message);
         
-        // Hata durumunda loading mesajını kaldır
+        const loadingMsg = document.querySelector('div[style*="position:fixed"]');
+        if (loadingMsg) document.body.removeChild(loadingMsg);
+    }
+}
+
+// ------------------------------------------------------
+// GECMİŞ LADESİ SİLME (SADECE ADMIN - TOKEN İADESİZ)
+// ------------------------------------------------------
+async function deleteMarketFromHistory(marketId, marketTitle) {
+    console.log("🔍 Silme işlemi başlatıldı:", marketId, marketTitle);
+    
+    if (typeof db === "undefined" || !db) {
+        alert("Firebase bağlantısı yok!");
+        return;
+    }
+
+    const currentUserEmail = localStorage.getItem("currentUser");
+    if (currentUserEmail !== "tsulhan@gmail.com") {
+        alert("❌ Bu işlem sadece yönetici tarafından yapılabilir!");
+        return;
+    }
+
+    const confirmation = confirm(
+        `"${marketTitle}" isimli GEÇMİŞ ladesi silmek istediğinize emin misiniz?\n\n` +
+        `⚠️ BU İŞLEM:\n` +
+        `1- Ladesi geçmişten tamamen kaldırır.\n` +
+        `2- Bu ladese ait tüm bahis geçmişini siler.\n` +
+        `3- Kullanıcıların tokenlarına DOKUNULMAZ (Zaten dağıtıldı).\n\n` +
+        `Bu işlem geri alınamaz!`
+    );
+    
+    if (!confirmation) return;
+
+    try {
+        const loadingMsg = document.createElement('div');
+        loadingMsg.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#0b132b; padding:20px 40px; border-radius:12px; border:1px solid #94a3b8; color:#94a3b8; font-weight:bold; z-index:9999;';
+        loadingMsg.innerHTML = '⏳ Geçmiş lades siliniyor...';
+        document.body.appendChild(loadingMsg);
+
+        await db.ref(`customMarkets/${marketId}`).remove();
+        
+        const betHistorySnapshot = await db.ref("betHistory").once("value");
+        const allHistories = betHistorySnapshot.val() || {};
+        
+        const deletePromises = [];
+        let deletedCount = 0;
+        
+        Object.keys(allHistories).forEach(historyKey => {
+            const bet = allHistories[historyKey];
+            if (bet && bet.marketId === marketId) {
+                deletePromises.push(db.ref(`betHistory/${historyKey}`).remove());
+                deletedCount++;
+            }
+        });
+
+        if (deletePromises.length > 0) {
+            await Promise.all(deletePromises);
+        }
+
+        document.body.removeChild(loadingMsg);
+
+        alert(`✅ "${marketTitle}" geçmişten başarıyla silindi!\n\n🗑️ ${deletedCount} adet bahis kaydı temizlendi.`);
+        
+        setTimeout(() => {
+            location.reload();
+        }, 1000);
+        
+    } catch (error) {
+        console.error("❌ Lades silme hatası:", error);
+        alert("❌ Lades silinirken bir hata oluştu: " + error.message);
+        
         const loadingMsg = document.querySelector('div[style*="position:fixed"]');
         if (loadingMsg) document.body.removeChild(loadingMsg);
     }
@@ -622,9 +651,6 @@ function updateUI() { }
 // ------------------------------------------------------
 // TOKEN TALEBİ / LADES OLUŞTURMA / BAHİS
 // ------------------------------------------------------
-// ------------------------------------------------------
-// TOKEN TALEBİ - GÜNCELLENMİŞ SÜRÜM
-// ------------------------------------------------------
 async function openTokenRequestModal() {
     const currentUserEmail = localStorage.getItem("currentUser");
     
@@ -634,7 +660,6 @@ async function openTokenRequestModal() {
         return;
     }
 
-    // Kullanıcının mevcut bakiyesini al
     if (typeof db === "undefined" || !db) {
         alert("Firebase bağlantısı yok.");
         return;
@@ -651,7 +676,6 @@ async function openTokenRequestModal() {
 
         const currentBalance = user.balance || 0;
         
-        // Token talebi modalını göster - daha kullanıcı dostu
         const amount = prompt(
             `💰 MEVCUT BAKİYENİZ: ${currentBalance.toLocaleString("tr-TR")} Token\n\n` +
             `Kaç Token talep etmek istiyorsunuz?\n` +
@@ -665,14 +689,13 @@ async function openTokenRequestModal() {
             return;
         }
 
-        // Admin'e token talebi gönder
         const reqKey = uniqueId("req");
         await fbSet(`adminRequests/${reqKey}`, {
             id: reqKey,
             type: "token",
             email: currentUserEmail,
             amount: tokenAmount,
-            currentBalance: currentBalance, // Mevcut bakiyeyi de kaydedelim
+            currentBalance: currentBalance,
             status: "Bekliyor",
             createdAt: Date.now()
         });
@@ -853,10 +876,15 @@ if (typeof closeAdminPanel === "undefined") { window.closeAdminPanel = fn_closeA
 
 async function generateInviteCode() {
     if (typeof db === "undefined" || !db) return;
-    const newCode = "LADES_" + Math.random().toString(36).substring(2, 8).toUpperCase();
-    const codeKey = uniqueId("code");
-    await fbSet(`inviteCodes/${codeKey}`, newCode);
-    // Realtime dinleyici aktif olduğu için renderAdminPanel()'i manuel çağırmaya gerek yok.
+    try {
+        const newCode = "LADES_" + Math.random().toString(36).substring(2, 8).toUpperCase();
+        const codeKey = uniqueId("code");
+        await fbSet(`inviteCodes/${codeKey}`, newCode);
+        alert(`✅ Yeni davet kodu oluşturuldu!\n\n🔑 ${newCode}`);
+    } catch (error) {
+        console.error("Kod üretme hatası:", error);
+        alert("❌ Kod oluşturulurken bir hata oluştu.");
+    }
 }
 
 async function finalizeLades(marketId, winningChoice) {
@@ -909,98 +937,89 @@ async function finalizeLades(marketId, winningChoice) {
 }
 
 // ------------------------------------------------------
-// ADMIN PANELİ LİSTELEME MOTORU (CANLI VE GÜVENLİ REALTIME SÜRÜM)
-// ------------------------------------------------------
-// ------------------------------------------------------
-// ADMIN PANELİ LİSTELEME MOTORU (GERÇEK INVITECODES DÜĞÜMÜNE GÖRE UYARLANDI)
-// ------------------------------------------------------
-// ------------------------------------------------------
 // ADMIN PANELİ LİSTELEME MOTORU (GÜNCELLENMİŞ SÜRÜM)
 // ------------------------------------------------------
 async function renderAdminPanel() {
     if (typeof db === "undefined" || !db) return;
 
     // 1. BEKLEYEN İSTEKLERİ CANLI DİNLE (adminRequests)
-    // renderAdminPanel() içinde, adminRequests dinleyicisini güncelle
-fbRef("adminRequests").on("value", (snapshot) => {
-    const requestsList = document.getElementById("admin-requests-list");
-    if (!requestsList) return;
-    
-    requestsList.innerHTML = "";
-    const requests = snapshot.val() || {};
-    let hasPending = false;
+    fbRef("adminRequests").on("value", (snapshot) => {
+        const requestsList = document.getElementById("admin-requests-list");
+        if (!requestsList) return;
+        
+        requestsList.innerHTML = "";
+        const requests = snapshot.val() || {};
+        let hasPending = false;
 
-    Object.entries(requests).forEach(([key, req]) => {
-        if (req && req.status === "Bekliyor") {
-            hasPending = true;
-            const isToken = req.type === "token";
-            const email = req.email || "Bilinmeyen";
-            const amount = req.amount || 0;
-            const currentBalance = req.currentBalance || 0;
-            
-            // Admin işlem butonları
-            let actionButtons = "";
-            let requestInfo = "";
-            
-            if (isToken) {
-                // Token talebi için daha detaylı bilgi
-                requestInfo = `
-                    <span style="font-size:12px; color:#ff4aa2;">
-                        💰 ${amount} Token talep ediyor 
-                        (Mevcut: ${currentBalance.toLocaleString("tr-TR")} Token)
-                    </span>
-                `;
-                actionButtons = `
-                    <button onclick="approveToken('${req.id}', '${email}', ${amount})" 
-                            style="background:#22c55e; color:black; border:none; padding:4px 12px; border-radius:5px; font-weight:bold; cursor:pointer; font-size:12px;">
-                        ✅ Onayla
-                    </button>
-                `;
-            } else {
-                // Davet talebi
-                requestInfo = `
-                    <span style="font-size:12px; color:#24ffff;">
-                        ✉️ Davet kodu talep ediyor
-                    </span>
-                `;
-                actionButtons = `
-                    <button onclick="approveInvite('${req.id}', '${email}')" 
-                            style="background:#22c55e; color:black; border:none; padding:4px 12px; border-radius:5px; font-weight:bold; cursor:pointer; font-size:12px;">
-                        🔑 Kod Üret
-                    </button>
+        Object.entries(requests).forEach(([key, req]) => {
+            if (req && req.status === "Bekliyor") {
+                hasPending = true;
+                const isToken = req.type === "token";
+                const email = req.email || "Bilinmeyen";
+                const amount = req.amount || 0;
+                const currentBalance = req.currentBalance || 0;
+                
+                let actionButtons = "";
+                let requestInfo = "";
+                
+                if (isToken) {
+                    requestInfo = `
+                        <span style="font-size:12px; color:#ff4aa2;">
+                            💰 ${amount} Token talep ediyor 
+                            (Mevcut: ${currentBalance.toLocaleString("tr-TR")} Token)
+                        </span>
+                    `;
+                    actionButtons = `
+                        <button onclick="approveToken('${req.id}', '${email}', ${amount})" 
+                                style="background:#22c55e; color:black; border:none; padding:4px 12px; border-radius:5px; font-weight:bold; cursor:pointer; font-size:12px;">
+                            ✅ Onayla
+                        </button>
+                    `;
+                } else {
+                    requestInfo = `
+                        <span style="font-size:12px; color:#24ffff;">
+                            ✉️ Davet kodu talep ediyor
+                        </span>
+                    `;
+                    actionButtons = `
+                        <button onclick="approveInvite('${req.id}', '${email}')" 
+                                style="background:#22c55e; color:black; border:none; padding:4px 12px; border-radius:5px; font-weight:bold; cursor:pointer; font-size:12px;">
+                            🔑 Kod Üret
+                        </button>
+                    `;
+                }
+
+                requestsList.innerHTML += `
+                    <div style="display:flex; justify-content:space-between; align-items:center; 
+                                background:#030814; padding:12px 15px; border-radius:8px; 
+                                margin-bottom:8px; border-left: 3px solid ${isToken ? '#ff4aa2' : '#24ffff'};">
+                        <div style="display:flex; flex-direction:column; gap:4px;">
+                            <span style="font-size:13px; font-weight:600; color:white;">
+                                ${email}
+                            </span>
+                            ${requestInfo}
+                        </div>
+                        <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                            ${actionButtons}
+                            <button onclick="deleteRequest('${key}')" 
+                                    style="background:#ef4444; color:white; border:none; padding:4px 12px; border-radius:5px; font-weight:bold; cursor:pointer; font-size:12px;">
+                                ❌ Reddet
+                            </button>
+                        </div>
+                    </div>
                 `;
             }
+        });
 
-            requestsList.innerHTML += `
-                <div style="display:flex; justify-content:space-between; align-items:center; 
-                            background:#030814; padding:12px 15px; border-radius:8px; 
-                            margin-bottom:8px; border-left: 3px solid ${isToken ? '#ff4aa2' : '#24ffff'};">
-                    <div style="display:flex; flex-direction:column; gap:4px;">
-                        <span style="font-size:13px; font-weight:600; color:white;">
-                            ${email}
-                        </span>
-                        ${requestInfo}
-                    </div>
-                    <div style="display:flex; gap:6px; flex-wrap:wrap;">
-                        ${actionButtons}
-                        <button onclick="deleteRequest('${key}')" 
-                                style="background:#ef4444; color:white; border:none; padding:4px 12px; border-radius:5px; font-weight:bold; cursor:pointer; font-size:12px;">
-                            ❌ Reddet
-                        </button>
-                    </div>
+        if (!hasPending) {
+            requestsList.innerHTML = `
+                <div style="text-align:center; color:#64748b; padding:20px; font-size:13px;">
+                    ✅ Bekleyen talep bulunmuyor.
                 </div>
             `;
         }
     });
 
-    if (!hasPending) {
-        requestsList.innerHTML = `
-            <div style="text-align:center; color:#64748b; padding:20px; font-size:13px;">
-                ✅ Bekleyen talep bulunmuyor.
-            </div>
-        `;
-    }
-});
     // 2. DAVET KODLARINI CANLI DİNLE (inviteCodes)
     fbRef("inviteCodes").on("value", (snapshot) => {
         const codesList = document.getElementById("admin-codes-list");
@@ -1152,34 +1171,85 @@ fbRef("adminRequests").on("value", (snapshot) => {
 }
 
 // ------------------------------------------------------
-// YENİ ENTEGRASYON YARDIMCI FONKSİYONLARI
+// ADMIN PANELİ YARDIMCI FONKSİYONLARI
 // ------------------------------------------------------
-async function approveInviteReal(requestKey, email) {
-    if (typeof db === "undefined" || !db) return;
-    const newCode = "LADES_" + Math.random().toString(36).substring(2, 8).toUpperCase();
+async function deleteRequest(reqKey) {
+    if (!confirm("Bu talebi silmek istediğinize emin misiniz?")) return;
     
-    // 1. Eski istek kaydını sil
-    await db.ref(`inviteCodes/${requestKey}`).remove();
-    
-    // 2. Aynı düğüm altına düz string olarak yeni kodu kaydet (Senin db yapına uygun olarak)
-    const newCodeKey = "code_" + Date.now();
-    await db.ref(`inviteCodes/${newCodeKey}`).set(newCode);
-
-    alert(`✅ İstek onaylandı!\n${email} için üretilen aktif kod: ${newCode}`);
-}
-
-async function deleteInviteCodeReal(codeKey) {
-    if (confirm("Bu kodu veya isteği silmek istediğinize emin misiniz?")) {
-        await db.ref(`inviteCodes/${codeKey}`).remove();
+    try {
+        await fbRemove(`adminRequests/${reqKey}`);
+        alert("✅ Talep başarıyla silindi.");
+    } catch (error) {
+        console.error("Talep silme hatası:", error);
+        alert("❌ Talep silinirken bir hata oluştu.");
     }
 }
 
-async function generateInviteCode() {
+async function approveInvite(reqId, email) {
     if (typeof db === "undefined" || !db) return;
-    const newCode = "LADES_" + Math.random().toString(36).substring(2, 8).toUpperCase();
-    const codeKey = "code_" + Date.now();
-    await db.ref(`inviteCodes/${codeKey}`).set(newCode);
-    alert("Yeni kod başarıyla üretildi: " + newCode);
+    
+    try {
+        const newCode = "LADES_" + Math.random().toString(36).substring(2, 8).toUpperCase();
+        const codeKey = uniqueId("code");
+        await fbSet(`inviteCodes/${codeKey}`, newCode);
+        
+        const requestsSnap = await fbGet("adminRequests");
+        const requests = requestsSnap || {};
+        const reqKey = Object.keys(requests).find(k => requests[k] && requests[k].id === reqId);
+        if (reqKey) {
+            await fbRemove(`adminRequests/${reqKey}`);
+        }
+        
+        alert(`✅ ${email} için davet kodu oluşturuldu!\n\n🔑 Kod: ${newCode}\n\nBu kodu kullanıcıya iletebilirsiniz.`);
+    } catch (error) {
+        console.error("Kod oluşturma hatası:", error);
+        alert("❌ Kod oluşturulurken bir hata oluştu.");
+    }
+}
+
+async function approveToken(reqId, email, amount) {
+    if (typeof db === "undefined" || !db) return;
+    
+    try {
+        const usersSnap = await fbGet("ladesUsers");
+        const users = usersSnap || {};
+        const userEntry = Object.entries(users).find(([key, u]) => u && u.email === email);
+        
+        if (userEntry) {
+            const [userKey, userObj] = userEntry;
+            const oldBalance = userObj.balance || 0;
+            const newBalance = oldBalance + amount;
+            
+            userObj.balance = newBalance;
+            await fbSet(`ladesUsers/${userKey}`, userObj);
+            
+            const requestsSnap = await fbGet("adminRequests");
+            const requests = requestsSnap || {};
+            const reqKey = Object.keys(requests).find(k => requests[k] && requests[k].id === reqId);
+            if (reqKey) {
+                await fbRemove(`adminRequests/${reqKey}`);
+            }
+            
+            alert(`✅ ${email} hesabına ${amount} Token başarıyla yüklendi!\n\nEski Bakiye: ${oldBalance.toLocaleString("tr-TR")}\nYeni Bakiye: ${newBalance.toLocaleString("tr-TR")}`);
+        } else {
+            alert("❌ Kullanıcı bulunamadı!");
+        }
+    } catch (error) {
+        console.error("Token onay hatası:", error);
+        alert("❌ Token onaylanırken bir hata oluştu: " + error.message);
+    }
+}
+
+async function deleteInviteCode(codeKey) {
+    if (!confirm("Bu davet kodunu silmek istediğinize emin misiniz?")) return;
+    
+    try {
+        await fbRemove(`inviteCodes/${codeKey}`);
+        alert("✅ Davet kodu başarıyla silindi.");
+    } catch (error) {
+        console.error("Kod silme hatası:", error);
+        alert("❌ Kod silinirken bir hata oluştu.");
+    }
 }
 
 // ------------------------------------------------------
@@ -1223,37 +1293,22 @@ async function approveInvite(reqId, email) {
 
 async function approveToken(reqId, email, amount) {
     if (typeof db === "undefined" || !db) return;
-    
-    try {
-        // Kullanıcıyı bul
-        const usersSnap = await fbGet("ladesUsers");
-        const users = usersSnap || {};
-        const userEntry = Object.entries(users).find(([key, u]) => u && u.email === email);
-        
-        if (userEntry) {
-            const [userKey, userObj] = userEntry;
-            const oldBalance = userObj.balance || 0;
-            const newBalance = oldBalance + amount;
-            
-            userObj.balance = newBalance;
-            await fbSet(`ladesUsers/${userKey}`, userObj);
-            
-            // İsteği sil
-            const requestsSnap = await fbGet("adminRequests");
-            const requests = requestsSnap || {};
-            const reqKey = Object.keys(requests).find(k => requests[k] && requests[k].id === reqId);
-            if (reqKey) {
-                await fbRemove(`adminRequests/${reqKey}`);
-            }
-            
-            alert(`✅ ${email} hesabına ${amount} Token başarıyla yüklendi!\n\nEski Bakiye: ${oldBalance.toLocaleString("tr-TR")}\nYeni Bakiye: ${newBalance.toLocaleString("tr-TR")}`);
-        } else {
-            alert("❌ Kullanıcı bulunamadı!");
-        }
-    } catch (error) {
-        console.error("Token onay hatası:", error);
-        alert("❌ Token onaylanırken bir hata oluştu: " + error.message);
+    const usersSnap = await fbGet("ladesUsers");
+    const users = usersSnap || {};
+    const userEntry = Object.entries(users).find(([key, u]) => u && u.email === email);
+
+    if (userEntry) {
+        const [userKey, userObj] = userEntry;
+        userObj.balance = (userObj.balance || 0) + amount;
+        await fbSet(`ladesUsers/${userKey}`, userObj);
     }
+
+    const requestsSnap = await fbGet("adminRequests");
+    const requests = requestsSnap || {};
+    const reqKey = Object.keys(requests).find(k => requests[k] && requests[k].id === reqId);
+    if (reqKey) await fbRemove(`adminRequests/${reqKey}`);
+
+    alert(`${email} hesabına ${amount} token yüklendi.`);
 }
 
 async function setTokensManual(email, currentBalance) {
@@ -1459,180 +1514,5 @@ function renderProfileBets(currentUserEmail, markets, history) {
     }
     if (pastCount === 0) {
         pastContainer.innerHTML = `<div style="text-align:center; color:#64748b; padding:30px; font-size:14px;">Henüz sonuçlanan lades geçmişiniz yok.</div>`;
-    }
-}
-// ------------------------------------------------------
-// ADMIN PANELİ YARDIMCI FONKSİYONLARI
-// ------------------------------------------------------
-
-// İstek silme
-async function deleteRequest(reqKey) {
-    if (!confirm("Bu talebi silmek istediğinize emin misiniz?")) return;
-    
-    try {
-        await fbRemove(`adminRequests/${reqKey}`);
-        alert("✅ Talep başarıyla silindi.");
-    } catch (error) {
-        console.error("Talep silme hatası:", error);
-        alert("❌ Talep silinirken bir hata oluştu.");
-    }
-}
-
-// Davet kodunu onayla ve üret
-async function approveInvite(reqId, email) {
-    if (typeof db === "undefined" || !db) return;
-    
-    try {
-        // Yeni kod üret
-        const newCode = "LADES_" + Math.random().toString(36).substring(2, 8).toUpperCase();
-        const codeKey = uniqueId("code");
-        
-        // Kodu inviteCodes düğümüne kaydet
-        await fbSet(`inviteCodes/${codeKey}`, newCode);
-        
-        // İsteği sil
-        const requestsSnap = await fbGet("adminRequests");
-        const requests = requestsSnap || {};
-        const reqKey = Object.keys(requests).find(k => requests[k] && requests[k].id === reqId);
-        if (reqKey) {
-            await fbRemove(`adminRequests/${reqKey}`);
-        }
-        
-        alert(`✅ ${email} için davet kodu oluşturuldu!\n\n🔑 Kod: ${newCode}\n\nBu kodu kullanıcıya iletebilirsiniz.`);
-    } catch (error) {
-        console.error("Kod oluşturma hatası:", error);
-        alert("❌ Kod oluşturulurken bir hata oluştu.");
-    }
-}
-
-// Token talebini onayla
-async function approveToken(reqId, email, amount) {
-    if (typeof db === "undefined" || !db) return;
-    
-    try {
-        // Kullanıcıyı bul
-        const usersSnap = await fbGet("ladesUsers");
-        const users = usersSnap || {};
-        const userEntry = Object.entries(users).find(([key, u]) => u && u.email === email);
-        
-        if (userEntry) {
-            const [userKey, userObj] = userEntry;
-            userObj.balance = (userObj.balance || 0) + amount;
-            await fbSet(`ladesUsers/${userKey}`, userObj);
-        } else {
-            alert("❌ Kullanıcı bulunamadı!");
-            return;
-        }
-        
-        // İsteği sil
-        const requestsSnap = await fbGet("adminRequests");
-        const requests = requestsSnap || {};
-        const reqKey = Object.keys(requests).find(k => requests[k] && requests[k].id === reqId);
-        if (reqKey) {
-            await fbRemove(`adminRequests/${reqKey}`);
-        }
-        
-        alert(`✅ ${email} hesabına ${amount} Token başarıyla yüklendi.`);
-    } catch (error) {
-        console.error("Token onay hatası:", error);
-        alert("❌ Token onaylanırken bir hata oluştu.");
-    }
-}
-
-// Davet kodunu sil
-async function deleteInviteCode(codeKey) {
-    if (!confirm("Bu davet kodunu silmek istediğinize emin misiniz?")) return;
-    
-    try {
-        await fbRemove(`inviteCodes/${codeKey}`);
-        alert("✅ Davet kodu başarıyla silindi.");
-    } catch (error) {
-        console.error("Kod silme hatası:", error);
-        alert("❌ Kod silinirken bir hata oluştu.");
-    }
-}
-
-// Manuel kod üretme (mevcut generateInviteCode fonksiyonunu güncelle)
-async function generateInviteCode() {
-    if (typeof db === "undefined" || !db) return;
-    
-    try {
-        const newCode = "LADES_" + Math.random().toString(36).substring(2, 8).toUpperCase();
-        const codeKey = uniqueId("code");
-        await fbSet(`inviteCodes/${codeKey}`, newCode);
-        alert(`✅ Yeni davet kodu oluşturuldu!\n\n🔑 ${newCode}`);
-    } catch (error) {
-        console.error("Kod üretme hatası:", error);
-        alert("❌ Kod oluşturulurken bir hata oluştu.");
-    }
-}
-// ------------------------------------------------------
-// GECMİŞ LADESİ SİLME (SADECE ADMIN)
-// ------------------------------------------------------
-// ------------------------------------------------------
-// GECMİŞ LADESİ SİLME (SADECE ADMIN - TOKEN İADESİZ)
-// ------------------------------------------------------
-async function deleteMarketFromHistory(marketId, marketTitle) {
-    if (typeof db === "undefined" || !db) {
-        alert("Firebase bağlantısı yok!");
-        return;
-    }
-
-    // Admin kontrolü
-    const currentUserEmail = localStorage.getItem("currentUser");
-    if (currentUserEmail !== "tsulhan@gmail.com") {
-        alert("❌ Bu işlem sadece yönetici tarafından yapılabilir!");
-        return;
-    }
-
-    const confirmation = confirm(
-        `"${marketTitle}" isimli GEÇMİŞ ladesi silmek istediğinize emin misiniz?\n\n` +
-        `⚠️ BU İŞLEM:\n` +
-        `1- Ladesi geçmişten tamamen kaldırır.\n` +
-        `2- Bu ladese ait tüm bahis geçmişini siler.\n` +
-        `3- Kullanıcıların tokenlarına DOKUNULMAZ (Zaten dağıtıldı).\n\n` +
-        `Bu işlem geri alınamaz!`
-    );
-    
-    if (!confirmation) return;
-
-    try {
-        // Loading göstergesi
-        const loadingMsg = document.createElement('div');
-        loadingMsg.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#0b132b; padding:20px 40px; border-radius:12px; border:1px solid #94a3b8; color:#94a3b8; font-weight:bold; z-index:9999;';
-        loadingMsg.innerHTML = '⏳ Geçmiş lades siliniyor...';
-        document.body.appendChild(loadingMsg);
-
-        // 1. Ladesi customMarkets'ten sil
-        await db.ref(`customMarkets/${marketId}`).remove();
-        
-        // 2. Bu ladese ait tüm bahis geçmişini sil
-        const betHistorySnapshot = await db.ref("betHistory").once("value");
-        const allHistories = betHistorySnapshot.val() || {};
-        
-        const deletePromises = [];
-        Object.keys(allHistories).forEach(historyKey => {
-            const bet = allHistories[historyKey];
-            if (bet && bet.marketId === marketId) {
-                deletePromises.push(db.ref(`betHistory/${historyKey}`).remove());
-            }
-        });
-
-        if (deletePromises.length > 0) {
-            await Promise.all(deletePromises);
-        }
-
-        // Loading mesajını kaldır
-        document.body.removeChild(loadingMsg);
-
-        alert(`✅ "${marketTitle}" geçmişten başarıyla silindi!\n\n🗑️ ${deletePromises.length} adet bahis kaydı temizlendi.`);
-        
-    } catch (error) {
-        console.error("Lades silme hatası:", error);
-        alert("❌ Lades silinirken bir hata oluştu: " + error.message);
-        
-        // Hata durumunda loading mesajını kaldır
-        const loadingMsg = document.querySelector('div[style*="position:fixed"]');
-        if (loadingMsg) document.body.removeChild(loadingMsg);
     }
 }
