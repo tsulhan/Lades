@@ -818,10 +818,17 @@ async function confirmBet() {
         return;
     }
 
+    // ✅ MİNİMUM BAHİS KONTROLÜ
+    const MIN_BET = 250;
+    if (amount < MIN_BET) {
+        alert(`❌ Minimum bahis miktarı ${MIN_BET.toLocaleString("tr-TR")} Token'dır!`);
+        return;
+    }
+
     // ✅ MAKSİMUM BAHİS KONTROLÜ
-    const MAX_BET = 5000;
+    const MAX_BET = 1000;
     if (amount > MAX_BET) {
-        alert(`❌ Bir ladese maksimum ${MAX_BET.toLocaleString("tr-TR")} Token yatırabilirsiniz!`);
+        alert(`❌ Maksimum bahis miktarı ${MAX_BET.toLocaleString("tr-TR")} Token'dır!`);
         return;
     }
 
@@ -834,37 +841,13 @@ async function confirmBet() {
     }
 
     if (amount > (currentUser.balance || 0)) {
-        alert("Yetersiz bakiye!");
+        alert(`❌ Yetersiz bakiye! Mevcut bakiyeniz: ${(currentUser.balance || 0).toLocaleString("tr-TR")} Token`);
         return;
     }
 
-    // ✅ MEVCUT HAVUZU KONTROL ET (Minimum bahis için)
     const target = await fbGet(`customMarkets/${activeMarketId}`);
     if (!target) {
         alert("Lades bulunamadı!");
-        return;
-    }
-
-    // Mevcut havuzu hesapla
-    const yesPool = target.yesPool || 0;
-    const noPool = target.noPool || 0;
-    const drawPool = target.drawPool || 0;
-    const currentPool = target.category === "Spor" 
-        ? (yesPool + noPool + drawPool) 
-        : (yesPool + noPool);
-
-    // ✅ MİNİMUM BAHİS: Havuzun %10'u (en az 10 Token)
-    const MIN_BET_PERCENT = 0.10; // %10
-    let minBet = Math.max(10, Math.floor(currentPool * MIN_BET_PERCENT));
-    
-    // Eğer havuz boşsa (ilk bahis), minimum 10 Token olsun
-    if (currentPool === 0) {
-        minBet = 10;
-    }
-
-    if (amount < minBet) {
-        alert(`❌ Bu ladese minimum bahis miktarı: ${minBet.toLocaleString("tr-TR")} Token\n` +
-              `(Mevcut havuzun %10'u: ${Math.floor(currentPool * MIN_BET_PERCENT).toLocaleString("tr-TR")} Token)`);
         return;
     }
 
