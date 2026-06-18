@@ -846,52 +846,56 @@
     </main>
 
     <div id="admin-modal" class="admin-modal-overlay">
-        <div class="admin-box">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                <h2 style="color:#24ffff;">
-                    <i class="fa-solid fa-user-shield"></i> Lades Yönetim Paneli
-                </h2>
-                <button onclick="closeAdminPanel()" style="background:transparent; border:none; color:#888; font-size:24px; cursor:pointer;">
-                    &times;
-                </button>
-            </div>
+    <div class="admin-box">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+            <h2 style="color:#24ffff;">
+                <i class="fa-solid fa-user-shield"></i> Lades Yönetim Paneli
+            </h2>
+            <button onclick="closeAdminPanel()" style="background:transparent; border:none; color:#888; font-size:24px; cursor:pointer;">
+                &times;
+            </button>
+        </div>
 
-            <div class="admin-section" style="border-top:none; margin-top:0; padding-top:0;">
-                <h4>🎯 Aktif Ladesleri Sonuçlandır (Havuz Dağıtımı)</h4>
-                <div id="admin-active-markets" style="background: rgba(36,255,255,0.02); border:1px dashed #1c2541; padding:15px; border-radius:12px;"></div>
-            </div>
+        <!-- BEKLEYEN İSTEKLER -->
+        <div class="admin-section" style="border-top:none; margin-top:0; padding-top:0;">
+            <h4>📥 Bekleyen İstekler (Davet &amp; Token)</h4>
+            <div id="admin-requests-list" style="min-height:60px;"></div>
+        </div>
 
-            <div class="admin-section">
-                <h4>📥 Bekleyen İstekler (Davet &amp; Token)</h4>
-                <div id="admin-requests-list"></div>
-            </div>
+        <!-- DAVET KODLARI -->
+        <div class="admin-section">
+            <h4>🔑 Davet Kodu Yönetimi</h4>
+            <button onclick="generateInviteCode()" style="background:#24ffff; color:#030814; border:none; padding:10px 18px; border-radius:8px; font-weight:800; cursor:pointer; margin-bottom:12px;">
+                + Yeni Davet Kodu Üret
+            </button>
+            <div id="admin-codes-list" style="display:flex; flex-wrap:wrap; gap:8px; background:#030814; padding:12px; border-radius:12px; min-height:40px;"></div>
+        </div>
 
-            <div class="admin-section">
-                <h4>🔑 Davet Kodu Yönetimi</h4>
-                <button onclick="generateInviteCode()" style="background:#24ffff; color:#030814; border:none; padding:10px 18px; border-radius:8px; font-weight:800; cursor:pointer; margin-bottom:12px;">
-                    + Yeni Davet Kodu Üret
-                </button>
-                <div id="admin-codes-list" style="display:flex; flex-wrap:wrap; gap:8px; background:#030814; padding:12px; border-radius:12px;"></div>
-            </div>
+        <!-- AKTİF LADESLER -->
+        <div class="admin-section">
+            <h4>🎯 Aktif Ladesleri Sonuçlandır</h4>
+            <div id="admin-active-markets" style="background: rgba(36,255,255,0.02); border:1px dashed #1c2541; padding:15px; border-radius:12px;"></div>
+        </div>
 
-            <div class="admin-section">
-                <h4>👥 Kayıtlı Kullanıcılar ve Şifre Tanımlama</h4>
-                <div style="overflow-x:auto;">
-                    <table style="width:100%; border-collapse:collapse; text-align:left;">
-                        <thead>
-                             <tr style="border-bottom:2px solid #1c2541; color:#64748b; font-size:12px;">
-                                <th style="padding-bottom:8px;">Kullanıcı E-posta</th>
-                                <th style="padding-bottom:8px;">Şifre</th>
-                                <th style="padding-bottom:8px;">Mevcut Bakiye</th>
-                                <th style="padding-bottom:8px; text-align:right;">İşlemler</th>
-                             </tr>
-                        </thead>
-                        <tbody id="admin-users-list"></tbody>
-                    </table>
-                </div>
+        <!-- KULLANICILAR -->
+        <div class="admin-section">
+            <h4>👥 Kayıtlı Kullanıcılar</h4>
+            <div style="overflow-x:auto;">
+                <table style="width:100%; border-collapse:collapse; text-align:left;">
+                    <thead>
+                        <tr style="border-bottom:2px solid #1c2541; color:#64748b; font-size:12px;">
+                            <th style="padding-bottom:8px;">Kullanıcı E-posta</th>
+                            <th style="padding-bottom:8px;">Şifre</th>
+                            <th style="padding-bottom:8px;">Bakiye</th>
+                            <th style="padding-bottom:8px; text-align:right;">İşlemler</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-users-list"></tbody>
+                </table>
             </div>
         </div>
     </div>
+</div>
 
     <div id="bet-modal" class="modal-overlay" style="display: none !important;">
         <div class="modal">

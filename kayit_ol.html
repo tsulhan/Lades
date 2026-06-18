@@ -5,8 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LADES | Kayıt Ol</title>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Firebase ve Lades dosyalarını ekleyelim -->
     <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-database-compat.js"></script>
+    <script src="src/js/firebase.js"></script>
+    <script src="src/js/core.js"></script>
     
     <style>
         :root { 
@@ -24,8 +28,6 @@
         body { background: var(--bg); color: var(--text); display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
         
         .card { background: var(--card); padding: 40px; border-radius: 24px; width: 100%; max-width: 440px; border: 1px solid var(--border); box-shadow: 0 20px 40px rgba(0,0,0,0.5); position: relative; overflow: hidden; }
-        
-        /* Şık Üst Neon Çizgisi */
         .card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, var(--primary), var(--cyan)); }
         
         .header { text-align: center; margin-bottom: 30px; }
@@ -71,8 +73,8 @@
         <div class="input-group">
             <label>Davet Kodu</label>
             <div class="row">
-                <input type="text" id="reg-code" placeholder="Davet kodunuzu girin">
-                <button class="btn btn-secondary" id="btnCode">KOD İSTE</button>
+                <input type="text" id="reg-invite-code" placeholder="Davet kodunuzu girin">
+                <button class="btn btn-secondary" id="btnRequestCode">KOD İSTE</button>
             </div>
         </div>
 
@@ -83,10 +85,15 @@
 
         <div class="input-group">
             <label>Şifre</label>
-            <input type="password" id="reg-pass" placeholder="••••••••">
+            <input type="password" id="reg-password" placeholder="••••••••">
         </div>
 
-        <button class="btn btn-primary" id="btnReg">HESABIMI OLUŞTUR 🚀</button>
+        <div class="input-group">
+            <label>Şifre Tekrar</label>
+            <input type="password" id="reg-password-confirm" placeholder="••••••••">
+        </div>
+
+        <button class="btn btn-primary" id="btnRegister">HESABIMI OLUŞTUR 🚀</button>
 
         <div class="footer">
             Zaten bir hesabın var mı? <a href="login.html">Giriş Yap</a>
@@ -94,75 +101,130 @@
     </div>
 
     <script>
-        // Canlı Firebase Realtime Database URL'niz
-        const db = firebase.initializeApp({ databaseURL: "https://lades-f33dd-default-rtdb.firebaseio.com/" }).database();
-
-        // 1. KOD İSTE (Yönetici Paneliyle tam uyumlu 'adminRequests' düğümü)
-        document.getElementById('btnCode').addEventListener('click', async () => {
-            const email = document.getElementById('reg-email').value.trim();
-            if(!email) return alert("Talep gönderebilmek için lütfen önce E-posta adresinizi yazın.");
+        // Kayıt sayfasına özel JavaScript
+        document.addEventListener("DOMContentLoaded", function() {
+            // KOD İSTE Butonu
+            document.getElementById('btnRequestCode').addEventListener('click', requestInviteCode);
             
-            try {
-                await db.ref("adminRequests/" + Date.now()).set({ 
-                    email: email, 
-                    status: "Bekliyor", 
-                    note: email + " kod istiyor",
-                    timestamp: Date.now()
-                });
-                alert("Davet kodu talebiniz yöneticiye başarıyla iletildi!");
-            } catch (error) {
-                alert("İstek gönderilirken bir hata oluştu: " + error.message);
-            }
+            // KAYIT OL Butonu
+            document.getElementById('btnRegister').addEventListener('click', handleRegister);
         });
 
-        // 2. KAYIT OL (Doğru eşleşmeli 'invitations' taraması ve kullanıcı oluşturma)
-        document.getElementById('btnReg').addEventListener('click', async () => {
-            const code = document.getElementById('reg-code').value.trim();
+        // KOD İSTE fonksiyonu - app.js'deki ile aynı olacak
+        async function requestInviteCode() {
             const email = document.getElementById('reg-email').value.trim();
-            const pass = document.getElementById('reg-pass').value;
 
-            if(!code || !email || !pass) return alert("Lütfen tüm alanları doldurun!");
+            if (!email) {
+                alert("Lütfen önce E-posta alanını doldurun!");
+                return;
+            }
+
+            if (typeof db === "undefined" || !db) {
+                alert("Firebase bağlantısı yok. Lütfen sayfayı yenileyin.");
+                return;
+            }
 
             try {
-                const snap = await db.ref("invitations").once("value");
-                const invites = snap.val(); 
+                // adminRequests düğümüne kaydedelim
+                const reqKey = uniqueId("req");
+                await fbSet(`adminRequests/${reqKey}`, {
+                    id: reqKey,
+                    type: "invite",
+                    email: email,
+                    status: "Bekliyor",
+                    createdAt: Date.now()
+                });
+
+                alert("✅ Davet kodu talebiniz yöneticiye iletildi! Yönetici onayladığında kodunuz hazır olacak.");
+            } catch (error) {
+                console.error("Talep gönderme hatası:", error);
+                alert("❌ Talep gönderilirken bir hata oluştu: " + error.message);
+            }
+        }
+
+        // KAYIT OL fonksiyonu
+        async function handleRegister() {
+            const inviteCode = document.getElementById('reg-invite-code').value.trim();
+            const email = document.getElementById('reg-email').value.trim();
+            const password = document.getElementById('reg-password').value;
+            const passwordConfirm = document.getElementById('reg-password-confirm').value;
+
+            // Tüm alanların dolu olduğunu kontrol et
+            if (!inviteCode || !email || !password || !passwordConfirm) {
+                alert("Lütfen tüm alanları doldurun!");
+                return;
+            }
+
+            // Şifre eşleşmesini kontrol et
+            if (password !== passwordConfirm) {
+                alert("Şifreler birbiriyle uyuşmuyor!");
+                return;
+            }
+
+            // Şifre uzunluğunu kontrol et
+            if (password.length < 4) {
+                alert("Şifre en az 4 karakter olmalıdır!");
+                return;
+            }
+
+            if (typeof db === "undefined" || !db) {
+                alert("Firebase bağlantısı yok. Lütfen sayfayı yenileyin.");
+                return;
+            }
+
+            try {
+                // 1. Davet kodunu kontrol et (inviteCodes düğümünde ara)
+                const inviteCodesSnap = await fbGet("inviteCodes");
+                const inviteCodes = inviteCodesSnap || {};
                 
-                let validCode = null;
-                // Veritabanında eşleşen ve durumu 'Aktif' olan kodu buluyoruz
-                for (let id in invites) {
-                    if (invites[id] && invites[id].code === code && invites[id].status === "Aktif") {
-                        validCode = { id: id, ...invites[id] };
-                        break;
+                // Kodun geçerli olup olmadığını kontrol et
+                let foundKey = null;
+                let foundCode = null;
+                
+                Object.keys(inviteCodes).forEach(key => {
+                    if (inviteCodes[key] === inviteCode) {
+                        foundKey = key;
+                        foundCode = inviteCodes[key];
                     }
+                });
+
+                if (!foundKey) {
+                    alert("❌ Geçersiz davet kodu! Lütfen doğru kodu girdiğinizden emin olun.");
+                    return;
                 }
 
-                if(!validCode) return alert("Girdiğiniz davet kodu geçersiz, yanlış veya zaten kullanılmış!");
+                // 2. Kullanıcının zaten kayıtlı olup olmadığını kontrol et
+                const usersSnap = await fbGet("ladesUsers");
+                const users = usersSnap || {};
+                const userKey = email.replace(/\./g, ',');
+                
+                if (users[userKey]) {
+                    alert("❌ Bu e-posta adresi zaten kayıtlı! Lütfen giriş yapın.");
+                    return;
+                }
 
-                // Nokta karakterini alt tire yaparak güvenli Firebase key'i oluşturuyoruz
-                const safeEmailKey = email.replace(/\./g, "_");
-
-                // Kullanıcı oluşturuluyor (app.js şemasına tam uyumlu: 3600 başlangıç tokenı)
-                await db.ref("users/" + safeEmailKey).set({ 
-                    email: email, 
-                    password: pass, 
-                    tokens: 3600, 
-                    role: "user",
-                    correctGuesses: 0,
-                    totalGuesses: 0,
-                    usedInviteCode: code,
-                    registerDate: new Date().toISOString()
+                // 3. Yeni kullanıcıyı oluştur
+                await fbSet(`ladesUsers/${userKey}`, {
+                    email: email,
+                    password: password, // Not: İleride hash'lenecek
+                    balance: 3600,
+                    isAdmin: false,
+                    createdAt: Date.now()
                 });
+
+                // 4. Kullanılan davet kodunu sil (tek kullanımlık yap)
+                await fbRemove(`inviteCodes/${foundKey}`);
+
+                alert("✅ Kayıt başarılı! Başlangıç bakiyeniz: 3600 TOKEN");
                 
-                // Kullanılan kodun durumunu güncelliyoruz
-                await db.ref("invitations/" + validCode.id).update({ status: "Kullanıldı" });
-                
-                alert("Kayıt işleminiz başarıyla tamamlandı! Giriş yapabilirsiniz.");
+                // 5. Giriş sayfasına yönlendir
                 window.location.href = "login.html";
 
             } catch (error) {
-                alert("Kayıt sırasında bir hata meydana geldi: " + error.message);
+                console.error("Kayıt hatası:", error);
+                alert("❌ Kayıt sırasında bir hata oluştu: " + error.message);
             }
-        });
+        }
     </script>
 </body>
 </html>
