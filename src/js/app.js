@@ -94,7 +94,7 @@ async function handleRegister() {
     await fbSet(`ladesUsers/${newUserKey}`, {
         email,
         password,
-        balance: 0, // ✅ Başlangıç bakiyesi 0
+        balance: 0,
         isAdmin: false
     });
 
@@ -139,6 +139,15 @@ async function requestInviteCode() {
         email,
         status: "Bekliyor",
         createdAt: Date.now()
+    });
+
+    // ✅ Adminlere Davet Kodu Talebi Bildirimi
+    await sendNotificationToAdmins({
+        title: "📩 Davet Kodu Talebi!",
+        message: `${email} kullanıcısı davet kodu talep ediyor!`,
+        type: "invite_request",
+        link: "dashboard.html?tab=admin",
+        data: { email: email }
     });
 
     alert("✅ Davet kodu talebiniz yöneticiye iletildi! Yönetici onayladığında kodunuz hazır olacak.");
@@ -210,7 +219,6 @@ function startRealtimeListeners() {
             const balanceElement = document.getElementById("token-balance");
             if (balanceElement) balanceElement.innerText = balance.toLocaleString("tr-TR");
 
-            // ✅ Token iste butonunu göster/gizle
             const tokenRequestBtn = document.getElementById("token-request-btn");
             if (tokenRequestBtn) {
                 if (balance === 0) {
@@ -240,6 +248,9 @@ function startRealtimeListeners() {
         const usersObj = snapshot.val() || {};
         renderLeaderboard(usersObj);
     });
+
+    // ✅ BİLDİRİM DİNLEYİCİSİ (REALTIME)
+    startNotificationListener();
 }
 
 // ------------------------------------------------------
@@ -249,7 +260,6 @@ function renderLeaderboard(usersObj) {
     const leaderboardList = document.getElementById("leaderboard-list");
     if (!leaderboardList) return;
 
-    // ✅ Sadece bakiyesi 0'dan büyük olanları göster
     const sortedUsers = Object.values(usersObj)
         .filter(u => u && u.email && (u.balance || 0) > 0)
         .sort((a, b) => (b.balance || 0) - (a.balance || 0));
@@ -369,13 +379,9 @@ function generateMarketCardHTML(market, isActive) {
 
     const safeTitle = (market.title || "").replace(/'/g, "\\'");
     const isSpor = market.category === "Spor";
-    
-    // ✅ ADMIN KONTROLÜ - Doğrudan localStorage'dan al
     const currentUserEmail = localStorage.getItem("currentUser");
     const isAdmin = currentUserEmail === "tsulhan@gmail.com";
     
-    console.log("🔍 Admin kontrolü:", { currentUserEmail, isAdmin, marketId: market.id }); // Debug için
-
     let actionContent = "";
 
     if (isActive) {
@@ -421,11 +427,9 @@ function generateMarketCardHTML(market, isActive) {
         `;
     }
 
-    // ✅ SADECE ADMIN İÇİN SİLME BUTONU (HEM AKTİF HEM GEÇMİŞ)
     let adminDeleteHTML = "";
     if (isAdmin) {
         if (isActive) {
-            // ✅ AKTİF LADES: Token iadeli silme (kırmızı çarpı)
             adminDeleteHTML = `
                 <button onclick="deleteMarketCompletely('${market.id}', '${safeTitle}')" 
                         style="position: absolute; top: 12px; right: 12px; background: rgba(239, 68, 68, 0.15); 
@@ -440,7 +444,6 @@ function generateMarketCardHTML(market, isActive) {
                 </button>
             `;
         } else {
-            // ✅ GEÇMİŞ LADES: Temiz silme (gri çarpı)
             adminDeleteHTML = `
                 <button onclick="deleteMarketFromHistory('${market.id}', '${safeTitle}')" 
                         style="position: absolute; top: 12px; right: 12px; background: rgba(148, 163, 184, 0.1); 
@@ -474,12 +477,9 @@ function generateMarketCardHTML(market, isActive) {
 }
 
 // ------------------------------------------------------
-// ADMİN: LADESİ SİLME VE KULLANICI TOKENLARINI İADE ETME MOTORU
+// ADMIN: LADESİ SİLME VE KULLANICI TOKENLARINI İADE ETME
 // ------------------------------------------------------
 async function deleteMarketCompletely(marketId, marketTitle) {
-    console.log("🔍 Silme işlemi başlatıldı - ID:", marketId);
-    console.log("📝 Lades başlığı:", marketTitle);
-    
     if (typeof db === "undefined" || !db) {
         alert("❌ Firebase bağlantısı yok!");
         return;
@@ -581,11 +581,9 @@ async function deleteMarketCompletely(marketId, marketTitle) {
 }
 
 // ------------------------------------------------------
-// GECMİŞ LADESİ SİLME (SADECE ADMIN - TOKEN İADESİZ)
+// GEÇMİŞ LADESİ SİLME (SADECE ADMIN - TOKEN İADESİZ)
 // ------------------------------------------------------
 async function deleteMarketFromHistory(marketId, marketTitle) {
-    console.log("🔍 Silme işlemi başlatıldı:", marketId, marketTitle);
-    
     if (typeof db === "undefined" || !db) {
         alert("Firebase bağlantısı yok!");
         return;
@@ -705,6 +703,15 @@ async function openTokenRequestModal() {
             createdAt: Date.now()
         });
 
+        // ✅ Adminlere Token Talebi Bildirimi
+        await sendNotificationToAdmins({
+            title: "💰 Token Talebi!",
+            message: `${currentUserEmail} kullanıcısı ${tokenAmount} Token talep ediyor!`,
+            type: "token_request",
+            link: "dashboard.html?tab=admin",
+            data: { email: currentUserEmail, amount: tokenAmount }
+        });
+
         alert(`✅ ${tokenAmount} Token talebiniz yöneticiye iletildi!\n\nYönetici onayladığında bakiyeniz güncellenecektir.`);
         
     } catch (error) {
@@ -732,15 +739,15 @@ async function createNewMarket() {
         return;
     }
 
-    // ✅ MİNİMUM BAHİS KONTROLÜ (Lades oluştururken)
+    // ✅ Minimum ve Maksimum Bahis Kontrolü
     const MIN_BET = 250;
+    const MAX_BET = 1000;
+    
     if (isNaN(initialBet) || initialBet < MIN_BET) {
         alert(`❌ Lades oluşturmak için minimum ${MIN_BET.toLocaleString("tr-TR")} Token yatırmanız gerekiyor!`);
         return;
     }
 
-    // ✅ MAKSİMUM BAHİS KONTROLÜ (Lades oluştururken)
-    const MAX_BET = 1000;
     if (initialBet > MAX_BET) {
         alert(`❌ Lades oluşturmak için maksimum ${MAX_BET.toLocaleString("tr-TR")} Token yatırabilirsiniz!`);
         return;
@@ -755,7 +762,7 @@ async function createNewMarket() {
     }
 
     if (!title || !date) {
-        alert("Lütfen tüm alanları doldurun!");
+        alert("Lütfen alanları doğru doldurun!");
         return;
     }
 
@@ -799,6 +806,15 @@ async function createNewMarket() {
         createdAt: Date.now()
     });
 
+    // ✅ YENİ LADES BİLDİRİMİ - Tüm kullanıcılara
+    await sendNotificationToAllUsers({
+        title: "📢 Yeni Lades!",
+        message: `${title} ladesi oluşturuldu! Katılmak ister misin?`,
+        type: "new_market",
+        marketId: marketId,
+        link: "dashboard.html?tab=mevcut-ladesler"
+    });
+
     alert(`⚡ Lades Başarıyla Yaratıldı!\n\n💰 Yatırılan: ${initialBet.toLocaleString("tr-TR")} Token`);
 
     const questionInput = document.getElementById("market-question");
@@ -832,15 +848,15 @@ async function confirmBet() {
         return;
     }
 
-    // ✅ MİNİMUM BAHİS KONTROLÜ
+    // ✅ Minimum ve Maksimum Bahis Kontrolü
     const MIN_BET = 250;
+    const MAX_BET = 1000;
+    
     if (amount < MIN_BET) {
         alert(`❌ Minimum bahis miktarı ${MIN_BET.toLocaleString("tr-TR")} Token'dır!`);
         return;
     }
 
-    // ✅ MAKSİMUM BAHİS KONTROLÜ
-    const MAX_BET = 1000;
     if (amount > MAX_BET) {
         alert(`❌ Maksimum bahis miktarı ${MAX_BET.toLocaleString("tr-TR")} Token'dır!`);
         return;
@@ -865,11 +881,9 @@ async function confirmBet() {
         return;
     }
 
-    // Bahis işlemini gerçekleştir
     currentUser.balance = parseInt(currentUser.balance) - amount;
     await fbSet(`ladesUsers/${userKey}`, currentUser);
 
-    // Havuzu güncelle
     if (activeChoice === "YES") {
         target.yesPool = (target.yesPool || 0) + amount;
     } else if (activeChoice === "NO") {
@@ -880,7 +894,6 @@ async function confirmBet() {
 
     await fbSet(`customMarkets/${activeMarketId}`, target);
 
-    // Bahis geçmişine ekle
     const historyKey = uniqueId("history");
     await fbSet(`betHistory/${historyKey}`, {
         id: historyKey,
@@ -935,17 +948,11 @@ async function finalizeLades(marketId, winningChoice) {
         return;
     }
 
-    // 1. Havuzları al
     const yesPool = market.yesPool || 0;
     const noPool = market.noPool || 0;
     const drawPool = market.drawPool || 0;
 
-    // 2. Toplam havuzu hesapla
-    const totalPool = market.category === "Spor" 
-        ? (yesPool + noPool + drawPool) 
-        : (yesPool + noPool);
-
-    // 3. Kazanan havuzu belirle
+    const totalPool = market.category === "Spor" ? (yesPool + noPool + drawPool) : (yesPool + noPool);
     let winningPool = 0;
     let winningChoiceName = "";
     
@@ -960,7 +967,6 @@ async function finalizeLades(marketId, winningChoice) {
         winningChoiceName = "BERABERLİK";
     }
 
-    // 4. Eğer kazanan havuz boşsa veya toplam havuz 0'sa
     if (totalPool === 0 || winningPool === 0) {
         alert(`⚠️ ${winningChoiceName} havuzu boş veya toplam havuz 0. Lades kapatıldı ama dağıtım yapılmadı.`);
         market.status = "Sonuçlandı";
@@ -968,16 +974,12 @@ async function finalizeLades(marketId, winningChoice) {
         return;
     }
 
-    // 5. Bahis geçmişini ve kullanıcıları al
     const historySnap = await fbGet("betHistory");
     const history = historySnap || {};
     const usersSnap = await fbGet("ladesUsers");
     const users = usersSnap || {};
 
-    // 6. Kazananları bul
-    const winners = Object.values(history).filter(
-        h => h.marketId === marketId && h.choice === winningChoice
-    );
+    const winners = Object.values(history).filter(h => h.marketId === marketId && h.choice === winningChoice);
 
     if (winners.length === 0) {
         alert(`⚠️ ${winningChoiceName} seçeneğine bahis yapan kimse yok. Lades kapatıldı.`);
@@ -986,7 +988,7 @@ async function finalizeLades(marketId, winningChoice) {
         return;
     }
 
-    // ✅ 7. BASİT ORANSAL DAĞITIM (Komisyon ve ağırlıklandırma YOK)
+    // ✅ BASİT ORANSAL DAĞITIM
     let totalDistributed = 0;
     const distributionResults = [];
 
@@ -995,12 +997,9 @@ async function finalizeLades(marketId, winningChoice) {
         if (!userEntry) return;
 
         const [userKey, userObj] = userEntry;
-        
-        // ✅ Basit oransal hesaplama: (Kullanıcının yatırımı / Kazanan havuz) × Toplam havuz
         const userShare = winner.amount / winningPool;
         let rewardAmount = Math.floor(userShare * totalPool);
 
-        // En az 1 Token alsın (0 olmasın)
         if (rewardAmount === 0) rewardAmount = 1;
 
         userObj.balance = (userObj.balance || 0) + rewardAmount;
@@ -1015,14 +1014,34 @@ async function finalizeLades(marketId, winningChoice) {
         });
     });
 
-    // 8. Kullanıcıları güncelle
     await fbSet("ladesUsers", users);
-
-    // 9. Ladesi sonuçlandır
     market.status = "Sonuçlandı";
     await fbSet(`customMarkets/${marketId}`, market);
 
-    // 10. Bilgi mesajı
+    // ✅ SONUÇ BİLDİRİMİ - Kazanan ve kaybedenlere
+    const allParticipants = Object.values(history).filter(h => h.marketId === marketId);
+    
+    const resultPromises = allParticipants.map(participant => {
+        const isWinner = winners.some(w => w.email === participant.email);
+        const winAmount = isWinner ? 
+            distributionResults.find(r => r.email === participant.email)?.reward || 0 : 0;
+        
+        let title = isWinner ? "🎉 Kazandınız!" : "😔 Kaybettiniz";
+        let message = isWinner ? 
+            `${market.title} ladesinde ${winAmount.toLocaleString("tr-TR")} Token kazandınız! 🏆` :
+            `${market.title} ladesinde ${participant.amount.toLocaleString("tr-TR")} Token kaybettiniz.`;
+
+        return createNotification(participant.email, {
+            title: title,
+            message: message,
+            type: "result",
+            marketId: marketId,
+            link: "profil.html",
+            data: { isWinner, winAmount, lostAmount: participant.amount }
+        });
+    });
+    await Promise.all(resultPromises);
+
     const remainingTokens = totalPool - totalDistributed;
     
     let distributionDetails = distributionResults.map(r => 
@@ -1039,12 +1058,11 @@ async function finalizeLades(marketId, winningChoice) {
 }
 
 // ------------------------------------------------------
-// ADMIN PANELİ LİSTELEME MOTORU (GÜNCELLENMİŞ SÜRÜM)
+// ADMIN PANELİ LİSTELEME MOTORU
 // ------------------------------------------------------
 async function renderAdminPanel() {
     if (typeof db === "undefined" || !db) return;
 
-    // 1. BEKLEYEN İSTEKLERİ CANLI DİNLE (adminRequests)
     fbRef("adminRequests").on("value", (snapshot) => {
         const requestsList = document.getElementById("admin-requests-list");
         if (!requestsList) return;
@@ -1122,7 +1140,6 @@ async function renderAdminPanel() {
         }
     });
 
-    // 2. DAVET KODLARINI CANLI DİNLE (inviteCodes)
     fbRef("inviteCodes").on("value", (snapshot) => {
         const codesList = document.getElementById("admin-codes-list");
         if (!codesList) return;
@@ -1153,7 +1170,6 @@ async function renderAdminPanel() {
         });
     });
 
-    // 3. AKTİF LADES PAZARLARINI CANLI DİNLE
     fbRef("customMarkets").on("value", (snapshot) => {
         const adminActiveMarkets = document.getElementById("admin-active-markets");
         if (!adminActiveMarkets) return;
@@ -1219,7 +1235,6 @@ async function renderAdminPanel() {
         }
     });
 
-    // 4. KAYITLI KULLANICILARI CANLI DİNLE
     fbRef("ladesUsers").on("value", (snapshot) => {
         const usersTable = document.getElementById("admin-users-list");
         if (!usersTable) return;
@@ -1354,9 +1369,6 @@ async function deleteInviteCode(codeKey) {
     }
 }
 
-// ------------------------------------------------------
-// KULLANICIYI VERİTABANINDAN KALICI OLARAK SİLME FONKSİYONU
-// ------------------------------------------------------
 async function deleteUserCompletely(email) {
     if (!email) return;
 
@@ -1377,40 +1389,6 @@ async function deleteUserCompletely(email) {
         console.error("Kullanıcı silme hatası:", error);
         alert("Kullanıcı silinirken bir hata oluştu: " + error.message);
     }
-}
-
-async function approveInvite(reqId, email) {
-    if (typeof db === "undefined" || !db) return;
-    const newCode = "LADES_" + Math.random().toString(36).substring(2, 8).toUpperCase();
-    const codeKey = uniqueId("code");
-    await fbSet(`inviteCodes/${codeKey}`, newCode);
-
-    const requestsSnap = await fbGet("adminRequests");
-    const requests = requestsSnap || {};
-    const reqKey = Object.keys(requests).find(k => requests[k] && requests[k].id === reqId);
-    if (reqKey) await fbRemove(`adminRequests/${reqKey}`);
-
-    alert(`Onaylandı! Kod: ${newCode}`);
-}
-
-async function approveToken(reqId, email, amount) {
-    if (typeof db === "undefined" || !db) return;
-    const usersSnap = await fbGet("ladesUsers");
-    const users = usersSnap || {};
-    const userEntry = Object.entries(users).find(([key, u]) => u && u.email === email);
-
-    if (userEntry) {
-        const [userKey, userObj] = userEntry;
-        userObj.balance = (userObj.balance || 0) + amount;
-        await fbSet(`ladesUsers/${userKey}`, userObj);
-    }
-
-    const requestsSnap = await fbGet("adminRequests");
-    const requests = requestsSnap || {};
-    const reqKey = Object.keys(requests).find(k => requests[k] && requests[k].id === reqId);
-    if (reqKey) await fbRemove(`adminRequests/${reqKey}`);
-
-    alert(`${email} hesabına ${amount} token yüklendi.`);
 }
 
 async function setTokensManual(email, currentBalance) {
@@ -1617,4 +1595,254 @@ function renderProfileBets(currentUserEmail, markets, history) {
     if (pastCount === 0) {
         pastContainer.innerHTML = `<div style="text-align:center; color:#64748b; padding:30px; font-size:14px;">Henüz sonuçlanan lades geçmişiniz yok.</div>`;
     }
+}
+
+// ======================================================
+// BİLDİRİM SİSTEMİ - TÜM FONKSİYONLAR
+// ======================================================
+
+// ------------------------------------------------------
+// 1. BİLDİRİM OLUŞTURMA FONKSİYONLARI
+// ------------------------------------------------------
+
+async function createNotification(userEmail, notificationData) {
+    if (typeof db === "undefined" || !db) return;
+    
+    try {
+        const userKey = userEmail.replace(/\./g, ',');
+        const notifKey = uniqueId("notif");
+        
+        const notification = {
+            id: notifKey,
+            title: notificationData.title || "Bildirim",
+            message: notificationData.message || "",
+            type: notificationData.type || "general",
+            read: false,
+            createdAt: Date.now(),
+            marketId: notificationData.marketId || null,
+            link: notificationData.link || "#",
+            data: notificationData.data || {}
+        };
+        
+        await fbSet(`notifications/${userKey}/${notifKey}`, notification);
+        return true;
+    } catch (error) {
+        console.error("Bildirim oluşturma hatası:", error);
+        return false;
+    }
+}
+
+async function sendNotificationToAllUsers(notificationData) {
+    if (typeof db === "undefined" || !db) return;
+    
+    try {
+        const usersSnap = await fbGet("ladesUsers");
+        const users = usersSnap || {};
+        
+        const promises = Object.keys(users).map(userKey => {
+            const user = users[userKey];
+            if (user && user.email) {
+                return createNotification(user.email, notificationData);
+            }
+            return Promise.resolve();
+        });
+        
+        await Promise.all(promises);
+        console.log("✅ Tüm kullanıcılara bildirim gönderildi");
+        return true;
+    } catch (error) {
+        console.error("Toplu bildirim hatası:", error);
+        return false;
+    }
+}
+
+async function sendNotificationToAdmins(notificationData) {
+    if (typeof db === "undefined" || !db) return;
+    
+    try {
+        const usersSnap = await fbGet("ladesUsers");
+        const users = usersSnap || {};
+        
+        const promises = Object.keys(users).map(userKey => {
+            const user = users[userKey];
+            if (user && (user.isAdmin || user.email === "tsulhan@gmail.com")) {
+                return createNotification(user.email, notificationData);
+            }
+            return Promise.resolve();
+        });
+        
+        await Promise.all(promises);
+        console.log("✅ Adminlere bildirim gönderildi");
+        return true;
+    } catch (error) {
+        console.error("Admin bildirim hatası:", error);
+        return false;
+    }
+}
+
+// ------------------------------------------------------
+// 2. BİLDİRİM GÖSTERME FONKSİYONLARI
+// ------------------------------------------------------
+
+async function getNotifications(userEmail) {
+    if (typeof db === "undefined" || !db) return [];
+    
+    try {
+        const userKey = userEmail.replace(/\./g, ',');
+        const notifSnap = await fbGet(`notifications/${userKey}`);
+        const notifications = notifSnap || {};
+        
+        return Object.values(notifications)
+            .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+    } catch (error) {
+        console.error("Bildirim getirme hatası:", error);
+        return [];
+    }
+}
+
+async function toggleNotificationDropdown() {
+    const dropdown = document.getElementById("notification-dropdown");
+    const list = document.getElementById("notification-list");
+    
+    if (!dropdown) return;
+    
+    if (dropdown.style.display === "block") {
+        dropdown.style.display = "none";
+        return;
+    }
+    
+    dropdown.style.display = "block";
+    
+    const currentUser = localStorage.getItem("currentUser");
+    if (!currentUser) {
+        list.innerHTML = `
+            <div style="text-align: center; color: #64748b; padding: 30px; font-size: 13px;">
+                Lütfen giriş yapın.
+            </div>
+        `;
+        return;
+    }
+    
+    const notifications = await getNotifications(currentUser);
+    
+    if (notifications.length === 0) {
+        list.innerHTML = `
+            <div style="text-align: center; color: #64748b; padding: 30px; font-size: 13px;">
+                📭 Bildirim bulunmuyor.
+            </div>
+        `;
+        return;
+    }
+    
+    list.innerHTML = notifications.map(notif => {
+        const timeAgo = getTimeAgo(notif.createdAt);
+        const isUnread = !notif.read ? 'unread' : '';
+        const badgeClass = `notif-badge-${notif.type}`;
+        
+        return `
+            <div class="notification-item ${isUnread}" onclick="markNotificationAsRead('${notif.id}')">
+                <div class="notif-title">${notif.title}</div>
+                <div class="notif-message">${notif.message}</div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px;">
+                    <span class="notif-time">${timeAgo}</span>
+                    <span class="notif-badge ${badgeClass}">${getNotificationTypeText(notif.type)}</span>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function getNotificationTypeText(type) {
+    const types = {
+        'new_market': 'Yeni Lades',
+        'closing': 'Kapanış Uyarısı',
+        'result': 'Sonuç',
+        'token_request': 'Token Talebi',
+        'invite_request': 'Davet Talebi'
+    };
+    return types[type] || 'Genel';
+}
+
+function getTimeAgo(timestamp) {
+    const now = Date.now();
+    const diff = now - timestamp;
+    
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(diff / 3600000);
+    const days = Math.floor(diff / 86400000);
+    
+    if (minutes < 1) return 'Şimdi';
+    if (minutes < 60) return `${minutes} dakika önce`;
+    if (hours < 24) return `${hours} saat önce`;
+    if (days < 7) return `${days} gün önce`;
+    return new Date(timestamp).toLocaleDateString('tr-TR');
+}
+
+async function markNotificationAsRead(notificationId) {
+    const currentUser = localStorage.getItem("currentUser");
+    if (!currentUser) return;
+    
+    try {
+        const userKey = currentUser.replace(/\./g, ',');
+        await db.ref(`notifications/${userKey}/${notificationId}/read`).set(true);
+        updateNotificationBadge();
+    } catch (error) {
+        console.error("Bildirim okundu hatası:", error);
+    }
+}
+
+async function markAllNotificationsAsRead() {
+    const currentUser = localStorage.getItem("currentUser");
+    if (!currentUser) return;
+    
+    try {
+        const userKey = currentUser.replace(/\./g, ',');
+        const notifSnap = await fbGet(`notifications/${userKey}`);
+        const notifications = notifSnap || {};
+        
+        const promises = Object.keys(notifications).map(key => {
+            return db.ref(`notifications/${userKey}/${key}/read`).set(true);
+        });
+        
+        await Promise.all(promises);
+        updateNotificationBadge();
+        await toggleNotificationDropdown();
+    } catch (error) {
+        console.error("Tümünü okundu hatası:", error);
+    }
+}
+
+async function updateNotificationBadge() {
+    const currentUser = localStorage.getItem("currentUser");
+    if (!currentUser) return;
+    
+    try {
+        const userKey = currentUser.replace(/\./g, ',');
+        const notifSnap = await fbGet(`notifications/${userKey}`);
+        const notifications = notifSnap || {};
+        
+        const unreadCount = Object.values(notifications).filter(n => !n.read).length;
+        const badge = document.getElementById("notification-badge");
+        
+        if (badge) {
+            if (unreadCount > 0) {
+                badge.style.display = "inline-block";
+                badge.textContent = unreadCount > 99 ? "99+" : unreadCount;
+            } else {
+                badge.style.display = "none";
+            }
+        }
+    } catch (error) {
+        console.error("Rozet güncelleme hatası:", error);
+    }
+}
+
+function startNotificationListener() {
+    const currentUserEmail = localStorage.getItem("currentUser");
+    if (!currentUserEmail) return;
+
+    const userKey = currentUserEmail.replace(/\./g, ',');
+    fbRef(`notifications/${userKey}`).on("value", () => {
+        updateNotificationBadge();
+    });
 }
