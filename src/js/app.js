@@ -369,8 +369,13 @@ function generateMarketCardHTML(market, isActive) {
 
     const safeTitle = (market.title || "").replace(/'/g, "\\'");
     const isSpor = market.category === "Spor";
-    const currentUserEmail = localStorage.getItem("currentUser");
     
+    // ✅ ADMIN KONTROLÜ - Doğrudan localStorage'dan al
+    const currentUserEmail = localStorage.getItem("currentUser");
+    const isAdmin = currentUserEmail === "tsulhan@gmail.com";
+    
+    console.log("🔍 Admin kontrolü:", { currentUserEmail, isAdmin, marketId: market.id }); // Debug için
+
     let actionContent = "";
 
     if (isActive) {
@@ -416,9 +421,9 @@ function generateMarketCardHTML(market, isActive) {
         `;
     }
 
-    // ✅ Admin silme butonu - HEM AKTİF HEM GEÇMİŞ için
+    // ✅ SADECE ADMIN İÇİN SİLME BUTONU (HEM AKTİF HEM GEÇMİŞ)
     let adminDeleteHTML = "";
-    if (currentUserEmail === "tsulhan@gmail.com") {
+    if (isAdmin) {
         if (isActive) {
             // ✅ AKTİF LADES: Token iadeli silme (kırmızı çarpı)
             adminDeleteHTML = `
