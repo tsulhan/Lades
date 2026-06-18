@@ -4,41 +4,70 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LADES | Kayıt Ol</title>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght=400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-database-compat.js"></script>
+    
     <style>
-        :root { --primary: #ff4aa2; --bg: #030814; --card: #0b132b; --text: #ffffff; --subtext: #94a3b8; --border: #1c2541; --input-bg: #060b19; --cyan: #24ffff; }
+        :root { 
+            --primary: #ff4aa2; 
+            --bg: #030814; 
+            --card: #0b132b; 
+            --text: #ffffff; 
+            --subtext: #94a3b8; 
+            --border: #1c2541;
+            --input-bg: #060b19;
+            --cyan: #24ffff;
+        }
+        
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
         body { background: var(--bg); color: var(--text); display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
+        
         .card { background: var(--card); padding: 40px; border-radius: 24px; width: 100%; max-width: 440px; border: 1px solid var(--border); box-shadow: 0 20px 40px rgba(0,0,0,0.5); position: relative; overflow: hidden; }
+        
+        /* Şık Üst Neon Çizgisi */
         .card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, var(--primary), var(--cyan)); }
+        
         .header { text-align: center; margin-bottom: 30px; }
-        .logo-icon { font-size: 40px; margin-bottom: 10px; text-shadow: 0 0 15px var(--primary); display: inline-block; }
+        .logo-icon { font-size: 40px; margin-bottom: 10px; text-shadow: 0 0 15px var(--primary); display: inline-block; animation: pulse 2s infinite; }
+        .header h2 { font-size: 28px; font-weight: 800; margin-bottom: 8px; background: linear-gradient(to right, #ffffff, #94a3b8); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
         .header p { color: var(--subtext); font-size: 14px; }
-        .header h2 { font-size: 28px; font-weight: 800; margin-bottom: 8px; background: linear-gradient(to right, #ffffff, #94a3b8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
         .input-group { margin-bottom: 20px; }
         .input-group label { display: block; color: var(--subtext); font-size: 12px; font-weight: 700; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.7px; }
+        
         .row { display: flex; gap: 10px; }
         input { width: 100%; padding: 15px 16px; background: var(--input-bg); border: 1px solid var(--border); border-radius: 12px; color: white; font-size: 15px; transition: all 0.3s ease; }
         input:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 4px rgba(255, 74, 162, 0.15); }
+
         .btn { padding: 15px; border-radius: 12px; border: none; font-weight: 700; cursor: pointer; transition: all 0.2s ease; font-size: 14px; }
         .btn-primary { width: 100%; background: var(--primary); color: white; margin-top: 10px; box-shadow: 0 4px 20px rgba(255, 74, 162, 0.3); font-size: 15px; letter-spacing: 0.5px; }
-        .btn-primary:hover { background: #e03b8d; transform: translateY(-1px); }
+        .btn-primary:hover { background: #e03b8d; transform: translateY(-1px); box-shadow: 0 6px 24px rgba(255, 74, 162, 0.4); }
+        .btn-primary:active { transform: translateY(0); }
+        
         .btn-secondary { background: rgba(36, 255, 255, 0.08); color: var(--cyan); border: 1px solid var(--cyan); white-space: nowrap; padding: 0 20px; }
-        .btn-secondary:hover { background: var(--cyan); color: #030814; }
+        .btn-secondary:hover { background: var(--cyan); color: #030814; box-shadow: 0 0 15px rgba(36, 255, 255, 0.4); }
+
         .footer { margin-top: 30px; text-align: center; font-size: 14px; color: var(--subtext); border-top: 1px solid rgba(28, 37, 65, 0.5); padding-top: 20px; }
-        .footer a { color: var(--cyan); text-decoration: none; font-weight: 600; }
-        .footer a:hover { text-decoration: underline; }
+        .footer a { color: var(--cyan); text-decoration: none; font-weight: 600; transition: color 0.2s; }
+        .footer a:hover { text-decoration: underline; color: #fff; }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
     </style>
 </head>
 <body>
+
     <div class="card">
         <div class="header">
             <div class="logo-icon">⚡</div>
             <h2>LADES'e Katıl</h2>
             <p>Eğlence dolu rekabete adım atın</p>
         </div>
+
         <div class="input-group">
             <label>Davet Kodu</label>
             <div class="row">
@@ -46,57 +75,93 @@
                 <button class="btn btn-secondary" id="btnCode">KOD İSTE</button>
             </div>
         </div>
+
         <div class="input-group">
             <label>E-posta Adresi</label>
             <input type="email" id="reg-email" placeholder="ornek@domain.com">
         </div>
+
         <div class="input-group">
             <label>Şifre</label>
             <input type="password" id="reg-pass" placeholder="••••••••">
         </div>
+
         <button class="btn btn-primary" id="btnReg">HESABIMI OLUŞTUR 🚀</button>
+
         <div class="footer">
             Zaten bir hesabın var mı? <a href="login.html">Giriş Yap</a>
         </div>
     </div>
+
     <script>
+        // Canlı Firebase Realtime Database URL'niz
         const db = firebase.initializeApp({ databaseURL: "https://lades-f33dd-default-rtdb.firebaseio.com/" }).database();
 
+        // 1. KOD İSTE (Yönetici Paneliyle tam uyumlu 'adminRequests' düğümü)
         document.getElementById('btnCode').addEventListener('click', async () => {
             const email = document.getElementById('reg-email').value.trim();
             if(!email) return alert("Talep gönderebilmek için lütfen önce E-posta adresinizi yazın.");
+            
             try {
-                await db.ref("requests/" + Date.now()).set({ email, status: "Bekliyor", note: email + " kod istiyor", timestamp: Date.now() });
+                await db.ref("adminRequests/" + Date.now()).set({ 
+                    email: email, 
+                    status: "Bekliyor", 
+                    note: email + " kod istiyor",
+                    timestamp: Date.now()
+                });
                 alert("Davet kodu talebiniz yöneticiye başarıyla iletildi!");
-            } catch (error) { alert("Hata: " + error.message); }
+            } catch (error) {
+                alert("İstek gönderilirken bir hata oluştu: " + error.message);
+            }
         });
 
+        // 2. KAYIT OL (Doğru eşleşmeli 'invitations' taraması ve kullanıcı oluşturma)
         document.getElementById('btnReg').addEventListener('click', async () => {
             const code = document.getElementById('reg-code').value.trim();
             const email = document.getElementById('reg-email').value.trim();
             const pass = document.getElementById('reg-pass').value;
+
             if(!code || !email || !pass) return alert("Lütfen tüm alanları doldurun!");
+
             try {
                 const snap = await db.ref("invitations").once("value");
                 const invites = snap.val(); 
+                
                 let validCode = null;
+                // Veritabanında eşleşen ve durumu 'Aktif' olan kodu buluyoruz
                 for (let id in invites) {
                     if (invites[id] && invites[id].code === code && invites[id].status === "Aktif") {
                         validCode = { id: id, ...invites[id] };
                         break;
                     }
                 }
-                if(!validCode) return alert("Girdiğiniz davet kodu geçersiz veya zaten kullanılmış!");
 
+                if(!validCode) return alert("Girdiğiniz davet kodu geçersiz, yanlış veya zaten kullanılmış!");
+
+                // Nokta karakterini alt tire yaparak güvenli Firebase key'i oluşturuyoruz
                 const safeEmailKey = email.replace(/\./g, "_");
+
+                // Kullanıcı oluşturuluyor (app.js şemasına tam uyumlu: 3600 başlangıç tokenı)
                 await db.ref("users/" + safeEmailKey).set({ 
-                    email, password: pass, tokens: 3600, role: "user",
-                    correctGuesses: 0, totalGuesses: 0, usedInviteCode: code, registerDate: new Date().toISOString()
+                    email: email, 
+                    password: pass, 
+                    tokens: 3600, 
+                    role: "user",
+                    correctGuesses: 0,
+                    totalGuesses: 0,
+                    usedInviteCode: code,
+                    registerDate: new Date().toISOString()
                 });
+                
+                // Kullanılan kodun durumunu güncelliyoruz
                 await db.ref("invitations/" + validCode.id).update({ status: "Kullanıldı" });
+                
                 alert("Kayıt işleminiz başarıyla tamamlandı! Giriş yapabilirsiniz.");
                 window.location.href = "login.html";
-            } catch (error) { alert("Hata: " + error.message); }
+
+            } catch (error) {
+                alert("Kayıt sırasında bir hata meydana geldi: " + error.message);
+            }
         });
     </script>
 </body>
