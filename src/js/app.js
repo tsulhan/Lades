@@ -428,17 +428,19 @@ function generateMarketCardHTML(market, isActive) {
         `;
     }
 
+    // ✅ YENİ: Admin silme butonu - SADECE Geçmiş (isActive = false) ve admin için
     let adminDeleteHTML = "";
-    if (currentUserEmail === "tsulhan@gmail.com") {
+    if (currentUserEmail === "tsulhan@gmail.com" && !isActive) {  // Sadece admin ve geçmiş ladesler için
         adminDeleteHTML = `
-            <button onclick="deleteMarketCompletely('${market.id}', '${safeTitle}')" 
-                    style="position: absolute; top: 12px; right: 12px; background: rgba(239, 68, 68, 0.12); 
-                           border: 1px solid rgba(239, 68, 68, 0.25); color: #f87171; width: 26px; height: 26px; 
+            <button onclick="deleteMarketFromHistory('${market.id}', '${safeTitle}')" 
+                    style="position: absolute; top: 12px; right: 12px; background: rgba(239, 68, 68, 0.15); 
+                           border: 1px solid rgba(239, 68, 68, 0.3); color: #ef4444; width: 28px; height: 28px; 
                            border-radius: 50%; cursor: pointer; display: flex; align-items: center; 
-                           justify-content: center; font-size: 11px; transition: 0.2s; z-index: 10;"
-                    onmouseover="this.style.background='rgba(239, 68, 68, 0.3)'; this.style.color='white';"
-                    onmouseout="this.style.background='rgba(239, 68, 68, 0.12)'; this.style.color='#f87171';"
-                    title="Bu Ladesi Sil ve Paraları İade Et">
+                           justify-content: center; font-size: 14px; transition: 0.3s; z-index: 10;
+                           font-weight: 700;"
+                    onmouseover="this.style.background='rgba(239, 68, 68, 0.4)'; this.style.color='white'; this.style.borderColor='#ef4444';"
+                    onmouseout="this.style.background='rgba(239, 68, 68, 0.15)'; this.style.color='#ef4444'; this.style.borderColor='rgba(239, 68, 68, 0.3)';"
+                    title="Bu ladesi geçmişten sil">
                 <i class="fa-solid fa-xmark"></i>
             </button>
         `;
@@ -463,14 +465,31 @@ function generateMarketCardHTML(market, isActive) {
 // ------------------------------------------------------
 // ADMİN: LADESİ SİLME VE KULLANICI TOKENLARINI İADE ETME MOTORU
 // ------------------------------------------------------
+// ------------------------------------------------------
+// AKTİF LADESİ SİLME VE TOKENLARI İADE ETME (SADECE ADMIN)
+// ------------------------------------------------------
 async function deleteMarketCompletely(marketId, marketTitle) {
-    const confirmation = confirm(`"${marketTitle}" isimli ladesi silmek istediğinize emin misiniz?\n\n⚠️ BU İŞLEM: \n1- Ladesi tamamen kaldırır.\n2- Bu ladese oynayan TÜM KULLANICILARIN tokenlarını hesaplarına İADE eder!`);
-    
-    if (!confirmation) return;
     if (typeof db === "undefined" || !db) {
         alert("Firebase bağlantısı yok!");
         return;
     }
+
+    // Admin kontrolü
+    const currentUserEmail = localStorage.getItem("currentUser");
+    if (currentUserEmail !== "tsulhan@gmail.com") {
+        alert("❌ Bu işlem sadece yönetici tarafından yapılabilir!");
+        return;
+    }
+
+    const confirmation = confirm(
+        `"${marketTitle}" isimli ladesi silmek istediğinize emin misiniz?\n\n` +
+        `⚠️ BU İŞLEM:\n` +
+        `1- Ladesi tamamen kaldırır.\n` +
+        `2- Bu ladese oynayan TÜM KULLANICILARIN tokenlarını hesaplarına İADE eder!\n\n` +
+        `Bu işlem geri alınamaz!`
+    );
+    
+    if (!confirmation) return;
 
     try {
         const [betHistorySnapshot, usersSnapshot] = await Promise.all([
@@ -482,7 +501,7 @@ async function deleteMarketCompletely(marketId, marketTitle) {
         const allUsers = usersSnapshot.val() || {};
 
         const deletePromises = [];
-        const userUpdates = { ...allUsers }; 
+        const userUpdates = { ...allUsers };
         let refundedTokenCount = 0;
         let affectedUsersCount = 0;
 
@@ -1471,5 +1490,59 @@ async function generateInviteCode() {
     } catch (error) {
         console.error("Kod üretme hatası:", error);
         alert("❌ Kod oluşturulurken bir hata oluştu.");
+    }
+}
+// ------------------------------------------------------
+// GECMİŞ LADESİ SİLME (SADECE ADMIN)
+// ------------------------------------------------------
+async function deleteMarketFromHistory(marketId, marketTitle) {
+    if (typeof db === "undefined" || !db) {
+        alert("Firebase bağlantısı yok!");
+        return;
+    }
+
+    // Admin kontrolü
+    const currentUserEmail = localStorage.getItem("currentUser");
+    if (currentUserEmail !== "tsulhan@gmail.com") {
+        alert("❌ Bu işlem sadece yönetici tarafından yapılabilir!");
+        return;
+    }
+
+    const confirmation = confirm(
+        `"${marketTitle}" isimli geçmiş ladesi silmek istediğinize emin misiniz?\n\n` +
+        `⚠️ BU İŞLEM:\n` +
+        `1- Ladesi geçmişten tamamen kaldırır.\n` +
+        `2- Bu ladese ait tüm bahis geçmişini siler.\n` +
+        `3- Kullanıcıların tokenlarına DOKUNULMAZ (Zaten dağıtıldı).\n\n` +
+        `Bu işlem geri alınamaz!`
+    );
+    
+    if (!confirmation) return;
+
+    try {
+        // 1. Ladesi customMarkets'ten sil
+        await db.ref(`customMarkets/${marketId}`).remove();
+        
+        // 2. Bu ladese ait tüm bahis geçmişini sil
+        const betHistorySnapshot = await db.ref("betHistory").once("value");
+        const allHistories = betHistorySnapshot.val() || {};
+        
+        const deletePromises = [];
+        Object.keys(allHistories).forEach(historyKey => {
+            const bet = allHistories[historyKey];
+            if (bet && bet.marketId === marketId) {
+                deletePromises.push(db.ref(`betHistory/${historyKey}`).remove());
+            }
+        });
+
+        if (deletePromises.length > 0) {
+            await Promise.all(deletePromises);
+        }
+
+        alert(`✅ "${marketTitle}" geçmişten başarıyla silindi!\n\n${deletePromises.length} adet bahis kaydı temizlendi.`);
+        
+    } catch (error) {
+        console.error("Lades silme hatası:", error);
+        alert("❌ Lades silinirken bir hata oluştu: " + error.message);
     }
 }
