@@ -72,7 +72,24 @@
             text-overflow: ellipsis;
             white-space: nowrap;
         }
+/* Token İste butonu animasyonu */
+#token-request-btn {
+    animation: pulse-request 2s infinite;
+}
 
+@keyframes pulse-request {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.05); opacity: 0.8; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+/* Token bag hover efekti */
+#token-bag-container:hover {
+    background: rgba(36, 255, 255, 0.2) !important;
+    border-color: #ff4aa2 !important;
+    box-shadow: 0 0 20px rgba(255, 74, 162, 0.2) !important;
+    transition: all 0.3s ease;
+}
         .token-bag {
             background: rgba(36, 255, 255, 0.1);
             border: 1px solid #24ffff;
@@ -703,7 +720,12 @@
         <div class="logo">⚡ LADES</div>
         <div class="header-center">
             <div id="user-email-badge" class="user-email-badge">yükleniyor...</div>
-            <div class="token-bag">💰 <span id="token-balance">0</span> TOKEN</div>
+            <div class="token-bag" id="token-bag-container" style="cursor:pointer;" onclick="openTokenRequestModal()">
+    💰 <span id="token-balance">0</span> TOKEN
+    <span id="token-request-btn" style="display:none; background:#ff4aa2; color:white; padding:2px 10px; border-radius:12px; font-size:10px; margin-left:8px;">
+        İSTE
+    </span>
+        </div>
 
             <button id="admin-panel-btn" class="icon-btn" onclick="openAdminPanel()" title="Yönetici Paneli" style="display:none; color:#24ffff;">
                 <i class="fa-solid fa-user-shield"></i>

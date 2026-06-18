@@ -207,7 +207,7 @@
                 await fbSet(`ladesUsers/${userKey}`, {
                     email: email,
                     password: password, // Not: İleride hash'lenecek
-                    balance: 3600,
+                    balance: 0,
                     isAdmin: false,
                     createdAt: Date.now()
                 });
@@ -215,7 +215,7 @@
                 // 4. Kullanılan davet kodunu sil (tek kullanımlık yap)
                 await fbRemove(`inviteCodes/${foundKey}`);
 
-                alert("✅ Kayıt başarılı! Başlangıç bakiyeniz: 3600 TOKEN");
+                alert("✅ Kayıt başarılı! Başlangıç bakiyeniz: 0 TOKEN. Token talebi oluşturabilirsiniz.");
                 
                 // 5. Giriş sayfasına yönlendir
                 window.location.href = "login.html";
