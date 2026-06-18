@@ -489,13 +489,18 @@ function generateMarketCardHTML(market, isActive) {
 // ------------------------------------------------------
 // AKTİF LADESİ SİLME VE TOKENLARI İADE ETME (SADECE ADMIN)
 // ------------------------------------------------------
+// ------------------------------------------------------
+// AKTİF LADESİ SİLME VE TOKENLARI İADE ETME (GÜNCELLENDİ)
+// ------------------------------------------------------
 async function deleteMarketCompletely(marketId, marketTitle) {
+    console.log("🔍 Silme işlemi başlatıldı - ID:", marketId);
+    console.log("📝 Lades başlığı:", marketTitle);
+    
     if (typeof db === "undefined" || !db) {
-        alert("Firebase bağlantısı yok!");
+        alert("❌ Firebase bağlantısı yok!");
         return;
     }
 
-    // Admin kontrolü
     const currentUserEmail = localStorage.getItem("currentUser");
     if (currentUserEmail !== "tsulhan@gmail.com") {
         alert("❌ Bu işlem sadece yönetici tarafından yapılabilir!");
@@ -520,12 +525,24 @@ async function deleteMarketCompletely(marketId, marketTitle) {
         loadingMsg.innerHTML = '⏳ Lades siliniyor ve tokenlar iade ediliyor...';
         document.body.appendChild(loadingMsg);
 
-        const [betHistorySnapshot, usersSnapshot] = await Promise.all([
-            db.ref("betHistory").once("value"),
-            db.ref("ladesUsers").once("value")
-        ]);
+        // 1. Ladesin verisini al (kontrol için)
+        const marketSnapshot = await db.ref(`customMarkets/${marketId}`).once("value");
+        const marketData = marketSnapshot.val();
+        
+        if (!marketData) {
+            alert("❌ Lades bulunamadı! Zaten silinmiş olabilir.");
+            document.body.removeChild(loadingMsg);
+            return;
+        }
+        
+        console.log("✅ Lades verisi bulundu:", marketData);
 
+        // 2. Bahis geçmişini al
+        const betHistorySnapshot = await db.ref("betHistory").once("value");
         const allHistories = betHistorySnapshot.val() || {};
+        
+        // 3. Kullanıcıları al
+        const usersSnapshot = await db.ref("ladesUsers").once("value");
         const allUsers = usersSnapshot.val() || {};
 
         const deletePromises = [];
@@ -533,11 +550,12 @@ async function deleteMarketCompletely(marketId, marketTitle) {
         let refundedTokenCount = 0;
         let affectedUsersCount = 0;
 
-        // Bahisleri bul ve iade et
+        // 4. Bu ladese ait bahisleri bul ve iade et
         Object.keys(allHistories).forEach(historyKey => {
             const bet = allHistories[historyKey];
             
             if (bet && bet.marketId === marketId) {
+                console.log("📊 Bahis bulundu:", bet);
                 const userEmail = bet.email;
                 const betAmount = parseInt(bet.amount || 0);
 
@@ -549,6 +567,7 @@ async function deleteMarketCompletely(marketId, marketTitle) {
                         userUpdates[userCleanKey].balance = currentBalance + betAmount;
                         refundedTokenCount += betAmount;
                         affectedUsersCount++;
+                        console.log(`💰 ${userEmail} -> ${betAmount} Token iade edildi`);
                     }
                 }
                 // Bahis kaydını sil
@@ -556,28 +575,40 @@ async function deleteMarketCompletely(marketId, marketTitle) {
             }
         });
 
-        // Kullanıcı bakiyelerini güncelle
+        // 5. Kullanıcı bakiyelerini güncelle
         if (affectedUsersCount > 0) {
+            console.log(`👥 ${affectedUsersCount} kullanıcıya ${refundedTokenCount} Token iade ediliyor...`);
             await db.ref("ladesUsers").set(userUpdates);
+            console.log("✅ Kullanıcı bakiyeleri güncellendi");
         }
 
-        // Bahis geçmişini sil
+        // 6. Bahis geçmişini sil
         if (deletePromises.length > 0) {
+            console.log(`🗑️ ${deletePromises.length} bahis kaydı siliniyor...`);
             await Promise.all(deletePromises);
+            console.log("✅ Bahis geçmişi silindi");
         }
 
-        // Ladesi sil
+        // 7. Ladesi sil
+        console.log(`🗑️ Lades siliniyor: ${marketId}`);
         await db.ref(`customMarkets/${marketId}`).remove();
+        console.log("✅ Lades silindi");
 
         // Loading mesajını kaldır
         document.body.removeChild(loadingMsg);
 
+        // 8. Başarılı mesajı
         alert(`✅ "${marketTitle}" başarıyla silindi!\n\n` +
               `👥 Etkilenen Kullanıcı: ${affectedUsersCount}\n` +
               `💰 İade Edilen Toplam Token: ${refundedTokenCount.toLocaleString("tr-TR")}`);
         
+        // 9. Sayfayı yenile (verileri güncelle)
+        setTimeout(() => {
+            location.reload();
+        }, 1000);
+        
     } catch (error) {
-        console.error("Lades silme ve iade hatası:", error);
+        console.error("❌ Lades silme ve iade hatası:", error);
         alert("❌ İşlem sırasında bir hata oluştu: " + error.message);
         
         // Hata durumunda loading mesajını kaldır
