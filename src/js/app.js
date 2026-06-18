@@ -777,40 +777,56 @@ async function finalizeLades(marketId, winningChoice) {
 // ------------------------------------------------------
 // ADMIN PANELİ LİSTELEME MOTORU (CANLI VE GÜVENLİ REALTIME SÜRÜM)
 // ------------------------------------------------------
+// ------------------------------------------------------
+// ADMIN PANELİ LİSTELEME MOTORU (GERÇEK INVITECODES DÜĞÜMÜNE GÖRE UYARLANDI)
+// ------------------------------------------------------
 async function renderAdminPanel() {
     if (typeof db === "undefined" || !db) return;
 
-    // 1. Bekleyen Davet ve Token İsteklerini Canlı Dinleme
-    fbRef("adminRequests").on("value", (snapshot) => {
+    // 1. BEKLEYEN DAVET İSTEKLERİNİ CANLI DİNLE (inviteCodes içindeki istekleri tarar)
+    fbRef("inviteCodes").on("value", (snapshot) => {
         const requestsList = document.getElementById("admin-requests-list");
-        if (!requestsList) return;
+        const codesList = document.getElementById("admin-codes-list");
+        
+        if (!requestsList || !codesList) return;
         
         requestsList.innerHTML = "";
-        const requests = snapshot.val() || {};
-        const pendingRequests = Object.values(requests).filter(r => r && r.status === "Bekliyor");
+        codesList.innerHTML = "";
+        
+        const allData = snapshot.val() || {};
+        let pendingCount = 0;
 
-        if (pendingRequests.length === 0) {
-            requestsList.innerHTML = `<p style="color:#64748b; font-size:13px;">Bekleyen bir talep bulunmuyor.</p>`;
-        } else {
-            pendingRequests.forEach(req => {
-                if (req.type === "invite") {
-                    requestsList.innerHTML += `
-                        <div style="display:flex; justify-content:space-between; align-items:center; background:#030814; padding:10px; border-radius:8px; margin-bottom:8px; font-size:13px;">
-                            <span>✉️ <b>${req.email}</b> davet kodu istiyor.</span>
-                            <button onclick="approveInvite('${req.id}', '${req.email}')" style="background:#22c55e; color:black; border:none; padding:4px 8px; border-radius:5px; font-weight:bold; cursor:pointer;">Onayla</button>
-                        </div>`;
-                } else if (req.type === "token") {
-                    requestsList.innerHTML += `
-                        <div style="display:flex; justify-content:space-between; align-items:center; background:#030814; padding:10px; border-radius:8px; margin-bottom:8px; font-size:13px;">
-                            <span>💰 <b>${req.email}</b> -> ${req.amount} Token istiyor.</span>
-                            <button onclick="approveToken('${req.id}', '${req.email}', ${req.amount})" style="background:#22c55e; color:black; border:none; padding:4px 8px; border-radius:5px; font-weight:bold; cursor:pointer;">Onayla</button>
-                        </div>`;
-                }
-            });
+        Object.entries(allData).forEach(([key, val]) => {
+            // Eğer veri bir nesneyse ve tipi 'istek' ise veya anahtar kelime 'istek_' içeriyorsat
+            if (key.startsWith("istek_") || (typeof val === "object" && val.status === "Bekliyor")) {
+                pendingCount++;
+                const emailDisplay = typeof val === "object" ? val.email : key.replace("istek_", "").replace(/_/g, ".");
+                
+                requestsList.innerHTML += `
+                    <div style="display:flex; justify-content:space-between; align-items:center; background:#030814; padding:10px; border-radius:8px; margin-bottom:8px; font-size:13px;">
+                        <span>✉️ <b>${emailDisplay}</b> davet kodu istiyor.</span>
+                        <div style="display:flex; gap:6px;">
+                            <button onclick="approveInviteReal('${key}', '${emailDisplay}')" style="background:#22c55e; color:black; border:none; padding:4px 8px; border-radius:5px; font-weight:bold; cursor:pointer;">Kod Üret & Onayla</button>
+                            <button onclick="deleteInviteCodeReal('${key}')" style="background:#ef4444; color:white; border:none; padding:4px 8px; border-radius:5px; font-weight:bold; cursor:pointer;">Sil</button>
+                        </div>
+                    </div>`;
+            } else {
+                // İstek olmayanlar normal üretilmiş aktif kodlardır
+                const codeString = typeof val === "object" ? (val.code || val.text) : val;
+                codesList.innerHTML += `
+                    <div style="background:rgba(36,255,255,0.1); border:1px solid #24ffff; padding:6px 12px; border-radius:6px; font-size:12px; color:#24ffff; display:inline-flex; align-items:center; gap:8px; margin:4px;">
+                        <span>🔑 ${codeString}</span>
+                        <i class="fa-solid fa-trash" onclick="deleteInviteCodeReal('${key}')" style="cursor:pointer; color:#ef4444; margin-left:4px;" title="Kodu Sil"></i>
+                    </div>`;
+            }
+        });
+
+        if (pendingCount === 0) {
+            requestsList.innerHTML = `<p style="color:#64748b; font-size:13px;">Bekleyen bir davet talebi bulunmuyor.</p>`;
         }
     });
 
-    // 2. Aktif Lades Pazarlarını Canlı Dinleme
+    // 2. AKTİF LADES PAZARLARINI CANLI DİNLE
     fbRef("customMarkets").on("value", (snapshot) => {
         const adminActiveMarkets = document.getElementById("admin-active-markets");
         if (!adminActiveMarkets) return;
@@ -853,23 +869,7 @@ async function renderAdminPanel() {
         }
     });
 
-    // 3. Üretilmiş Davet Kodlarını Canlı Dinleme
-    fbRef("inviteCodes").on("value", (snapshot) => {
-        const codesList = document.getElementById("admin-codes-list");
-        if (!codesList) return;
-
-        const inviteCodesSnap = snapshot.val();
-        if (!inviteCodesSnap) {
-            codesList.innerHTML = `<span style="color:#64748b; font-size:12px;">Üretilmiş kod bulunmuyor.</span>`;
-            return;
-        }
-
-        codesList.innerHTML = Object.values(inviteCodesSnap).map(c => `
-            <span style="background:rgba(36,255,255,0.1); border:1px solid #24ffff; padding:4px 8px; border-radius:6px; font-size:12px; color:#24ffff; display:inline-block; margin:2px;">${c}</span>
-        `).join(" ");
-    });
-
-    // 4. Kayıtlı Kullanıcıları Canlı Dinleme
+    // 3. KAYITLI KULLANICILARI CANLI DİNLE
     fbRef("ladesUsers").on("value", (snapshot) => {
         const usersTable = document.getElementById("admin-users-list");
         if (!usersTable) return;
@@ -896,6 +896,37 @@ async function renderAdminPanel() {
                 </tr>`;
         });
     });
+}
+
+// ------------------------------------------------------
+// YENİ ENTEGRASYON YARDIMCI FONKSİYONLARI
+// ------------------------------------------------------
+async function approveInviteReal(requestKey, email) {
+    if (typeof db === "undefined" || !db) return;
+    const newCode = "LADES_" + Math.random().toString(36).substring(2, 8).toUpperCase();
+    
+    // 1. Eski istek kaydını sil
+    await db.ref(`inviteCodes/${requestKey}`).remove();
+    
+    // 2. Aynı düğüm altına düz string olarak yeni kodu kaydet (Senin db yapına uygun olarak)
+    const newCodeKey = "code_" + Date.now();
+    await db.ref(`inviteCodes/${newCodeKey}`).set(newCode);
+
+    alert(`✅ İstek onaylandı!\n${email} için üretilen aktif kod: ${newCode}`);
+}
+
+async function deleteInviteCodeReal(codeKey) {
+    if (confirm("Bu kodu veya isteği silmek istediğinize emin misiniz?")) {
+        await db.ref(`inviteCodes/${codeKey}`).remove();
+    }
+}
+
+async function generateInviteCode() {
+    if (typeof db === "undefined" || !db) return;
+    const newCode = "LADES_" + Math.random().toString(36).substring(2, 8).toUpperCase();
+    const codeKey = "code_" + Date.now();
+    await db.ref(`inviteCodes/${codeKey}`).set(newCode);
+    alert("Yeni kod başarıyla üretildi: " + newCode);
 }
 
 // ------------------------------------------------------
