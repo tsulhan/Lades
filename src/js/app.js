@@ -428,22 +428,40 @@ function generateMarketCardHTML(market, isActive) {
         `;
     }
 
-    // ✅ YENİ: Admin silme butonu - SADECE Geçmiş (isActive = false) ve admin için
+    // ✅ YENİ: Admin silme butonu - HEM AKTİF HEM GEÇMİŞ için
     let adminDeleteHTML = "";
-    if (currentUserEmail === "tsulhan@gmail.com" && !isActive) {  // Sadece admin ve geçmiş ladesler için
-        adminDeleteHTML = `
-            <button onclick="deleteMarketFromHistory('${market.id}', '${safeTitle}')" 
-                    style="position: absolute; top: 12px; right: 12px; background: rgba(239, 68, 68, 0.15); 
-                           border: 1px solid rgba(239, 68, 68, 0.3); color: #ef4444; width: 28px; height: 28px; 
-                           border-radius: 50%; cursor: pointer; display: flex; align-items: center; 
-                           justify-content: center; font-size: 14px; transition: 0.3s; z-index: 10;
-                           font-weight: 700;"
-                    onmouseover="this.style.background='rgba(239, 68, 68, 0.4)'; this.style.color='white'; this.style.borderColor='#ef4444';"
-                    onmouseout="this.style.background='rgba(239, 68, 68, 0.15)'; this.style.color='#ef4444'; this.style.borderColor='rgba(239, 68, 68, 0.3)';"
-                    title="Bu ladesi geçmişten sil">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
-        `;
+    if (currentUserEmail === "tsulhan@gmail.com") {  // Sadece admin
+        if (isActive) {
+            // ✅ AKTİF LADES: Token iadeli silme (kırmızı çarpı)
+            adminDeleteHTML = `
+                <button onclick="deleteMarketCompletely('${market.id}', '${safeTitle}')" 
+                        style="position: absolute; top: 12px; right: 12px; background: rgba(239, 68, 68, 0.15); 
+                               border: 1px solid rgba(239, 68, 68, 0.3); color: #ef4444; width: 28px; height: 28px; 
+                               border-radius: 50%; cursor: pointer; display: flex; align-items: center; 
+                               justify-content: center; font-size: 14px; transition: 0.3s; z-index: 10;
+                               font-weight: 700;"
+                        onmouseover="this.style.background='rgba(239, 68, 68, 0.4)'; this.style.color='white'; this.style.borderColor='#ef4444';"
+                        onmouseout="this.style.background='rgba(239, 68, 68, 0.15)'; this.style.color='#ef4444'; this.style.borderColor='rgba(239, 68, 68, 0.3)';"
+                        title="Bu ladesi sil ve tokenları iade et">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            `;
+        } else {
+            // ✅ GEÇMİŞ LADES: Temiz silme (gri çarpı - daha sade)
+            adminDeleteHTML = `
+                <button onclick="deleteMarketFromHistory('${market.id}', '${safeTitle}')" 
+                        style="position: absolute; top: 12px; right: 12px; background: rgba(148, 163, 184, 0.1); 
+                               border: 1px solid rgba(148, 163, 184, 0.2); color: #94a3b8; width: 28px; height: 28px; 
+                               border-radius: 50%; cursor: pointer; display: flex; align-items: center; 
+                               justify-content: center; font-size: 14px; transition: 0.3s; z-index: 10;
+                               font-weight: 700;"
+                        onmouseover="this.style.background='rgba(239, 68, 68, 0.3)'; this.style.color='#ef4444'; this.style.borderColor='rgba(239, 68, 68, 0.5)';"
+                        onmouseout="this.style.background='rgba(148, 163, 184, 0.1)'; this.style.color='#94a3b8'; this.style.borderColor='rgba(148, 163, 184, 0.2)';"
+                        title="Bu ladesi geçmişten sil">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            `;
+        }
     }
 
     return `
