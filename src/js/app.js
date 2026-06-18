@@ -52,7 +52,7 @@ async function handleLogin() {
         }
     } catch (error) {
         console.error("Giriş hatası detayları:", error);
-        alert("Giriş işlemi sırasında teknik bir hata meydana geldi.");
+        alert("Giriş işlem sırasında teknik bir hata meydana geldi.");
     }
 }
 
@@ -722,7 +722,7 @@ async function generateInviteCode() {
     const newCode = "LADES_" + Math.random().toString(36).substring(2, 8).toUpperCase();
     const codeKey = uniqueId("code");
     await fbSet(`inviteCodes/${codeKey}`, newCode);
-    await renderAdminPanel();
+    // Realtime dinleyici aktif olduğu için renderAdminPanel()'i manuel çağırmaya gerek yok.
 }
 
 async function finalizeLades(marketId, winningChoice) {
@@ -745,7 +745,6 @@ async function finalizeLades(marketId, winningChoice) {
         alert("Havuz boş veya kazanan seçeneğe bahis yapılmamış. Lades kapatıldı.");
         market.status = "Sonuçlandı";
         await fbSet(`customMarkets/${marketId}`, market);
-        await renderAdminPanel();
         return;
     }
 
@@ -773,22 +772,22 @@ async function finalizeLades(marketId, winningChoice) {
     await fbSet("ladesUsers", users);
 
     alert(`🎉 Dağıtıldı! Toplam ${totalPool} Token kazananlara aktarıldı.`);
-    await renderAdminPanel();
 }
 
 // ------------------------------------------------------
-// ADMIN PANELİ LİSTELEME MOTORU (GÜNCEL KULLANICI SİLME DAHİL)
+// ADMIN PANELİ LİSTELEME MOTORU (CANLI VE GÜVENLİ REALTIME SÜRÜM)
 // ------------------------------------------------------
 async function renderAdminPanel() {
     if (typeof db === "undefined" || !db) return;
 
-    const requestsList = document.getElementById("admin-requests-list");
-    const requestsSnap = await fbGet("adminRequests");
-    const requests = requestsSnap || {};
-
-    if (requestsList) {
+    // 1. Bekleyen Davet ve Token İsteklerini Canlı Dinleme
+    fbRef("adminRequests").on("value", (snapshot) => {
+        const requestsList = document.getElementById("admin-requests-list");
+        if (!requestsList) return;
+        
         requestsList.innerHTML = "";
-        const pendingRequests = objectValuesToArray(requests).filter(r => r.status === "Bekliyor");
+        const requests = snapshot.val() || {};
+        const pendingRequests = Object.values(requests).filter(r => r && r.status === "Bekliyor");
 
         if (pendingRequests.length === 0) {
             requestsList.innerHTML = `<p style="color:#64748b; font-size:13px;">Bekleyen bir talep bulunmuyor.</p>`;
@@ -809,15 +808,17 @@ async function renderAdminPanel() {
                 }
             });
         }
-    }
+    });
 
-    const adminActiveMarkets = document.getElementById("admin-active-markets");
-    const marketsSnap = await fbGet("customMarkets");
-    const markets = marketsSnap || {};
-    const activeMarkets = objectValuesToArray(markets).filter(m => m.status === "Aktif");
+    // 2. Aktif Lades Pazarlarını Canlı Dinleme
+    fbRef("customMarkets").on("value", (snapshot) => {
+        const adminActiveMarkets = document.getElementById("admin-active-markets");
+        if (!adminActiveMarkets) return;
 
-    if (adminActiveMarkets) {
         adminActiveMarkets.innerHTML = "";
+        const markets = snapshot.val() || {};
+        const activeMarkets = Object.values(markets).filter(m => m && m.status === "Aktif");
+
         if (activeMarkets.length === 0) {
             adminActiveMarkets.innerHTML = `<p style="color:#64748b; font-size:13px;">Şu an aktif bir lades pazarı yok.</p>`;
         } else {
@@ -850,25 +851,38 @@ async function renderAdminPanel() {
                     </div>`;
             });
         }
-    }
+    });
 
-    const codesList = document.getElementById("admin-codes-list");
-    const inviteCodesSnap = await fbGet("inviteCodes");
-    if (codesList && inviteCodesSnap) {
-        codesList.innerHTML = objectValuesToArray(inviteCodesSnap).map(c => `
-            <span style="background:rgba(36,255,255,0.1); border:1px solid #24ffff; padding:4px 8px; border-radius:6px; font-size:12px; color:#24ffff;">${c}</span>
+    // 3. Üretilmiş Davet Kodlarını Canlı Dinleme
+    fbRef("inviteCodes").on("value", (snapshot) => {
+        const codesList = document.getElementById("admin-codes-list");
+        if (!codesList) return;
+
+        const inviteCodesSnap = snapshot.val();
+        if (!inviteCodesSnap) {
+            codesList.innerHTML = `<span style="color:#64748b; font-size:12px;">Üretilmiş kod bulunmuyor.</span>`;
+            return;
+        }
+
+        codesList.innerHTML = Object.values(inviteCodesSnap).map(c => `
+            <span style="background:rgba(36,255,255,0.1); border:1px solid #24ffff; padding:4px 8px; border-radius:6px; font-size:12px; color:#24ffff; display:inline-block; margin:2px;">${c}</span>
         `).join(" ");
-    }
+    });
 
-    const usersTable = document.getElementById("admin-users-list");
-    const usersSnap = await fbGet("ladesUsers");
-    if (usersTable && usersSnap) {
+    // 4. Kayıtlı Kullanıcıları Canlı Dinleme
+    fbRef("ladesUsers").on("value", (snapshot) => {
+        const usersTable = document.getElementById("admin-users-list");
+        if (!usersTable) return;
+
         usersTable.innerHTML = "";
+        const usersSnap = snapshot.val() || {};
+
         Object.values(usersSnap).forEach(u => {
+            if (!u) return;
             const isSelf = u.email === "tsulhan@gmail.com";
             const deleteButtonHTML = isSelf 
                 ? `<span style="color:#64748b; font-size:11px; padding:4px 10px;">🔒 Korumalı</span>`
-                : `<button onclick="deleteUserCompletely('${u.email}')" style="background:rgba(239, 68, 68, 0.15); color:#ef4444; border:1px solid rgba(239, 68, 68, 0.3); padding:4px 10px; border-radius:4px; font-size:11px; cursor:pointer; font-weight:600; margin-left:6px; transition:0.2s;" onmouseover="this.style.background='#ef4444'; this.style.color='white';" onmouseout="this.style.background='rgba(239, 68, 68, 0.15)'; this.style.color='#ef4444';">🗑️ Kullanıcıyı Sil</button>`;
+                : `<button onclick="deleteUserCompletely('${u.email}')" style="background:rgba(239, 68, 68, 0.15); color:#ef4444; border:1px solid rgba(239, 68, 68, 0.3); padding:4px 10px; border-radius:4px; font-size:11px; cursor:pointer; font-weight:600; margin-left:6px; transition:0.2s;" onmouseover="this.style.background='#ef4444'; this.style.color='white';" onmouseout="this.style.background='rgba(239, 68, 68, 0.15)'; this.style.color='#ef4444';">🗑️ Sil</button>`;
 
             usersTable.innerHTML += `
                 <tr style="border-bottom:1px solid #1c2541;">
@@ -881,7 +895,7 @@ async function renderAdminPanel() {
                     </td>
                 </tr>`;
         });
-    }
+    });
 }
 
 // ------------------------------------------------------
@@ -903,7 +917,6 @@ async function deleteUserCompletely(email) {
         await db.ref(`ladesUsers/${userCleanKey}`).remove();
         
         alert(`"${email}" kullanıcısı başarıyla her yerden silindi!`);
-        await renderAdminPanel();
     } catch (error) {
         console.error("Kullanıcı silme hatası:", error);
         alert("Kullanıcı silinirken bir hata oluştu: " + error.message);
@@ -918,18 +931,17 @@ async function approveInvite(reqId, email) {
 
     const requestsSnap = await fbGet("adminRequests");
     const requests = requestsSnap || {};
-    const reqKey = Object.keys(requests).find(k => requests[k].id === reqId);
+    const reqKey = Object.keys(requests).find(k => requests[k] && requests[k].id === reqId);
     if (reqKey) await fbRemove(`adminRequests/${reqKey}`);
 
     alert(`Onaylandı! Kod: ${newCode}`);
-    await renderAdminPanel();
 }
 
 async function approveToken(reqId, email, amount) {
     if (typeof db === "undefined" || !db) return;
     const usersSnap = await fbGet("ladesUsers");
     const users = usersSnap || {};
-    const userEntry = Object.entries(users).find(([key, u]) => u.email === email);
+    const userEntry = Object.entries(users).find(([key, u]) => u && u.email === email);
 
     if (userEntry) {
         const [userKey, userObj] = userEntry;
@@ -939,11 +951,10 @@ async function approveToken(reqId, email, amount) {
 
     const requestsSnap = await fbGet("adminRequests");
     const requests = requestsSnap || {};
-    const reqKey = Object.keys(requests).find(k => requests[k].id === reqId);
+    const reqKey = Object.keys(requests).find(k => requests[k] && requests[k].id === reqId);
     if (reqKey) await fbRemove(`adminRequests/${reqKey}`);
 
     alert(`${email} hesabına ${amount} token yüklendi.`);
-    await renderAdminPanel();
 }
 
 async function setTokensManual(email, currentBalance) {
@@ -961,7 +972,7 @@ async function setTokensManual(email, currentBalance) {
 
     const usersSnap = await fbGet("ladesUsers");
     const users = usersSnap || {};
-    const userEntry = Object.entries(users).find(([key, u]) => u.email === email);
+    const userEntry = Object.entries(users).find(([key, u]) => u && u.email === email);
 
     if (userEntry) {
         const [userKey, userObj] = userEntry;
@@ -969,8 +980,6 @@ async function setTokensManual(email, currentBalance) {
         await fbSet(`ladesUsers/${userKey}`, userObj);
         alert(`Başarılı! Bakiyesi ${targetBalance.toLocaleString("tr-TR")} Token olarak güncellendi.`);
     }
-
-    await renderAdminPanel();
 }
 
 // ------------------------------------------------------
