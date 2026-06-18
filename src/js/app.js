@@ -732,6 +732,20 @@ async function createNewMarket() {
         return;
     }
 
+    // ✅ MİNİMUM BAHİS KONTROLÜ (Lades oluştururken)
+    const MIN_BET = 250;
+    if (isNaN(initialBet) || initialBet < MIN_BET) {
+        alert(`❌ Lades oluşturmak için minimum ${MIN_BET.toLocaleString("tr-TR")} Token yatırmanız gerekiyor!`);
+        return;
+    }
+
+    // ✅ MAKSİMUM BAHİS KONTROLÜ (Lades oluştururken)
+    const MAX_BET = 1000;
+    if (initialBet > MAX_BET) {
+        alert(`❌ Lades oluşturmak için maksimum ${MAX_BET.toLocaleString("tr-TR")} Token yatırabilirsiniz!`);
+        return;
+    }
+
     const userKey = currentUserEmail.replace(/\./g, ',');
     const currentUser = await fbGet(`ladesUsers/${userKey}`);
 
@@ -740,8 +754,8 @@ async function createNewMarket() {
         return;
     }
 
-    if (!title || !date || isNaN(initialBet) || initialBet <= 0) {
-        alert("Lütfen alanları doğru doldurun!");
+    if (!title || !date) {
+        alert("Lütfen tüm alanları doldurun!");
         return;
     }
 
@@ -751,7 +765,7 @@ async function createNewMarket() {
     }
 
     if (initialBet > (currentUser.balance || 0)) {
-        alert("Yetersiz bakiye!");
+        alert(`❌ Yetersiz bakiye! Mevcut bakiyeniz: ${(currentUser.balance || 0).toLocaleString("tr-TR")} Token`);
         return;
     }
 
@@ -785,7 +799,7 @@ async function createNewMarket() {
         createdAt: Date.now()
     });
 
-    alert("⚡ Lades Başarıyla Yaratıldı!");
+    alert(`⚡ Lades Başarıyla Yaratıldı!\n\n💰 Yatırılan: ${initialBet.toLocaleString("tr-TR")} Token`);
 
     const questionInput = document.getElementById("market-question");
     const betInput = document.getElementById("market-initial-bet");
