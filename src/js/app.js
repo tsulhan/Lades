@@ -7,18 +7,24 @@ let activeMarketId = "";
 let activeMarketTitle = "";
 let activeChoice = "";
 let selectedCategoryFilter = "Tümü";
+let creatorNamesCache = {};
 
 // ------------------------------------------------------
 // YARDIMCI FONKSİYONLAR
 // ------------------------------------------------------
 
-// ✅ Kullanıcının nickname'ini getir
+// ✅ Kullanıcının nickname'ini getir (cache ile)
 async function getUserNickname(email) {
-    if (typeof db === "undefined" || !db || !email) return maskUserEmail(email);
+    if (!email) return "Bilinmeyen";
+    if (creatorNamesCache[email]) return creatorNamesCache[email];
+    
+    if (typeof db === "undefined" || !db) return maskUserEmail(email);
     try {
         const userKey = email.replace(/\./g, ',');
         const user = await fbGet(`ladesUsers/${userKey}`);
-        return user?.nickname || maskUserEmail(email);
+        const nickname = user?.nickname || maskUserEmail(email);
+        creatorNamesCache[email] = nickname;
+        return nickname;
     } catch {
         return maskUserEmail(email);
     }
@@ -89,7 +95,6 @@ async function handleRegister() {
         return;
     }
 
-    // ✅ Nickname validasyonu
     if (!validateNickname(nickname)) {
         alert("Kullanıcı adı 3-20 karakter olmalı ve sadece harf/rakam içermelidir!");
         return;
@@ -130,7 +135,6 @@ async function handleRegister() {
         return;
     }
 
-    // ✅ Nickname benzersiz mi kontrol et
     if (userList.some(u => u.nickname === nickname)) {
         alert("Bu kullanıcı adı zaten alınmış! Lütfen başka bir nickname seçin.");
         return;
@@ -155,7 +159,6 @@ async function handleRegister() {
     window.location.href = "login.html";
 }
 
-// ✅ Nickname validasyon fonksiyonu
 function validateNickname(nickname) {
     if (!nickname || nickname.length < 3 || nickname.length > 20) return false;
     return /^[a-zA-Z0-9ğüşıöçĞÜŞİÖÇ]+$/.test(nickname);
@@ -224,7 +227,6 @@ function updateChoiceOptions() {
     } else {
         drawOption.hidden = true;
         drawOption.disabled = true;
-
         if (choiceSelect.value === "DRAW") {
             choiceSelect.value = "YES";
         }
@@ -267,7 +269,6 @@ function startRealtimeListeners() {
         if (user) {
             const userEmailBadge = document.getElementById("user-email-badge");
             if (userEmailBadge) {
-                // ✅ Nickname veya email göster
                 userEmailBadge.innerText = user.nickname || user.email;
             }
 
@@ -277,11 +278,7 @@ function startRealtimeListeners() {
 
             const tokenRequestBtn = document.getElementById("token-request-btn");
             if (tokenRequestBtn) {
-                if (balance === 0) {
-                    tokenRequestBtn.style.display = "inline-block";
-                } else {
-                    tokenRequestBtn.style.display = "none";
-                }
+                tokenRequestBtn.style.display = balance === 0 ? "inline-block" : "none";
             }
 
             const adminBtn = document.getElementById("admin-panel-btn");
@@ -332,12 +329,10 @@ function renderLeaderboard(usersObj) {
     sortedUsers.forEach((user, index) => {
         const rank = index + 1;
         let rankDisplay = rank;
-
         if (rank === 1) rankDisplay = "🥇";
         else if (rank === 2) rankDisplay = "🥈";
         else if (rank === 3) rankDisplay = "🥉";
 
-        // ✅ Nickname veya email göster
         const displayName = user.nickname || maskUserEmail(user.email);
 
         leaderboardList.innerHTML += `
@@ -400,6 +395,31 @@ function renderMarketGrid(marketsObj) {
             });
         }
     }
+
+    // ✅ Lades kartları oluşturulduktan sonra nickname'leri güncelle
+    setTimeout(() => {
+        updateCreatorNames();
+    }, 100);
+}
+
+// ✅ Lades kartlarındaki creator alanlarını nickname ile güncelle
+async function updateCreatorNames() {
+    const creatorSpans = document.querySelectorAll('[id^="creator-"]');
+    
+    for (const span of creatorSpans) {
+        const marketId = span.id.replace('creator-', '');
+        
+        const marketsSnap = await fbGet("customMarkets");
+        const markets = marketsSnap || {};
+        const market = markets[marketId];
+        
+        if (market && market.createdBy) {
+            const nickname = await getUserNickname(market.createdBy);
+            if (nickname) {
+                span.textContent = nickname;
+            }
+        }
+    }
 }
 
 function generateMarketCardHTML(market, isActive) {
@@ -427,11 +447,8 @@ function generateMarketCardHTML(market, isActive) {
     const currentUserEmail = localStorage.getItem("currentUser");
     const isAdmin = currentUserEmail === "tsulhan@gmail.com";
     
-    // ✅ Ladesi açan kişiyi bul (nickname veya email)
+    // Geçici gösterim (email maskeli), sonra updateCreatorNames ile güncellenecek
     const creator = market.createdBy || "Bilinmeyen";
-    // Not: getUserNickname async olduğu için burada doğrudan kullanamıyoruz.
-    // Bu nedenle display'i daha sonra güncellemek için data attribute ekliyoruz.
-    // Ancak şimdilik maskUserEmail ile gösterelim.
     const creatorDisplay = maskUserEmail(creator);
     
     let actionContent = "";
@@ -512,7 +529,6 @@ function generateMarketCardHTML(market, isActive) {
         }
     }
 
-    // ✅ Ladesi açan kişiyi göster (creatorDisplay)
     return `
         <div class="market-card" style="position: relative; ${!isActive ? 'opacity: 0.9; border-color: #1c2541; background: #060b19;' : ''}">
             ${adminDeleteHTML}
@@ -530,18 +546,6 @@ function generateMarketCardHTML(market, isActive) {
             ${actionContent}
         </div>
     `;
-}
-
-// ✅ Lades kartları oluşturulduktan sonra nickname'leri güncelle
-async function updateCreatorNames() {
-    // Bu fonksiyon, sayfa yüklendikten sonra tüm creator alanlarını nickname ile günceller
-    const creatorSpans = document.querySelectorAll('[id^="creator-"]');
-    for (const span of creatorSpans) {
-        const marketId = span.id.replace('creator-', '');
-        // marketId'yi kullanarak creator email'ini bulmamız gerek
-        // Bu işlem biraz karmaşık olduğu için şimdilik maskeli email ile kalalım
-        // İleride nickname sistemi tam oturunca güncellenebilir
-    }
 }
 
 // ------------------------------------------------------
@@ -642,7 +646,6 @@ async function deleteMarketCompletely(marketId, marketTitle) {
     } catch (error) {
         console.error("❌ Lades silme ve iade hatası:", error);
         alert("❌ İşlem sırasında bir hata oluştu: " + error.message);
-        
         const loadingMsg = document.querySelector('div[style*="position:fixed"]');
         if (loadingMsg) document.body.removeChild(loadingMsg);
     }
@@ -711,7 +714,6 @@ async function deleteMarketFromHistory(marketId, marketTitle) {
     } catch (error) {
         console.error("❌ Lades silme hatası:", error);
         alert("❌ Lades silinirken bir hata oluştu: " + error.message);
-        
         const loadingMsg = document.querySelector('div[style*="position:fixed"]');
         if (loadingMsg) document.body.removeChild(loadingMsg);
     }
@@ -875,7 +877,7 @@ async function createNewMarket() {
         createdAt: Date.now()
     });
 
-    // ✅ YENİ LADES BİLDİRİMİ - Nickname ile
+    // ✅ Yeni lades bildirimi - nickname ile
     const creatorNickname = currentUser.nickname || maskUserEmail(currentUserEmail);
     
     await sendNotificationToAllUsers({
@@ -975,7 +977,7 @@ async function confirmBet() {
         createdAt: Date.now()
     });
 
-    // ✅ YENİ BAHİS BİLDİRİMİ - Nickname ile
+    // ✅ Bahis bildirimi - nickname ile
     const bettorNickname = currentUser.nickname || maskUserEmail(currentUserEmail);
     await sendBetNotificationToParticipants(activeMarketId, currentUserEmail, activeChoice, amount, target.title, bettorNickname);
 
@@ -1063,7 +1065,6 @@ async function finalizeLades(marketId, winningChoice) {
         return;
     }
 
-    // ✅ BASİT ORANSAL DAĞITIM
     let totalDistributed = 0;
     const distributionResults = [];
 
@@ -1074,7 +1075,6 @@ async function finalizeLades(marketId, winningChoice) {
         const [userKey, userObj] = userEntry;
         const userShare = winner.amount / winningPool;
         let rewardAmount = Math.floor(userShare * totalPool);
-
         if (rewardAmount === 0) rewardAmount = 1;
 
         userObj.balance = (userObj.balance || 0) + rewardAmount;
@@ -1094,7 +1094,7 @@ async function finalizeLades(marketId, winningChoice) {
     market.status = "Sonuçlandı";
     await fbSet(`customMarkets/${marketId}`, market);
 
-    // ✅ SONUÇ BİLDİRİMİ - Nickname ile
+    // ✅ Sonuç bildirimi - nickname ile
     const allParticipants = Object.values(history).filter(h => h.marketId === marketId);
     
     const resultPromises = allParticipants.map(async (participant) => {
@@ -1102,7 +1102,6 @@ async function finalizeLades(marketId, winningChoice) {
         const winAmount = isWinner ? 
             distributionResults.find(r => r.email === participant.email)?.reward || 0 : 0;
         
-        // Kullanıcının nickname'ini al
         const userEntry = Object.entries(users).find(([key, u]) => u.email === participant.email);
         const displayName = userEntry ? userEntry[1].nickname || maskUserEmail(participant.email) : maskUserEmail(participant.email);
         
@@ -1316,6 +1315,7 @@ async function renderAdminPanel() {
         }
     });
 
+    // ✅ Admin panelinde hem nickname hem email göster
     fbRef("ladesUsers").on("value", (snapshot) => {
         const usersTable = document.getElementById("admin-users-list");
         if (!usersTable) return;
@@ -1348,7 +1348,7 @@ async function renderAdminPanel() {
             usersTable.innerHTML += `
                 <tr style="border-bottom:1px solid #1c2541;">
                     <td style="padding:8px 0; font-size:13px;">
-                        ${displayName} ${user.isAdmin || user.email === "tsulhan@gmail.com" ? "👑" : ""}
+                        <strong>${displayName}</strong> ${user.isAdmin || user.email === "tsulhan@gmail.com" ? "👑" : ""}
                         <span style="color:#64748b; font-size:11px; display:block;">${user.email}</span>
                     </td>
                     <td style="padding:8px 0; font-size:13px; color:#ff4aa2; font-family:monospace;">
@@ -1467,7 +1467,6 @@ async function deleteUserCompletely(email) {
     try {
         const userCleanKey = email.replace(/\./g, ',');
         await db.ref(`ladesUsers/${userCleanKey}`).remove();
-        
         alert(`"${email}" kullanıcısı başarıyla her yerden silindi!`);
     } catch (error) {
         console.error("Kullanıcı silme hatası:", error);
@@ -1513,7 +1512,6 @@ function openBetModal(marketId, marketTitle, choice) {
     const modalEl = document.getElementById("bet-modal");
 
     if (titleEl) titleEl.innerText = marketTitle;
-
     if (choiceEl) {
         if (choice === "YES") { choiceEl.innerText = "EVET"; choiceEl.style.color = "#22c55e"; }
         else if (choice === "NO") { choiceEl.innerText = "HAYIR"; choiceEl.style.color = "#ef4444"; }
@@ -1689,10 +1687,6 @@ function renderProfileBets(currentUserEmail, markets, history) {
 // BİLDİRİM SİSTEMİ - TÜM FONKSİYONLAR
 // ======================================================
 
-// ------------------------------------------------------
-// 1. BİLDİRİM OLUŞTURMA FONKSİYONLARI
-// ------------------------------------------------------
-
 async function createNotification(userEmail, notificationData) {
     if (typeof db === "undefined" || !db) return;
     
@@ -1768,9 +1762,6 @@ async function sendNotificationToAdmins(notificationData) {
     }
 }
 
-// ------------------------------------------------------
-// 2. BAHİS BİLDİRİMİ - Ladese katılan diğer kullanıcılara
-// ------------------------------------------------------
 async function sendBetNotificationToParticipants(marketId, bettorEmail, choice, amount, marketTitle, bettorNickname) {
     if (typeof db === "undefined" || !db) return;
     
@@ -1810,10 +1801,6 @@ async function sendBetNotificationToParticipants(marketId, bettorEmail, choice, 
         console.error("Bahis bildirimi gönderme hatası:", error);
     }
 }
-
-// ------------------------------------------------------
-// 3. BİLDİRİM GÖSTERME FONKSİYONLARI
-// ------------------------------------------------------
 
 async function getNotifications(userEmail) {
     if (typeof db === "undefined" || !db) return [];
