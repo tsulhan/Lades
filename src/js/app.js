@@ -802,12 +802,16 @@ async function createNewMarket() {
         createdAt: Date.now()
     });
 
+    // ✅ YENİ: Lades yaratıcısının adını göster
+    const creatorDisplay = maskUserEmail(currentUserEmail);
+
     await sendNotificationToAllUsers({
         title: "📢 Yeni Lades!",
-        message: `${title} ladesi oluşturuldu! Katılmak ister misin?`,
+        message: `${creatorDisplay}, "${title}" ladesini oluşturdu! Katılmak ister misin?`,
         type: "new_market",
         marketId: marketId,
-        link: "dashboard.html?tab=mevcut-ladesler"
+        link: "dashboard.html?tab=mevcut-ladesler",
+        data: { creator: currentUserEmail }
     });
 
     alert(`⚡ Lades Başarıyla Yaratıldı!\n\n💰 Yatırılan: ${initialBet.toLocaleString("tr-TR")} Token`);
@@ -822,7 +826,6 @@ async function createNewMarket() {
         switchTab("mevcut-ladesler");
     }
 }
-
 async function confirmBet() {
     const amount = parseInt(document.getElementById("bet-amount")?.value);
     const currentUserEmail = localStorage.getItem("currentUser");
