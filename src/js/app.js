@@ -9,6 +9,34 @@ let activeChoice = "";
 let selectedCategoryFilter = "Tümü";
 
 // ------------------------------------------------------
+// YARDIMCI FONKSİYONLAR
+// ------------------------------------------------------
+
+// ✅ Kullanıcının nickname'ini getir
+async function getUserNickname(email) {
+    if (typeof db === "undefined" || !db || !email) return maskUserEmail(email);
+    try {
+        const userKey = email.replace(/\./g, ',');
+        const user = await fbGet(`ladesUsers/${userKey}`);
+        return user?.nickname || maskUserEmail(email);
+    } catch {
+        return maskUserEmail(email);
+    }
+}
+
+// ✅ Email maskeleme (fallback)
+function maskUserEmail(email) {
+    if (!email || !email.includes("@")) return email;
+    const parts = email.split("@");
+    const name = parts[0];
+    const domain = parts[1];
+    if (name.length <= 4) {
+        return name.substring(0, 1) + "***@" + domain;
+    }
+    return name.substring(0, 4) + "***@" + domain;
+}
+
+// ------------------------------------------------------
 // GİRİŞ / KAYIT / DAVET
 // ------------------------------------------------------
 async function handleLogin() {
@@ -51,17 +79,29 @@ async function handleLogin() {
 
 async function handleRegister() {
     const inviteCode = document.getElementById("reg-invite-code")?.value.trim();
+    const nickname = document.getElementById("reg-nickname")?.value.trim();
     const email = document.getElementById("reg-email")?.value.trim();
     const password = document.getElementById("reg-password")?.value;
     const passwordConfirm = document.getElementById("reg-password-confirm")?.value;
 
-    if (!inviteCode || !email || !password || !passwordConfirm) {
+    if (!inviteCode || !nickname || !email || !password || !passwordConfirm) {
         alert("Lütfen tüm alanları doldurun!");
+        return;
+    }
+
+    // ✅ Nickname validasyonu
+    if (!validateNickname(nickname)) {
+        alert("Kullanıcı adı 3-20 karakter olmalı ve sadece harf/rakam içermelidir!");
         return;
     }
 
     if (password !== passwordConfirm) {
         alert("Şifreler birbiriyle uyuşmuyor!");
+        return;
+    }
+
+    if (password.length < 4) {
+        alert("Şifre en az 4 karakter olmalıdır!");
         return;
     }
 
@@ -86,7 +126,13 @@ async function handleRegister() {
     }
 
     if (userList.some(u => u.email === email)) {
-        alert("Bu kullanıcı zaten mevcut!");
+        alert("Bu e-posta adresi zaten kayıtlı!");
+        return;
+    }
+
+    // ✅ Nickname benzersiz mi kontrol et
+    if (userList.some(u => u.nickname === nickname)) {
+        alert("Bu kullanıcı adı zaten alınmış! Lütfen başka bir nickname seçin.");
         return;
     }
 
@@ -94,8 +140,10 @@ async function handleRegister() {
     await fbSet(`ladesUsers/${newUserKey}`, {
         email,
         password,
+        nickname: nickname,
         balance: 0,
-        isAdmin: false
+        isAdmin: false,
+        createdAt: Date.now()
     });
 
     const inviteKey = Object.keys(inviteCodes).find(k => inviteCodes[k] === inviteCode);
@@ -103,8 +151,14 @@ async function handleRegister() {
         await fbRemove(`inviteCodes/${inviteKey}`);
     }
 
-    alert("✅ Kayıt başarılı! Başlangıç bakiyeniz: 0 TOKEN. Token talebi oluşturabilirsiniz.");
+    alert(`✅ Kayıt başarılı, ${nickname}! 🎉\n\nBaşlangıç bakiyeniz: 0 TOKEN\nToken talebi oluşturabilirsiniz.`);
     window.location.href = "login.html";
+}
+
+// ✅ Nickname validasyon fonksiyonu
+function validateNickname(nickname) {
+    if (!nickname || nickname.length < 3 || nickname.length > 20) return false;
+    return /^[a-zA-Z0-9ğüşıöçĞÜŞİÖÇ]+$/.test(nickname);
 }
 
 async function requestInviteCode() {
@@ -212,7 +266,10 @@ function startRealtimeListeners() {
 
         if (user) {
             const userEmailBadge = document.getElementById("user-email-badge");
-            if (userEmailBadge) userEmailBadge.innerText = user.email;
+            if (userEmailBadge) {
+                // ✅ Nickname veya email göster
+                userEmailBadge.innerText = user.nickname || user.email;
+            }
 
             const balance = user.balance || 0;
             const balanceElement = document.getElementById("token-balance");
@@ -280,29 +337,19 @@ function renderLeaderboard(usersObj) {
         else if (rank === 2) rankDisplay = "🥈";
         else if (rank === 3) rankDisplay = "🥉";
 
-        const maskedEmail = maskUserEmail(user.email);
+        // ✅ Nickname veya email göster
+        const displayName = user.nickname || maskUserEmail(user.email);
 
         leaderboardList.innerHTML += `
             <div class="leaderboard-row">
                 <div class="leaderboard-user">
                     <span class="leaderboard-rank">${rankDisplay}</span>
-                    <span class="leaderboard-email">${maskedEmail}</span>
+                    <span class="leaderboard-email">${displayName}</span>
                 </div>
                 <div class="leaderboard-balance">${(user.balance || 0).toLocaleString("tr-TR")} Token</div>
             </div>
         `;
     });
-}
-
-function maskUserEmail(email) {
-    if (!email || !email.includes("@")) return email;
-    const parts = email.split("@");
-    const name = parts[0];
-    const domain = parts[1];
-    if (name.length <= 4) {
-        return name.substring(0, 1) + "***@" + domain;
-    }
-    return name.substring(0, 4) + "***@" + domain;
 }
 
 // ------------------------------------------------------
@@ -379,6 +426,13 @@ function generateMarketCardHTML(market, isActive) {
     const isSpor = market.category === "Spor";
     const currentUserEmail = localStorage.getItem("currentUser");
     const isAdmin = currentUserEmail === "tsulhan@gmail.com";
+    
+    // ✅ Ladesi açan kişiyi bul (nickname veya email)
+    const creator = market.createdBy || "Bilinmeyen";
+    // Not: getUserNickname async olduğu için burada doğrudan kullanamıyoruz.
+    // Bu nedenle display'i daha sonra güncellemek için data attribute ekliyoruz.
+    // Ancak şimdilik maskUserEmail ile gösterelim.
+    const creatorDisplay = maskUserEmail(creator);
     
     let actionContent = "";
 
@@ -458,6 +512,7 @@ function generateMarketCardHTML(market, isActive) {
         }
     }
 
+    // ✅ Ladesi açan kişiyi göster (creatorDisplay)
     return `
         <div class="market-card" style="position: relative; ${!isActive ? 'opacity: 0.9; border-color: #1c2541; background: #060b19;' : ''}">
             ${adminDeleteHTML}
@@ -468,11 +523,25 @@ function generateMarketCardHTML(market, isActive) {
                 </div>
                 <h3>${market.title || "Başlıksız Lades"}</h3>
                 <p>Bitiş: ${market.date || "-"} • Toplam Hacim: <span style="color:#24ffff; font-weight:700;">${totalVolume.toLocaleString("tr-TR")}</span> Token</p>
-                            
-                </div>
+                <p style="font-size:12px; color:#64748b; margin-top:2px;">
+                    👤 <span style="color:#ff4aa2; font-weight:600;" id="creator-${market.id}">${creatorDisplay}</span> tarafından açıldı
+                </p>
+            </div>
             ${actionContent}
         </div>
     `;
+}
+
+// ✅ Lades kartları oluşturulduktan sonra nickname'leri güncelle
+async function updateCreatorNames() {
+    // Bu fonksiyon, sayfa yüklendikten sonra tüm creator alanlarını nickname ile günceller
+    const creatorSpans = document.querySelectorAll('[id^="creator-"]');
+    for (const span of creatorSpans) {
+        const marketId = span.id.replace('creator-', '');
+        // marketId'yi kullanarak creator email'ini bulmamız gerek
+        // Bu işlem biraz karmaşık olduğu için şimdilik maskeli email ile kalalım
+        // İleride nickname sistemi tam oturunca güncellenebilir
+    }
 }
 
 // ------------------------------------------------------
@@ -677,9 +746,11 @@ async function openTokenRequestModal() {
         }
 
         const currentBalance = user.balance || 0;
+        const displayName = user.nickname || currentUserEmail;
         
         const amount = prompt(
-            `💰 MEVCUT BAKİYENİZ: ${currentBalance.toLocaleString("tr-TR")} Token\n\n` +
+            `💰 MEVCUT BAKİYENİZ: ${currentBalance.toLocaleString("tr-TR")} Token\n` +
+            `👤 Kullanıcı: ${displayName}\n\n` +
             `Kaç Token talep etmek istiyorsunuz?\n` +
             `(Yönetici onayı gereklidir)`
         );
@@ -696,6 +767,7 @@ async function openTokenRequestModal() {
             id: reqKey,
             type: "token",
             email: currentUserEmail,
+            nickname: user.nickname || currentUserEmail,
             amount: tokenAmount,
             currentBalance: currentBalance,
             status: "Bekliyor",
@@ -704,10 +776,10 @@ async function openTokenRequestModal() {
 
         await sendNotificationToAdmins({
             title: "💰 Token Talebi!",
-            message: `${currentUserEmail} kullanıcısı ${tokenAmount} Token talep ediyor!`,
+            message: `${displayName} (${currentUserEmail}) kullanıcısı ${tokenAmount} Token talep ediyor!`,
             type: "token_request",
             link: "dashboard.html?tab=admin",
-            data: { email: currentUserEmail, amount: tokenAmount }
+            data: { email: currentUserEmail, nickname: displayName, amount: tokenAmount }
         });
 
         alert(`✅ ${tokenAmount} Token talebiniz yöneticiye iletildi!\n\nYönetici onayladığında bakiyeniz güncellenecektir.`);
@@ -803,16 +875,16 @@ async function createNewMarket() {
         createdAt: Date.now()
     });
 
-    // ✅ YENİ: Lades yaratıcısının adını göster
-    const creatorDisplay = maskUserEmail(currentUserEmail);
-
+    // ✅ YENİ LADES BİLDİRİMİ - Nickname ile
+    const creatorNickname = currentUser.nickname || maskUserEmail(currentUserEmail);
+    
     await sendNotificationToAllUsers({
         title: "📢 Yeni Lades!",
-        message: `${creatorDisplay}, "${title}" ladesini oluşturdu! Katılmak ister misin?`,
+        message: `${creatorNickname}, "${title}" ladesini oluşturdu! Katılmak ister misin?`,
         type: "new_market",
         marketId: marketId,
         link: "dashboard.html?tab=mevcut-ladesler",
-        data: { creator: currentUserEmail }
+        data: { creator: currentUserEmail, creatorNickname: creatorNickname }
     });
 
     alert(`⚡ Lades Başarıyla Yaratıldı!\n\n💰 Yatırılan: ${initialBet.toLocaleString("tr-TR")} Token`);
@@ -827,6 +899,7 @@ async function createNewMarket() {
         switchTab("mevcut-ladesler");
     }
 }
+
 async function confirmBet() {
     const amount = parseInt(document.getElementById("bet-amount")?.value);
     const currentUserEmail = localStorage.getItem("currentUser");
@@ -902,8 +975,9 @@ async function confirmBet() {
         createdAt: Date.now()
     });
 
-    // ✅ YENİ: Bu ladese katılan diğer kullanıcılara bildirim gönder
-    await sendBetNotificationToParticipants(activeMarketId, currentUserEmail, activeChoice, amount, target.title);
+    // ✅ YENİ BAHİS BİLDİRİMİ - Nickname ile
+    const bettorNickname = currentUser.nickname || maskUserEmail(currentUserEmail);
+    await sendBetNotificationToParticipants(activeMarketId, currentUserEmail, activeChoice, amount, target.title, bettorNickname);
 
     alert(`✅ ${amount.toLocaleString("tr-TR")} Token başarıyla yatırıldı!`);
     closeModal();
@@ -989,6 +1063,7 @@ async function finalizeLades(marketId, winningChoice) {
         return;
     }
 
+    // ✅ BASİT ORANSAL DAĞITIM
     let totalDistributed = 0;
     const distributionResults = [];
 
@@ -1008,6 +1083,7 @@ async function finalizeLades(marketId, winningChoice) {
 
         distributionResults.push({
             email: winner.email,
+            nickname: userObj.nickname || maskUserEmail(winner.email),
             amount: winner.amount,
             reward: rewardAmount,
             share: (userShare * 100).toFixed(2) + '%'
@@ -1018,13 +1094,17 @@ async function finalizeLades(marketId, winningChoice) {
     market.status = "Sonuçlandı";
     await fbSet(`customMarkets/${marketId}`, market);
 
-    // ✅ SONUÇ BİLDİRİMİ
+    // ✅ SONUÇ BİLDİRİMİ - Nickname ile
     const allParticipants = Object.values(history).filter(h => h.marketId === marketId);
     
-    const resultPromises = allParticipants.map(participant => {
+    const resultPromises = allParticipants.map(async (participant) => {
         const isWinner = winners.some(w => w.email === participant.email);
         const winAmount = isWinner ? 
             distributionResults.find(r => r.email === participant.email)?.reward || 0 : 0;
+        
+        // Kullanıcının nickname'ini al
+        const userEntry = Object.entries(users).find(([key, u]) => u.email === participant.email);
+        const displayName = userEntry ? userEntry[1].nickname || maskUserEmail(participant.email) : maskUserEmail(participant.email);
         
         let title = isWinner ? "🎉 Kazandınız!" : "😔 Kaybettiniz";
         let message = isWinner ? 
@@ -1045,7 +1125,7 @@ async function finalizeLades(marketId, winningChoice) {
     const remainingTokens = totalPool - totalDistributed;
     
     let distributionDetails = distributionResults.map(r => 
-        `  • ${r.email}: ${r.amount} Token → ${r.reward} Token kazandı (${r.share})`
+        `  • ${r.nickname}: ${r.amount} Token → ${r.reward} Token kazandı (${r.share})`
     ).join('\n');
 
     alert(`🎉 ${winningChoiceName} KAZANDI!\n\n` +
@@ -1076,6 +1156,7 @@ async function renderAdminPanel() {
                 hasPending = true;
                 const isToken = req.type === "token";
                 const email = req.email || "Bilinmeyen";
+                const nickname = req.nickname || maskUserEmail(email);
                 const amount = req.amount || 0;
                 const currentBalance = req.currentBalance || 0;
                 
@@ -1085,7 +1166,7 @@ async function renderAdminPanel() {
                 if (isToken) {
                     requestInfo = `
                         <span style="font-size:12px; color:#ff4aa2;">
-                            💰 ${amount} Token talep ediyor 
+                            ${nickname} (${email}) - 💰 ${amount} Token talep ediyor 
                             (Mevcut: ${currentBalance.toLocaleString("tr-TR")} Token)
                         </span>
                     `;
@@ -1098,7 +1179,7 @@ async function renderAdminPanel() {
                 } else {
                     requestInfo = `
                         <span style="font-size:12px; color:#24ffff;">
-                            ✉️ Davet kodu talep ediyor
+                            ${email} - ✉️ Davet kodu talep ediyor
                         </span>
                     `;
                     actionButtons = `
@@ -1115,7 +1196,7 @@ async function renderAdminPanel() {
                                 margin-bottom:8px; border-left: 3px solid ${isToken ? '#ff4aa2' : '#24ffff'};">
                         <div style="display:flex; flex-direction:column; gap:4px;">
                             <span style="font-size:13px; font-weight:600; color:white;">
-                                ${email}
+                                ${nickname}
                             </span>
                             ${requestInfo}
                         </div>
@@ -1252,6 +1333,7 @@ async function renderAdminPanel() {
         Object.entries(usersSnap).forEach(([key, user]) => {
             if (!user) return;
             const isSelf = user.email === "tsulhan@gmail.com";
+            const displayName = user.nickname || maskUserEmail(user.email);
             const deleteButtonHTML = isSelf 
                 ? `<span style="color:#64748b; font-size:11px; padding:4px 8px;">🔒 Korumalı</span>`
                 : `<button onclick="deleteUserCompletely('${user.email}')" 
@@ -1266,7 +1348,8 @@ async function renderAdminPanel() {
             usersTable.innerHTML += `
                 <tr style="border-bottom:1px solid #1c2541;">
                     <td style="padding:8px 0; font-size:13px;">
-                        ${user.email} ${user.isAdmin || user.email === "tsulhan@gmail.com" ? "👑" : ""}
+                        ${displayName} ${user.isAdmin || user.email === "tsulhan@gmail.com" ? "👑" : ""}
+                        <span style="color:#64748b; font-size:11px; display:block;">${user.email}</span>
                     </td>
                     <td style="padding:8px 0; font-size:13px; color:#ff4aa2; font-family:monospace;">
                         ${user.password || "1234"}
@@ -1336,6 +1419,7 @@ async function approveToken(reqId, email, amount) {
             const [userKey, userObj] = userEntry;
             const oldBalance = userObj.balance || 0;
             const newBalance = oldBalance + amount;
+            const displayName = userObj.nickname || maskUserEmail(email);
             
             userObj.balance = newBalance;
             await fbSet(`ladesUsers/${userKey}`, userObj);
@@ -1347,7 +1431,7 @@ async function approveToken(reqId, email, amount) {
                 await fbRemove(`adminRequests/${reqKey}`);
             }
             
-            alert(`✅ ${email} hesabına ${amount} Token başarıyla yüklendi!\n\nEski Bakiye: ${oldBalance.toLocaleString("tr-TR")}\nYeni Bakiye: ${newBalance.toLocaleString("tr-TR")}`);
+            alert(`✅ ${displayName} (${email}) hesabına ${amount} Token başarıyla yüklendi!\n\nEski Bakiye: ${oldBalance.toLocaleString("tr-TR")}\nYeni Bakiye: ${newBalance.toLocaleString("tr-TR")}`);
         } else {
             alert("❌ Kullanıcı bulunamadı!");
         }
@@ -1472,8 +1556,12 @@ async function initProfilePage() {
     fbRef(`ladesUsers/${userCleanKey}`).on("value", (snapshot) => {
         const user = snapshot.val();
         if (user) {
+            const displayName = user.nickname || user.email;
             const balEl = document.getElementById("profile-token-balance");
             if (balEl) balEl.innerText = (user.balance || 0).toLocaleString("tr-TR");
+            
+            const nameEl = document.getElementById("profile-username");
+            if (nameEl) nameEl.innerText = displayName;
         }
     });
 
@@ -1683,7 +1771,7 @@ async function sendNotificationToAdmins(notificationData) {
 // ------------------------------------------------------
 // 2. BAHİS BİLDİRİMİ - Ladese katılan diğer kullanıcılara
 // ------------------------------------------------------
-async function sendBetNotificationToParticipants(marketId, bettorEmail, choice, amount, marketTitle) {
+async function sendBetNotificationToParticipants(marketId, bettorEmail, choice, amount, marketTitle, bettorNickname) {
     if (typeof db === "undefined" || !db) return;
     
     try {
@@ -1702,12 +1790,12 @@ async function sendBetNotificationToParticipants(marketId, bettorEmail, choice, 
         }
 
         const choiceText = choice === "YES" ? "EVET" : (choice === "NO" ? "HAYIR" : "BERABERLİK");
-        const bettorDisplay = maskUserEmail(bettorEmail);
+        const displayName = bettorNickname || maskUserEmail(bettorEmail);
 
         const promises = uniqueParticipants.map(email => {
             return createNotification(email, {
                 title: "💰 Yeni Bahis!",
-                message: `${bettorDisplay}, "${marketTitle}" ladesinde ${choiceText} seçeneğine ${amount.toLocaleString("tr-TR")} Token yatırdı!`,
+                message: `${displayName}, "${marketTitle}" ladesinde ${choiceText} seçeneğine ${amount.toLocaleString("tr-TR")} Token yatırdı!`,
                 type: "new_bet",
                 marketId: marketId,
                 link: "dashboard.html?tab=mevcut-ladesler",

@@ -789,6 +789,31 @@
             color: #94a3b8;
         }
 
+        /* Profil Sayfası Stilleri */
+        #profile-username {
+            font-weight: 700;
+            font-size: 18px;
+            color: #fff;
+        }
+
+        .badge-choice {
+            display: inline-block;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 6px;
+            text-transform: uppercase;
+            margin-top: 8px;
+            letter-spacing: 0.5px;
+        }
+
+        .badge-yes { background: rgba(34, 197, 94, 0.1); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.2); }
+        .badge-no { background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); }
+        .badge-draw { background: rgba(245, 158, 11, 0.1); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.2); }
+
+        .result-win { color: #4ade80; font-weight: 700; }
+        .result-lose { color: #f87171; font-weight: 700; }
+
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(8px); }
             to { opacity: 1; transform: translateY(0); }
@@ -875,6 +900,7 @@
     <header>
         <a href="dashboard.html" class="logo">⚡ LADES</a>
         <div class="header-center">
+            <!-- ✅ Kullanıcı bilgisi - Nickname veya Email gösterilecek -->
             <div id="user-email-badge" class="user-email-badge">yükleniyor...</div>
             
             <div class="token-bag" id="token-bag-container" onclick="openTokenRequestModal()">
@@ -884,14 +910,13 @@
                 </span>
             </div>
 
-            <!-- ✅ BİLDİRİM ZİLİ -->
+            <!-- BİLDİRİM ZİLİ -->
             <div class="notification-wrapper">
                 <button class="icon-btn" onclick="toggleNotificationDropdown()" title="Bildirimler" style="color: #ff4aa2;">
                     <i class="fa-solid fa-bell" style="font-size: 20px;"></i>
                     <span id="notification-badge" class="notification-badge">0</span>
                 </button>
                 
-                <!-- Bildirim Dropdown -->
                 <div id="notification-dropdown">
                     <div class="notification-header">
                         <span>📬 Bildirimler</span>
@@ -986,7 +1011,6 @@
                 <h2>Yeni Bir Tahmin Pazarı Oluştur</h2>
                 <p class="subtitle">Bahsinizi ve yönünüzü belirleyerek canlıya yeni bir iddia pazarı sürün.</p>
 
-                <!-- ✅ UYARI: Minimum ve Maksimum Bahis -->
                 <div style="background: rgba(255, 74, 162, 0.08); border: 1px solid rgba(255, 74, 162, 0.2); border-radius: 12px; padding: 12px 16px; margin-bottom: 20px; font-size: 13px; color: #94a3b8;">
                     ⚠️ <b style="color: #ff4aa2;">Lades Oluşturma Kuralları</b><br>
                     🟢 Minimum Bahis: <b style="color: #24ffff;">250 Token</b><br>
@@ -1087,7 +1111,7 @@
                     <table style="width:100%; border-collapse:collapse; text-align:left;">
                         <thead>
                             <tr style="border-bottom:2px solid #1c2541; color:#64748b; font-size:12px;">
-                                <th style="padding-bottom:8px;">Kullanıcı E-posta</th>
+                                <th style="padding-bottom:8px;">Kullanıcı</th>
                                 <th style="padding-bottom:8px;">Şifre</th>
                                 <th style="padding-bottom:8px;">Bakiye</th>
                                 <th style="padding-bottom:8px; text-align:right;">İşlemler</th>
@@ -1105,7 +1129,6 @@
             <h3 id="modal-market-title">Pazar Adı</h3>
             <p>Seçiminiz: <span id="modal-bet-choice" style="font-weight:800;"></span></p>
             
-            <!-- ✅ BAHİS KURALLARI BİLGİSİ -->
             <div style="background:rgba(36,255,255,0.05); border:1px solid rgba(36,255,255,0.2); border-radius:8px; padding:10px; margin-bottom:15px; font-size:12px; color:#94a3b8;">
                 ⚠️ Minimum Bahis: <b style="color:#24ffff;">250 Token</b><br>
                 ⚠️ Maksimum Bahis: <b style="color:#ff4aa2;">1.000 Token</b>
