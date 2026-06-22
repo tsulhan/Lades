@@ -73,7 +73,6 @@
             white-space: nowrap;
         }
 
-        /* Token İste butonu animasyonu */
         #token-request-btn {
             animation: pulse-request 2s infinite;
         }
@@ -84,7 +83,6 @@
             100% { transform: scale(1); opacity: 1; }
         }
 
-        /* Token bag hover efekti */
         #token-bag-container:hover {
             background: rgba(36, 255, 255, 0.2) !important;
             border-color: #ff4aa2 !important;
@@ -814,6 +812,243 @@
         .result-win { color: #4ade80; font-weight: 700; }
         .result-lose { color: #f87171; font-weight: 700; }
 
+        /* ============================================
+           CHAT PANELİ STİLLERİ
+           ============================================ */
+
+        .chat-panel {
+            position: fixed;
+            right: -420px;
+            top: 0;
+            width: 400px;
+            height: 100vh;
+            background: #0b132b;
+            border-left: 1px solid #1c2541;
+            z-index: 9998;
+            transition: right 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            box-shadow: -10px 0 30px rgba(0,0,0,0.5);
+        }
+
+        .chat-panel.open {
+            right: 0;
+        }
+
+        .chat-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid #1c2541;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #0b132b;
+            flex-shrink: 0;
+        }
+
+        .chat-header span {
+            font-weight: 700;
+            font-size: 16px;
+            color: #fff;
+        }
+
+        .chat-tabs {
+            display: flex;
+            border-bottom: 1px solid #1c2541;
+            flex-shrink: 0;
+            background: #060b19;
+        }
+
+        .chat-tab {
+            flex: 1;
+            padding: 10px 16px;
+            background: transparent;
+            border: none;
+            color: #64748b;
+            font-weight: 600;
+            font-size: 12px;
+            cursor: pointer;
+            transition: 0.2s;
+            text-align: center;
+        }
+
+        .chat-tab:hover {
+            color: white;
+        }
+
+        .chat-tab.active {
+            color: #24ffff;
+            border-bottom: 2px solid #24ffff;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            background: #030814;
+        }
+
+        .chat-message {
+            max-width: 85%;
+            padding: 10px 14px;
+            border-radius: 12px;
+            font-size: 13px;
+            line-height: 1.4;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .chat-message.sent {
+            align-self: flex-end;
+            background: rgba(36, 255, 255, 0.1);
+            border: 1px solid rgba(36, 255, 255, 0.2);
+            color: #fff;
+        }
+
+        .chat-message.received {
+            align-self: flex-start;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid #1c2541;
+            color: #94a3b8;
+        }
+
+        .chat-message .sender {
+            font-weight: 600;
+            font-size: 11px;
+            color: #ff4aa2;
+            margin-bottom: 2px;
+        }
+
+        .chat-message .time {
+            font-size: 9px;
+            color: #64748b;
+            margin-top: 4px;
+            text-align: right;
+        }
+
+        .chat-message .message-text {
+            word-wrap: break-word;
+        }
+
+        .chat-input-area {
+            padding: 12px 16px;
+            border-top: 1px solid #1c2541;
+            display: flex;
+            gap: 10px;
+            background: #0b132b;
+            flex-shrink: 0;
+        }
+
+        .chat-input-area input {
+            flex: 1;
+            padding: 10px 14px;
+            border-radius: 20px;
+            border: 1px solid #1c2541;
+            background: #030814;
+            color: white;
+            font-size: 14px;
+            outline: none;
+        }
+
+        .chat-input-area input:focus {
+            border-color: #24ffff;
+        }
+
+        .chat-input-area input:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .chat-input-area button {
+            background: #24ffff;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            color: #030814;
+            cursor: pointer;
+            transition: 0.2s;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+
+        .chat-input-area button:hover {
+            background: #1de6e6;
+            transform: scale(1.05);
+        }
+
+        .chat-input-area button:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .chat-toggle-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: #ff4aa2;
+            border: none;
+            color: white;
+            font-size: 28px;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(255, 74, 162, 0.4);
+            z-index: 9997;
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .chat-toggle-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 30px rgba(255, 74, 162, 0.6);
+        }
+
+        .chat-toggle-btn.hidden {
+            display: none;
+        }
+
+        .chat-messages::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .chat-messages::-webkit-scrollbar-track {
+            background: #030814;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: #1c2541;
+            border-radius: 4px;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb:hover {
+            background: #334155;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .chat-panel {
+                width: 100%;
+                right: -100%;
+            }
+            
+            .chat-panel.open {
+                right: 0;
+            }
+            
+            .chat-toggle-btn {
+                width: 50px;
+                height: 50px;
+                font-size: 22px;
+                bottom: 20px;
+                right: 20px;
+            }
+        }
+
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(8px); }
             to { opacity: 1; transform: translateY(0); }
@@ -900,7 +1135,6 @@
     <header>
         <a href="dashboard.html" class="logo">⚡ LADES</a>
         <div class="header-center">
-            <!-- ✅ Kullanıcı bilgisi - Nickname veya Email gösterilecek -->
             <div id="user-email-badge" class="user-email-badge">yükleniyor...</div>
             
             <div class="token-bag" id="token-bag-container" onclick="openTokenRequestModal()">
@@ -910,7 +1144,6 @@
                 </span>
             </div>
 
-            <!-- BİLDİRİM ZİLİ -->
             <div class="notification-wrapper">
                 <button class="icon-btn" onclick="toggleNotificationDropdown()" title="Bildirimler" style="color: #ff4aa2;">
                     <i class="fa-solid fa-bell" style="font-size: 20px;"></i>
@@ -1075,6 +1308,40 @@
             </div>
         </div>
     </main>
+
+    <!-- ============================================
+         CHAT PANELİ
+         ============================================ -->
+    <!-- Chat Toggle Butonu (Sağ Alt Köşe) -->
+    <button class="chat-toggle-btn" onclick="toggleChatPanel()" id="chat-toggle-btn">
+        <i class="fa-solid fa-comment-dots"></i>
+        <span id="chat-unread-badge" style="display:none; position:absolute; top:-5px; right:-5px; background:#ef4444; color:white; border-radius:50%; padding:2px 6px; font-size:10px;">0</span>
+    </button>
+
+    <!-- Chat Paneli -->
+    <div class="chat-panel" id="chat-panel">
+        <div class="chat-header">
+            <span>💬 Sohbet</span>
+            <button onclick="toggleChatPanel()" style="background:transparent; border:none; color:#888; font-size:20px; cursor:pointer;">
+                <i class="fa-solid fa-times"></i>
+            </button>
+        </div>
+        <div class="chat-tabs">
+            <button class="chat-tab active" data-chat="global" onclick="switchChatTab('global')">🌍 Genel</button>
+            <button class="chat-tab" data-chat="market" onclick="switchChatTab('market')" id="market-chat-tab" style="display:none;">📊 Lades</button>
+        </div>
+        <div class="chat-messages" id="chat-messages">
+            <div style="text-align:center; color:#64748b; padding:30px; font-size:13px;">
+                💬 Yükleniyor...
+            </div>
+        </div>
+        <div class="chat-input-area">
+            <input type="text" id="chat-input" placeholder="Mesajını yaz..." maxlength="200">
+            <button onclick="sendChatMessage()" id="chat-send-btn">
+                <i class="fa-solid fa-paper-plane"></i>
+            </button>
+        </div>
+    </div>
 
     <div id="admin-modal" class="admin-modal-overlay">
         <div class="admin-box">
