@@ -91,13 +91,19 @@ function renderLeaderboard(usersObj) {
 // ------------------------------------------------------
 function startRealtimeListeners() {
     const currentUserEmail = localStorage.getItem("currentUser");
-    if (!currentUserEmail) return;
+    if (!currentUserEmail) {
+        console.warn("⚠️ Kullanıcı giriş yapmamış, dinleyiciler başlatılamadı.");
+        return;
+    }
 
     const userCleanKey = currentUserEmail.replace(/\./g, ',');
+    console.log("✅ Dinleyici başlatılıyor:", currentUserEmail);
     
     // Kullanıcı bilgilerini dinle
     fbRef(`ladesUsers/${userCleanKey}`).on("value", (snapshot) => {
         let user = snapshot.val();
+        console.log("📊 Kullanıcı verisi geldi:", user);
+        
         if (user) {
             // Kullanıcı badge'ini güncelle
             const userEmailBadge = document.getElementById("user-email-badge");
@@ -108,7 +114,9 @@ function startRealtimeListeners() {
             // Token bakiyesini güncelle
             const balance = user.balance || 0;
             const balanceElement = document.getElementById("token-balance");
-            if (balanceElement) balanceElement.innerText = balance.toLocaleString("tr-TR");
+            if (balanceElement) {
+                balanceElement.innerText = balance.toLocaleString("tr-TR");
+            }
             
             // Token iste butonunu göster/gizle
             const tokenRequestBtn = document.getElementById("token-request-btn");
@@ -125,13 +133,23 @@ function startRealtimeListeners() {
                     adminBtn.style.display = "none";
                 }
             }
+            
+            // Token request banner'ı göster/gizle
+            const tokenRequestArea = document.getElementById("token-request-area");
+            if (tokenRequestArea) {
+                tokenRequestArea.style.display = balance === 0 ? "block" : "none";
+            }
+        } else {
+            console.warn("⚠️ Kullanıcı verisi bulunamadı! Kullanıcı oluşturulması gerekebilir.");
         }
     });
     
     // Ladesleri dinle
     fbRef("customMarkets").on("value", (snapshot) => {
         const marketsObj = snapshot.val() || {};
-        renderMarketGrid(marketsObj);
+        if (typeof renderMarketGrid === "function") {
+            renderMarketGrid(marketsObj);
+        }
     });
     
     // Kullanıcıları dinle (Liderlik tablosu için)
@@ -141,32 +159,49 @@ function startRealtimeListeners() {
     });
     
     // Bildirimleri dinle
-    startNotificationListener();
+    if (typeof startNotificationListener === "function") {
+        startNotificationListener();
+    }
 }
 
 // ------------------------------------------------------
 // SAYFA YÜKLENİNCE BAŞLAT
 // ------------------------------------------------------
 document.addEventListener("DOMContentLoaded", async () => {
+    console.log("🚀 LADES uygulaması başlatılıyor...");
+    
+    // Firebase'i başlat
     if (typeof bootstrapFirebase === "function") {
         await bootstrapFirebase();
+        console.log("✅ Firebase başlatıldı");
     }
     
     // Kategori seçeneğini güncelle
-    updateChoiceOptions();
-    const categorySelect = document.getElementById("market-category");
-    if (categorySelect) {
-        categorySelect.addEventListener("change", updateChoiceOptions);
+    if (typeof updateChoiceOptions === "function") {
+        updateChoiceOptions();
     }
     
-    // Gerçek zamanlı dinleyicileri başlat
+    const categorySelect = document.getElementById("market-category");
+    if (categorySelect) {
+        categorySelect.addEventListener("change", function() {
+            if (typeof updateChoiceOptions === "function") {
+                updateChoiceOptions();
+            }
+        });
+    }
+    
+    // ✅ GERÇEK ZAMANLI DİNLEYİCİLERİ BAŞLAT
     startRealtimeListeners();
     
     // Chat sistemini başlat
-    startChatSystem();
+    if (typeof startChatSystem === "function") {
+        startChatSystem();
+    }
     
     // Bildirim sistemini başlat
-    startNotificationSystem();
+    if (typeof startNotificationSystem === "function") {
+        startNotificationSystem();
+    }
     
     // Tab geçişleri için switchTab fonksiyonunu global yap
     window.switchTab = function(tabId) {
@@ -178,6 +213,8 @@ document.addEventListener("DOMContentLoaded", async () => {
             window.event.currentTarget.classList.add("active");
         }
     };
+    
+    console.log("✅ LADES uygulaması başarıyla başlatıldı!");
 });
 
 // ------------------------------------------------------
@@ -228,4 +265,4 @@ window.closeMarketChat = closeMarketChat;
 // Profile
 window.initProfilePage = initProfilePage;
 
-console.log("✅ LADES uygulaması başarıyla başlatıldı!");
+console.log("✅ Tüm modüller başarıyla yüklendi!");
