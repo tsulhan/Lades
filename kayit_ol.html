@@ -5,8 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LADES | Kayıt Ol</title>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Firebase ve Lades dosyalarını ekleyelim -->
+    <!-- Firebase ve Lades dosyaları -->
     <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-database-compat.js"></script>
     <script src="src/js/firebase.js"></script>
@@ -22,37 +23,199 @@
             --border: #1c2541;
             --input-bg: #060b19;
             --cyan: #24ffff;
+            --success: #22c55e;
+            --error: #ef4444;
         }
         
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
-        body { background: var(--bg); color: var(--text); display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
+        * { 
+            box-sizing: border-box; 
+            margin: 0; 
+            padding: 0; 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+        }
         
-        .card { background: var(--card); padding: 40px; border-radius: 24px; width: 100%; max-width: 440px; border: 1px solid var(--border); box-shadow: 0 20px 40px rgba(0,0,0,0.5); position: relative; overflow: hidden; }
-        .card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, var(--primary), var(--cyan)); }
+        body { 
+            background: var(--bg); 
+            color: var(--text); 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            min-height: 100vh; 
+            padding: 20px; 
+        }
         
-        .header { text-align: center; margin-bottom: 30px; }
-        .logo-icon { font-size: 40px; margin-bottom: 10px; text-shadow: 0 0 15px var(--primary); display: inline-block; animation: pulse 2s infinite; }
-        .header h2 { font-size: 28px; font-weight: 800; margin-bottom: 8px; background: linear-gradient(to right, #ffffff, #94a3b8); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
-        .header p { color: var(--subtext); font-size: 14px; }
+        .card { 
+            background: var(--card); 
+            padding: 40px; 
+            border-radius: 24px; 
+            width: 100%; 
+            max-width: 440px; 
+            border: 1px solid var(--border); 
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5); 
+            position: relative; 
+            overflow: hidden; 
+        }
+        
+        .card::before { 
+            content: ''; 
+            position: absolute; 
+            top: 0; 
+            left: 0; 
+            right: 0; 
+            height: 4px; 
+            background: linear-gradient(90deg, var(--primary), var(--cyan)); 
+        }
+        
+        .header { 
+            text-align: center; 
+            margin-bottom: 30px; 
+        }
+        
+        .logo-icon { 
+            font-size: 40px; 
+            margin-bottom: 10px; 
+            text-shadow: 0 0 15px var(--primary); 
+            display: inline-block; 
+            animation: pulse 2s infinite; 
+        }
+        
+        .header h2 { 
+            font-size: 28px; 
+            font-weight: 800; 
+            margin-bottom: 8px; 
+            background: linear-gradient(to right, #ffffff, #94a3b8); 
+            -webkit-background-clip: text; 
+            background-clip: text; 
+            -webkit-text-fill-color: transparent; 
+        }
+        
+        .header p { 
+            color: var(--subtext); 
+            font-size: 14px; 
+        }
 
-        .input-group { margin-bottom: 20px; }
-        .input-group label { display: block; color: var(--subtext); font-size: 12px; font-weight: 700; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.7px; }
+        .input-group { 
+            margin-bottom: 20px; 
+        }
         
-        .row { display: flex; gap: 10px; }
-        input { width: 100%; padding: 15px 16px; background: var(--input-bg); border: 1px solid var(--border); border-radius: 12px; color: white; font-size: 15px; transition: all 0.3s ease; }
-        input:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 4px rgba(255, 74, 162, 0.15); }
-
-        .btn { padding: 15px; border-radius: 12px; border: none; font-weight: 700; cursor: pointer; transition: all 0.2s ease; font-size: 14px; }
-        .btn-primary { width: 100%; background: var(--primary); color: white; margin-top: 10px; box-shadow: 0 4px 20px rgba(255, 74, 162, 0.3); font-size: 15px; letter-spacing: 0.5px; }
-        .btn-primary:hover { background: #e03b8d; transform: translateY(-1px); box-shadow: 0 6px 24px rgba(255, 74, 162, 0.4); }
-        .btn-primary:active { transform: translateY(0); }
+        .input-group label { 
+            display: block; 
+            color: var(--subtext); 
+            font-size: 12px; 
+            font-weight: 700; 
+            margin-bottom: 8px; 
+            text-transform: uppercase; 
+            letter-spacing: 0.7px; 
+        }
         
-        .btn-secondary { background: rgba(36, 255, 255, 0.08); color: var(--cyan); border: 1px solid var(--cyan); white-space: nowrap; padding: 0 20px; }
-        .btn-secondary:hover { background: var(--cyan); color: #030814; box-shadow: 0 0 15px rgba(36, 255, 255, 0.4); }
+        .input-group .helper-text {
+            display: block;
+            color: #64748b;
+            font-size: 11px;
+            margin-top: 4px;
+            font-weight: 400;
+            text-transform: none;
+            letter-spacing: 0;
+        }
+        
+        .input-group .helper-text .valid { color: var(--success); }
+        .input-group .helper-text .invalid { color: var(--error); }
+        
+        .row { 
+            display: flex; 
+            gap: 10px; 
+        }
+        
+        input { 
+            width: 100%; 
+            padding: 15px 16px; 
+            background: var(--input-bg); 
+            border: 1px solid var(--border); 
+            border-radius: 12px; 
+            color: white; 
+            font-size: 15px; 
+            transition: all 0.3s ease; 
+        }
+        
+        input:focus { 
+            border-color: var(--primary); 
+            outline: none; 
+            box-shadow: 0 0 0 4px rgba(255, 74, 162, 0.15); 
+        }
+        
+        input.valid { border-color: var(--success); }
+        input.invalid { border-color: var(--error); }
 
-        .footer { margin-top: 30px; text-align: center; font-size: 14px; color: var(--subtext); border-top: 1px solid rgba(28, 37, 65, 0.5); padding-top: 20px; }
-        .footer a { color: var(--cyan); text-decoration: none; font-weight: 600; transition: color 0.2s; }
-        .footer a:hover { text-decoration: underline; color: #fff; }
+        .btn { 
+            padding: 15px; 
+            border-radius: 12px; 
+            border: none; 
+            font-weight: 700; 
+            cursor: pointer; 
+            transition: all 0.2s ease; 
+            font-size: 14px; 
+        }
+        
+        .btn-primary { 
+            width: 100%; 
+            background: var(--primary); 
+            color: white; 
+            margin-top: 10px; 
+            box-shadow: 0 4px 20px rgba(255, 74, 162, 0.3); 
+            font-size: 15px; 
+            letter-spacing: 0.5px; 
+        }
+        
+        .btn-primary:hover { 
+            background: #e03b8d; 
+            transform: translateY(-1px); 
+            box-shadow: 0 6px 24px rgba(255, 74, 162, 0.4); 
+        }
+        
+        .btn-primary:active { 
+            transform: translateY(0); 
+        }
+        
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .btn-secondary { 
+            background: rgba(36, 255, 255, 0.08); 
+            color: var(--cyan); 
+            border: 1px solid var(--cyan); 
+            white-space: nowrap; 
+            padding: 0 20px; 
+        }
+        
+        .btn-secondary:hover { 
+            background: var(--cyan); 
+            color: #030814; 
+            box-shadow: 0 0 15px rgba(36, 255, 255, 0.4); 
+        }
+
+        .footer { 
+            margin-top: 30px; 
+            text-align: center; 
+            font-size: 14px; 
+            color: var(--subtext); 
+            border-top: 1px solid rgba(28, 37, 65, 0.5); 
+            padding-top: 20px; 
+        }
+        
+        .footer a { 
+            color: var(--cyan); 
+            text-decoration: none; 
+            font-weight: 600; 
+            transition: color 0.2s; 
+        }
+        
+        .footer a:hover { 
+            text-decoration: underline; 
+            color: #fff; 
+        }
 
         @keyframes pulse {
             0% { transform: scale(1); }
@@ -78,6 +241,15 @@
             </div>
         </div>
 
+        <!-- ✅ YENİ: NICKNAME ALANI -->
+        <div class="input-group">
+            <label>Kullanıcı Adı (Nickname)</label>
+            <input type="text" id="reg-nickname" placeholder="Örn: KralBeto" maxlength="20" autocomplete="off">
+            <small class="helper-text" id="nickname-helper">
+                <i class="fa-solid fa-info-circle"></i> 3-20 karakter, harf ve rakam kullanabilirsiniz
+            </small>
+        </div>
+
         <div class="input-group">
             <label>E-posta Adresi</label>
             <input type="email" id="reg-email" placeholder="ornek@domain.com">
@@ -85,7 +257,7 @@
 
         <div class="input-group">
             <label>Şifre</label>
-            <input type="password" id="reg-password" placeholder="••••••••">
+            <input type="password" id="reg-password" placeholder="••••••••" minlength="4">
         </div>
 
         <div class="input-group">
@@ -101,31 +273,90 @@
     </div>
 
     <script>
-        // Kayıt sayfasına özel JavaScript
         document.addEventListener("DOMContentLoaded", function() {
             // KOD İSTE Butonu
             document.getElementById('btnRequestCode').addEventListener('click', requestInviteCode);
             
             // KAYIT OL Butonu
             document.getElementById('btnRegister').addEventListener('click', handleRegister);
+
+            // ✅ NICKNAME CANLI KONTROL
+            const nicknameInput = document.getElementById('reg-nickname');
+            const helperText = document.getElementById('nickname-helper');
+            
+            nicknameInput.addEventListener('input', function() {
+                const value = this.value.trim();
+                const isValid = validateNickname(value);
+                
+                if (value.length === 0) {
+                    this.className = '';
+                    helperText.innerHTML = '<i class="fa-solid fa-info-circle"></i> 3-20 karakter, harf ve rakam kullanabilirsiniz';
+                    helperText.style.color = '#64748b';
+                } else if (isValid) {
+                    this.className = 'valid';
+                    helperText.innerHTML = '<i class="fa-solid fa-check-circle"></i> <span class="valid">Geçerli kullanıcı adı!</span>';
+                    helperText.style.color = '#64748b';
+                } else {
+                    this.className = 'invalid';
+                    const msg = value.length < 3 ? 'En az 3 karakter olmalı' :
+                               value.length > 20 ? 'En fazla 20 karakter olmalı' :
+                               'Sadece harf ve rakam kullanabilirsiniz';
+                    helperText.innerHTML = '<i class="fa-solid fa-exclamation-circle"></i> <span class="invalid">' + msg + '</span>';
+                    helperText.style.color = '#64748b';
+                }
+            });
+
+            // ✅ KAYIT BUTONUNUN DURUMUNU GÜNCELLE
+            function updateRegisterButton() {
+                const btn = document.getElementById('btnRegister');
+                const nickname = document.getElementById('reg-nickname').value.trim();
+                const email = document.getElementById('reg-email').value.trim();
+                const pass = document.getElementById('reg-password').value;
+                const passConfirm = document.getElementById('reg-password-confirm').value;
+                const code = document.getElementById('reg-invite-code').value.trim();
+                
+                const isNicknameValid = validateNickname(nickname);
+                const isEmailValid = email.includes('@') && email.length > 5;
+                const isPassValid = pass.length >= 4;
+                const isPassMatch = pass === passConfirm && pass.length > 0;
+                const isCodeValid = code.length > 0;
+                
+                btn.disabled = !(isNicknameValid && isEmailValid && isPassValid && isPassMatch && isCodeValid);
+                btn.style.opacity = btn.disabled ? '0.5' : '1';
+            }
+
+            // Tüm alanlara event listener ekle
+            document.querySelectorAll('#reg-nickname, #reg-email, #reg-password, #reg-password-confirm, #reg-invite-code')
+                .forEach(el => {
+                    el.addEventListener('input', updateRegisterButton);
+                    el.addEventListener('change', updateRegisterButton);
+                });
+
+            // İlk kontrol
+            updateRegisterButton();
         });
 
-        // KOD İSTE fonksiyonu - app.js'deki ile aynı olacak
+        // ✅ NICKNAME VALIDASYON FONKSİYONU
+        function validateNickname(nickname) {
+            if (!nickname || nickname.length < 3 || nickname.length > 20) return false;
+            return /^[a-zA-Z0-9ğüşıöçĞÜŞİÖÇ]+$/.test(nickname);
+        }
+
+        // ✅ KOD İSTE FONKSİYONU
         async function requestInviteCode() {
             const email = document.getElementById('reg-email').value.trim();
 
             if (!email) {
-                alert("Lütfen önce E-posta alanını doldurun!");
+                alert("❌ Lütfen önce E-posta alanını doldurun!");
                 return;
             }
 
             if (typeof db === "undefined" || !db) {
-                alert("Firebase bağlantısı yok. Lütfen sayfayı yenileyin.");
+                alert("❌ Firebase bağlantısı yok. Lütfen sayfayı yenileyin.");
                 return;
             }
 
             try {
-                // adminRequests düğümüne kaydedelim
                 const reqKey = uniqueId("req");
                 await fbSet(`adminRequests/${reqKey}`, {
                     id: reqKey,
@@ -135,6 +366,17 @@
                     createdAt: Date.now()
                 });
 
+                // ✅ Adminlere bildirim gönder
+                if (typeof sendNotificationToAdmins === 'function') {
+                    await sendNotificationToAdmins({
+                        title: "📩 Davet Kodu Talebi!",
+                        message: `${email} kullanıcısı davet kodu talep ediyor!`,
+                        type: "invite_request",
+                        link: "dashboard.html?tab=admin",
+                        data: { email: email }
+                    });
+                }
+
                 alert("✅ Davet kodu talebiniz yöneticiye iletildi! Yönetici onayladığında kodunuz hazır olacak.");
             } catch (error) {
                 console.error("Talep gönderme hatası:", error);
@@ -142,49 +384,52 @@
             }
         }
 
-        // KAYIT OL fonksiyonu
+        // ✅ KAYIT OL FONKSİYONU
         async function handleRegister() {
             const inviteCode = document.getElementById('reg-invite-code').value.trim();
+            const nickname = document.getElementById('reg-nickname').value.trim();
             const email = document.getElementById('reg-email').value.trim();
             const password = document.getElementById('reg-password').value;
             const passwordConfirm = document.getElementById('reg-password-confirm').value;
 
-            // Tüm alanların dolu olduğunu kontrol et
-            if (!inviteCode || !email || !password || !passwordConfirm) {
-                alert("Lütfen tüm alanları doldurun!");
+            // 1. Tüm alanlar dolu mu?
+            if (!inviteCode || !nickname || !email || !password || !passwordConfirm) {
+                alert("❌ Lütfen tüm alanları doldurun!");
                 return;
             }
 
-            // Şifre eşleşmesini kontrol et
+            // 2. Nickname valid mi?
+            if (!validateNickname(nickname)) {
+                alert("❌ Kullanıcı adı 3-20 karakter olmalı ve sadece harf/rakam içermelidir!");
+                return;
+            }
+
+            // 3. Şifre eşleşiyor mu?
             if (password !== passwordConfirm) {
-                alert("Şifreler birbiriyle uyuşmuyor!");
+                alert("❌ Şifreler birbiriyle uyuşmuyor!");
                 return;
             }
 
-            // Şifre uzunluğunu kontrol et
+            // 4. Şifre uzunluğu
             if (password.length < 4) {
-                alert("Şifre en az 4 karakter olmalıdır!");
+                alert("❌ Şifre en az 4 karakter olmalıdır!");
                 return;
             }
 
             if (typeof db === "undefined" || !db) {
-                alert("Firebase bağlantısı yok. Lütfen sayfayı yenileyin.");
+                alert("❌ Firebase bağlantısı yok. Lütfen sayfayı yenileyin.");
                 return;
             }
 
             try {
-                // 1. Davet kodunu kontrol et (inviteCodes düğümünde ara)
+                // 5. Davet kodunu kontrol et
                 const inviteCodesSnap = await fbGet("inviteCodes");
                 const inviteCodes = inviteCodesSnap || {};
                 
-                // Kodun geçerli olup olmadığını kontrol et
                 let foundKey = null;
-                let foundCode = null;
-                
                 Object.keys(inviteCodes).forEach(key => {
                     if (inviteCodes[key] === inviteCode) {
                         foundKey = key;
-                        foundCode = inviteCodes[key];
                     }
                 });
 
@@ -193,7 +438,7 @@
                     return;
                 }
 
-                // 2. Kullanıcının zaten kayıtlı olup olmadığını kontrol et
+                // 6. Kullanıcı zaten var mı?
                 const usersSnap = await fbGet("ladesUsers");
                 const users = usersSnap || {};
                 const userKey = email.replace(/\./g, ',');
@@ -203,25 +448,33 @@
                     return;
                 }
 
-                // 3. Yeni kullanıcıyı oluştur
+                // 7. Nickname daha önce alınmış mı?
+                const existingNickname = Object.values(users).find(u => u.nickname === nickname);
+                if (existingNickname) {
+                    alert("❌ Bu kullanıcı adı zaten alınmış! Lütfen başka bir nickname seçin.");
+                    return;
+                }
+
+                // 8. Yeni kullanıcıyı oluştur
                 await fbSet(`ladesUsers/${userKey}`, {
                     email: email,
-                    password: password, // Not: İleride hash'lenecek
+                    password: password,
+                    nickname: nickname,  // ✅ NICKNAME KAYDEDİLDİ
                     balance: 0,
                     isAdmin: false,
                     createdAt: Date.now()
                 });
 
-                // 4. Kullanılan davet kodunu sil (tek kullanımlık yap)
+                // 9. Kullanılan davet kodunu sil
                 await fbRemove(`inviteCodes/${foundKey}`);
 
-                alert("✅ Kayıt başarılı! Başlangıç bakiyeniz: 0 TOKEN. Token talebi oluşturabilirsiniz.");
+                alert(`✅ Kayıt başarılı, ${nickname}! 🎉\n\nBaşlangıç bakiyeniz: 0 TOKEN\nToken talebi oluşturabilirsiniz.`);
                 
-                // 5. Giriş sayfasına yönlendir
+                // 10. Giriş sayfasına yönlendir
                 window.location.href = "login.html";
 
             } catch (error) {
-                console.error("Kayıt hatası:", error);
+                console.error("❌ Kayıt hatası:", error);
                 alert("❌ Kayıt sırasında bir hata oluştu: " + error.message);
             }
         }

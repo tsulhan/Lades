@@ -468,7 +468,8 @@ function generateMarketCardHTML(market, isActive) {
                 </div>
                 <h3>${market.title || "Başlıksız Lades"}</h3>
                 <p>Bitiş: ${market.date || "-"} • Toplam Hacim: <span style="color:#24ffff; font-weight:700;">${totalVolume.toLocaleString("tr-TR")}</span> Token</p>
-            </div>
+                            
+                </div>
             ${actionContent}
         </div>
     `;
