@@ -2,36 +2,35 @@
 // ADMIN MODÜLÜ - Yönetici Paneli
 // ======================================================
 
-// ------------------------------------------------------
-// ADMIN PANELİNİ AÇ
-// ------------------------------------------------------
+// Admin panelini aç
 async function openAdminPanel() {
+    console.log("🔓 Admin paneli açılıyor...");
     const modal = document.getElementById("admin-modal");
-    if (modal) modal.style.display = "flex";
-    await renderAdminPanel();
+    if (modal) {
+        modal.style.display = "flex";
+        await renderAdminPanel();
+    }
 }
 
-// ------------------------------------------------------
-// ADMIN PANELİNİ KAPAT
-// ------------------------------------------------------
+// Admin panelini kapat
 function closeAdminPanel() {
     const modal = document.getElementById("admin-modal");
     if (modal) modal.style.display = "none";
 }
 
-// ------------------------------------------------------
-// ADMIN PANELİNİ RENDER ET
-// ------------------------------------------------------
+// Admin panelini render et
 async function renderAdminPanel() {
+    console.log("📋 Admin paneli render ediliyor...");
     if (typeof db === "undefined" || !db) return;
 
     // 1. BEKLEYEN İSTEKLER
-    fbRef("adminRequests").on("value", (snapshot) => {
+    try {
+        const requestsSnap = await fbGet("adminRequests");
+        const requests = requestsSnap || {};
         const requestsList = document.getElementById("admin-requests-list");
         if (!requestsList) return;
         
         requestsList.innerHTML = "";
-        const requests = snapshot.val() || {};
         let hasPending = false;
 
         Object.entries(requests).forEach(([key, req]) => {
@@ -102,46 +101,50 @@ async function renderAdminPanel() {
                 </div>
             `;
         }
-    });
+    } catch (error) {
+        console.error("İstekler yüklenirken hata:", error);
+    }
 
     // 2. DAVET KODLARI
-    fbRef("inviteCodes").on("value", (snapshot) => {
+    try {
+        const codesSnap = await fbGet("inviteCodes");
+        const codes = codesSnap || {};
         const codesList = document.getElementById("admin-codes-list");
         if (!codesList) return;
         
         codesList.innerHTML = "";
-        const codes = snapshot.val() || {};
-
         if (Object.keys(codes).length === 0) {
             codesList.innerHTML = `
                 <div style="text-align:center; color:#64748b; padding:10px; font-size:13px; width:100%;">
                     Henüz oluşturulmuş davet kodu yok.
                 </div>
             `;
-            return;
+        } else {
+            Object.entries(codes).forEach(([key, code]) => {
+                codesList.innerHTML += `
+                    <div style="background:rgba(36,255,255,0.1); border:1px solid #24ffff; 
+                                padding:8px 14px; border-radius:8px; font-size:13px; 
+                                color:#24ffff; display:inline-flex; align-items:center; gap:10px; margin:4px;">
+                        <span style="font-family:monospace; font-weight:700;">${code}</span>
+                        <i class="fa-solid fa-trash" onclick="deleteInviteCode('${key}')" 
+                           style="cursor:pointer; color:#ef4444; font-size:14px;" 
+                           title="Kodu Sil"></i>
+                    </div>
+                `;
+            });
         }
-
-        Object.entries(codes).forEach(([key, code]) => {
-            codesList.innerHTML += `
-                <div style="background:rgba(36,255,255,0.1); border:1px solid #24ffff; 
-                            padding:8px 14px; border-radius:8px; font-size:13px; 
-                            color:#24ffff; display:inline-flex; align-items:center; gap:10px; margin:4px;">
-                    <span style="font-family:monospace; font-weight:700;">${code}</span>
-                    <i class="fa-solid fa-trash" onclick="deleteInviteCode('${key}')" 
-                       style="cursor:pointer; color:#ef4444; font-size:14px;" 
-                       title="Kodu Sil"></i>
-                </div>
-            `;
-        });
-    });
+    } catch (error) {
+        console.error("Davet kodları yüklenirken hata:", error);
+    }
 
     // 3. AKTİF LADESLER
-    fbRef("customMarkets").on("value", (snapshot) => {
+    try {
+        const marketsSnap = await fbGet("customMarkets");
+        const markets = marketsSnap || {};
         const adminActiveMarkets = document.getElementById("admin-active-markets");
         if (!adminActiveMarkets) return;
-
+        
         adminActiveMarkets.innerHTML = "";
-        const markets = snapshot.val() || {};
         const activeMarkets = Object.values(markets).filter(m => m && m.status === "Aktif");
 
         if (activeMarkets.length === 0) {
@@ -199,66 +202,69 @@ async function renderAdminPanel() {
                 `;
             });
         }
-    });
+    } catch (error) {
+        console.error("Aktif ladesler yüklenirken hata:", error);
+    }
 
-    // 4. KAYITLI KULLANICILAR (HEM NICKNAME HEM EMAIL)
-    fbRef("ladesUsers").on("value", (snapshot) => {
+    // 4. KAYITLI KULLANICILAR
+    try {
+        const usersSnap = await fbGet("ladesUsers");
+        const users = usersSnap || {};
         const usersTable = document.getElementById("admin-users-list");
         if (!usersTable) return;
-
+        
         usersTable.innerHTML = "";
-        const usersSnap = snapshot.val() || {};
-
-        if (Object.keys(usersSnap).length === 0) {
+        if (Object.keys(users).length === 0) {
             usersTable.innerHTML = `
                 <tr><td colspan="4" style="text-align:center; color:#64748b; padding:15px;">Kayıtlı kullanıcı bulunmuyor.</td></tr>
             `;
-            return;
+        } else {
+            Object.entries(users).forEach(([key, user]) => {
+                if (!user) return;
+                const isSelf = user.email === "tsulhan@gmail.com";
+                const displayName = user.nickname || maskUserEmail(user.email);
+                const deleteButtonHTML = isSelf 
+                    ? `<span style="color:#64748b; font-size:11px; padding:4px 8px;">🔒 Korumalı</span>`
+                    : `<button onclick="deleteUserCompletely('${user.email}')" 
+                              style="background:rgba(239, 68, 68, 0.15); color:#ef4444; border:1px solid rgba(239, 68, 68, 0.3); 
+                                     padding:4px 10px; border-radius:4px; font-size:11px; cursor:pointer; font-weight:600; 
+                                     transition:0.2s;"
+                              onmouseover="this.style.background='#ef4444'; this.style.color='white';" 
+                              onmouseout="this.style.background='rgba(239, 68, 68, 0.15)'; this.style.color='#ef4444';">
+                        🗑️ Sil
+                    </button>`;
+
+                usersTable.innerHTML += `
+                    <tr style="border-bottom:1px solid #1c2541;">
+                        <td style="padding:8px 0; font-size:13px;">
+                            <strong>${displayName}</strong> ${user.isAdmin || user.email === "tsulhan@gmail.com" ? "👑" : ""}
+                            <span style="color:#64748b; font-size:11px; display:block;">${user.email}</span>
+                        </td>
+                        <td style="padding:8px 0; font-size:13px; color:#ff4aa2; font-family:monospace;">
+                            ${user.password || "1234"}
+                        </td>
+                        <td style="padding:8px 0; font-size:13px; color:#24ffff; font-weight:bold;">
+                            ${(user.balance || 0).toLocaleString("tr-TR")}
+                        </td>
+                        <td style="padding:8px 0; text-align:right;">
+                            <button onclick="setTokensManual('${user.email}', ${user.balance || 0})" 
+                                    style="background:#ff4aa2; color:white; border:none; padding:4px 10px; border-radius:4px; font-size:11px; cursor:pointer; font-weight:500;">
+                                ✏️ Bakiye Düzenle
+                            </button>
+                            ${deleteButtonHTML}
+                        </td>
+                    </tr>
+                `;
+            });
         }
-
-        Object.entries(usersSnap).forEach(([key, user]) => {
-            if (!user) return;
-            const isSelf = user.email === "tsulhan@gmail.com";
-            const displayName = user.nickname || maskUserEmail(user.email);
-            const deleteButtonHTML = isSelf 
-                ? `<span style="color:#64748b; font-size:11px; padding:4px 8px;">🔒 Korumalı</span>`
-                : `<button onclick="deleteUserCompletely('${user.email}')" 
-                          style="background:rgba(239, 68, 68, 0.15); color:#ef4444; border:1px solid rgba(239, 68, 68, 0.3); 
-                                 padding:4px 10px; border-radius:4px; font-size:11px; cursor:pointer; font-weight:600; 
-                                 transition:0.2s;"
-                          onmouseover="this.style.background='#ef4444'; this.style.color='white';" 
-                          onmouseout="this.style.background='rgba(239, 68, 68, 0.15)'; this.style.color='#ef4444';">
-                    🗑️ Sil
-                </button>`;
-
-            usersTable.innerHTML += `
-                <tr style="border-bottom:1px solid #1c2541;">
-                    <td style="padding:8px 0; font-size:13px;">
-                        <strong>${displayName}</strong> ${user.isAdmin || user.email === "tsulhan@gmail.com" ? "👑" : ""}
-                        <span style="color:#64748b; font-size:11px; display:block;">${user.email}</span>
-                    </td>
-                    <td style="padding:8px 0; font-size:13px; color:#ff4aa2; font-family:monospace;">
-                        ${user.password || "1234"}
-                    </td>
-                    <td style="padding:8px 0; font-size:13px; color:#24ffff; font-weight:bold;">
-                        ${(user.balance || 0).toLocaleString("tr-TR")}
-                    </td>
-                    <td style="padding:8px 0; text-align:right;">
-                        <button onclick="setTokensManual('${user.email}', ${user.balance || 0})" 
-                                style="background:#ff4aa2; color:white; border:none; padding:4px 10px; border-radius:4px; font-size:11px; cursor:pointer; font-weight:500;">
-                            ✏️ Bakiye Düzenle
-                        </button>
-                        ${deleteButtonHTML}
-                    </td>
-                </tr>
-            `;
-        });
-    });
+    } catch (error) {
+        console.error("Kullanıcılar yüklenirken hata:", error);
+    }
+    
+    console.log("✅ Admin paneli render edildi!");
 }
 
-// ------------------------------------------------------
-// DAVET KODU ÜRET
-// ------------------------------------------------------
+// DAVET KODU OLUŞTUR
 async function generateInviteCode() {
     if (typeof db === "undefined" || !db) return;
     try {
@@ -266,152 +272,116 @@ async function generateInviteCode() {
         const codeKey = uniqueId("code");
         await fbSet(`inviteCodes/${codeKey}`, newCode);
         alert(`✅ Yeni davet kodu oluşturuldu!\n\n🔑 ${newCode}`);
+        await renderAdminPanel();
     } catch (error) {
         console.error("Kod üretme hatası:", error);
         alert("❌ Kod oluşturulurken bir hata oluştu.");
     }
 }
 
-// ------------------------------------------------------
 // DAVET KODUNU ONAYLA
-// ------------------------------------------------------
 async function approveInvite(reqId, email) {
     if (typeof db === "undefined" || !db) return;
-    
     try {
         const newCode = "LADES_" + Math.random().toString(36).substring(2, 8).toUpperCase();
         const codeKey = uniqueId("code");
         await fbSet(`inviteCodes/${codeKey}`, newCode);
-        
         const requestsSnap = await fbGet("adminRequests");
         const requests = requestsSnap || {};
         const reqKey = Object.keys(requests).find(k => requests[k] && requests[k].id === reqId);
-        if (reqKey) {
-            await fbRemove(`adminRequests/${reqKey}`);
-        }
-        
-        alert(`✅ ${email} için davet kodu oluşturuldu!\n\n🔑 Kod: ${newCode}\n\nBu kodu kullanıcıya iletebilirsiniz.`);
+        if (reqKey) await fbRemove(`adminRequests/${reqKey}`);
+        alert(`✅ ${email} için davet kodu oluşturuldu!\n\n🔑 ${newCode}`);
+        await renderAdminPanel();
     } catch (error) {
         console.error("Kod oluşturma hatası:", error);
         alert("❌ Kod oluşturulurken bir hata oluştu.");
     }
 }
 
-// ------------------------------------------------------
 // TOKEN TALEBİNİ ONAYLA
-// ------------------------------------------------------
 async function approveToken(reqId, email, amount) {
     if (typeof db === "undefined" || !db) return;
-    
     try {
         const usersSnap = await fbGet("ladesUsers");
         const users = usersSnap || {};
         const userEntry = Object.entries(users).find(([key, u]) => u && u.email === email);
-        
         if (userEntry) {
             const [userKey, userObj] = userEntry;
-            const oldBalance = userObj.balance || 0;
-            const newBalance = oldBalance + amount;
-            const displayName = userObj.nickname || maskUserEmail(email);
-            
-            userObj.balance = newBalance;
+            userObj.balance = (userObj.balance || 0) + amount;
             await fbSet(`ladesUsers/${userKey}`, userObj);
-            
             const requestsSnap = await fbGet("adminRequests");
             const requests = requestsSnap || {};
             const reqKey = Object.keys(requests).find(k => requests[k] && requests[k].id === reqId);
-            if (reqKey) {
-                await fbRemove(`adminRequests/${reqKey}`);
-            }
-            
-            alert(`✅ ${displayName} (${email}) hesabına ${amount} Token başarıyla yüklendi!\n\nEski Bakiye: ${oldBalance.toLocaleString("tr-TR")}\nYeni Bakiye: ${newBalance.toLocaleString("tr-TR")}`);
-        } else {
-            alert("❌ Kullanıcı bulunamadı!");
+            if (reqKey) await fbRemove(`adminRequests/${reqKey}`);
+            alert(`✅ ${email} hesabına ${amount} Token başarıyla yüklendi!`);
+            await renderAdminPanel();
         }
     } catch (error) {
         console.error("Token onay hatası:", error);
-        alert("❌ Token onaylanırken bir hata oluştu: " + error.message);
+        alert("❌ Token onaylanırken bir hata oluştu.");
     }
 }
 
-// ------------------------------------------------------
 // İSTEK SİL
-// ------------------------------------------------------
 async function deleteRequest(reqKey) {
     if (!confirm("Bu talebi silmek istediğinize emin misiniz?")) return;
-    
     try {
         await fbRemove(`adminRequests/${reqKey}`);
         alert("✅ Talep başarıyla silindi.");
+        await renderAdminPanel();
     } catch (error) {
         console.error("Talep silme hatası:", error);
         alert("❌ Talep silinirken bir hata oluştu.");
     }
 }
 
-// ------------------------------------------------------
 // DAVET KODUNU SİL
-// ------------------------------------------------------
 async function deleteInviteCode(codeKey) {
     if (!confirm("Bu davet kodunu silmek istediğinize emin misiniz?")) return;
-    
     try {
         await fbRemove(`inviteCodes/${codeKey}`);
         alert("✅ Davet kodu başarıyla silindi.");
+        await renderAdminPanel();
     } catch (error) {
         console.error("Kod silme hatası:", error);
         alert("❌ Kod silinirken bir hata oluştu.");
     }
 }
 
-// ------------------------------------------------------
-// KULLANICIYI SİL
-// ------------------------------------------------------
-async function deleteUserCompletely(email) {
-    if (!email) return;
-
-    const confirmation = confirm(`"${email}" kullanıcısını sistemden TAMAMEN silmek istediğinize emin misiniz?\n\nBu işlem geri alınamaz ve kullanıcının hesabı kalıcı olarak kapatılır!`);
-    if (!confirmation) return;
-
-    if (typeof db === "undefined" || !db) {
-        alert("Firebase bağlantısı yok!");
-        return;
-    }
-
-    try {
-        const userCleanKey = email.replace(/\./g, ',');
-        await db.ref(`ladesUsers/${userCleanKey}`).remove();
-        alert(`"${email}" kullanıcısı başarıyla her yerden silindi!`);
-    } catch (error) {
-        console.error("Kullanıcı silme hatası:", error);
-        alert("Kullanıcı silinirken bir hata oluştu: " + error.message);
-    }
-}
-
-// ------------------------------------------------------
 // KULLANICI BAKİYESİNİ MANUEL DÜZENLE
-// ------------------------------------------------------
 async function setTokensManual(email, currentBalance) {
     const targetValueStr = prompt(`${email} kullanıcısının YENİ TOPLAM bakiyesi kaç token olsun?\n(Şu anki bakiye: ${currentBalance.toLocaleString("tr-TR")})`);
-    
-    if (targetValueStr === null) return; 
-    
+    if (targetValueStr === null) return;
     const targetBalance = parseInt(targetValueStr);
     if (isNaN(targetBalance) || targetBalance < 0) {
         alert("Lütfen geçerli bir bakiye giriniz!");
         return;
     }
-    
     if (typeof db === "undefined" || !db) return;
-
     const usersSnap = await fbGet("ladesUsers");
     const users = usersSnap || {};
     const userEntry = Object.entries(users).find(([key, u]) => u && u.email === email);
-
     if (userEntry) {
         const [userKey, userObj] = userEntry;
-        userObj.balance = targetBalance; 
+        userObj.balance = targetBalance;
         await fbSet(`ladesUsers/${userKey}`, userObj);
         alert(`Başarılı! Bakiyesi ${targetBalance.toLocaleString("tr-TR")} Token olarak güncellendi.`);
+        await renderAdminPanel();
+    }
+}
+
+// KULLANICIYI SİL
+async function deleteUserCompletely(email) {
+    if (!email) return;
+    if (!confirm(`"${email}" kullanıcısını sistemden TAMAMEN silmek istediğinize emin misiniz?`)) return;
+    if (typeof db === "undefined" || !db) return;
+    try {
+        const userCleanKey = email.replace(/\./g, ',');
+        await db.ref(`ladesUsers/${userCleanKey}`).remove();
+        alert(`"${email}" kullanıcısı başarıyla silindi!`);
+        await renderAdminPanel();
+    } catch (error) {
+        console.error("Kullanıcı silme hatası:", error);
+        alert("Kullanıcı silinirken bir hata oluştu.");
     }
 }
