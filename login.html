@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Giriş Yap - LADES</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght=300;400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <script>
@@ -44,20 +44,75 @@
             max-width: 420px;
             text-align: center;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Neon Başlık */
+        .neon-title {
+            font-size: 18px;
+            font-weight: 800;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 25px;
+            padding: 12px 0;
+            background: linear-gradient(90deg, #ff4aa2, #24ffff, #ff4aa2);
+            background-size: 300% 100%;
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: neon-shine 3s ease-in-out infinite;
+            text-shadow: 0 0 30px rgba(36, 255, 255, 0.2), 0 0 60px rgba(255, 74, 162, 0.2);
+            border-bottom: 2px solid rgba(36, 255, 255, 0.15);
+            padding-bottom: 15px;
+            line-height: 1.4;
+        }
+
+        @keyframes neon-shine {
+            0% {
+                background-position: 0% 50%;
+                text-shadow: 0 0 20px rgba(36, 255, 255, 0.15), 0 0 40px rgba(255, 74, 162, 0.1);
+            }
+            50% {
+                background-position: 100% 50%;
+                text-shadow: 0 0 40px rgba(36, 255, 255, 0.3), 0 0 80px rgba(255, 74, 162, 0.2);
+            }
+            100% {
+                background-position: 0% 50%;
+                text-shadow: 0 0 20px rgba(36, 255, 255, 0.15), 0 0 40px rgba(255, 74, 162, 0.1);
+            }
+        }
+
+        /* Neon ışık efekti için glitch çizgisi */
+        .neon-title::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: -100%;
+            width: 200%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, rgba(36, 255, 255, 0.3), rgba(255, 74, 162, 0.3), transparent);
+            animation: neon-line 4s ease-in-out infinite;
+        }
+
+        @keyframes neon-line {
+            0% { left: -100%; opacity: 0; }
+            50% { opacity: 1; }
+            100% { left: 100%; opacity: 0; }
         }
 
         .logo-icon {
             font-size: 45px;
             color: #24ffff;
             text-shadow: 0 0 15px #24ffff;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
         }
 
         h2 {
             font-size: 26px;
             font-weight: 800;
             letter-spacing: 1px;
-            margin-bottom: 12px;
+            margin-bottom: 5px;
         }
 
         .subtitle {
@@ -138,6 +193,14 @@
 <body>
 
     <div class="login-container">
+        <!-- ✅ NEON BAŞLIK -->
+        <div class="neon-title">
+            <i class="fa-solid fa-bolt" style="margin-right: 8px;"></i>
+            18 ADAM 1 BURKAN<br>
+            RESMİ LADES SİTESİNE<br>
+            HOŞGELDİN
+        </div>
+
         <div class="logo-icon">⚡</div>
         <h2>GİRİŞ YAP</h2>
         <div class="subtitle">
