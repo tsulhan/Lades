@@ -141,7 +141,6 @@ async function requestInviteCode() {
         createdAt: Date.now()
     });
 
-    // ✅ Adminlere Davet Kodu Talebi Bildirimi
     await sendNotificationToAdmins({
         title: "📩 Davet Kodu Talebi!",
         message: `${email} kullanıcısı davet kodu talep ediyor!`,
@@ -249,7 +248,6 @@ function startRealtimeListeners() {
         renderLeaderboard(usersObj);
     });
 
-    // ✅ BİLDİRİM DİNLEYİCİSİ (REALTIME)
     startNotificationListener();
 }
 
@@ -703,7 +701,6 @@ async function openTokenRequestModal() {
             createdAt: Date.now()
         });
 
-        // ✅ Adminlere Token Talebi Bildirimi
         await sendNotificationToAdmins({
             title: "💰 Token Talebi!",
             message: `${currentUserEmail} kullanıcısı ${tokenAmount} Token talep ediyor!`,
@@ -739,7 +736,6 @@ async function createNewMarket() {
         return;
     }
 
-    // ✅ Minimum ve Maksimum Bahis Kontrolü
     const MIN_BET = 250;
     const MAX_BET = 1000;
     
@@ -806,7 +802,6 @@ async function createNewMarket() {
         createdAt: Date.now()
     });
 
-    // ✅ YENİ LADES BİLDİRİMİ - Tüm kullanıcılara
     await sendNotificationToAllUsers({
         title: "📢 Yeni Lades!",
         message: `${title} ladesi oluşturuldu! Katılmak ister misin?`,
@@ -848,7 +843,6 @@ async function confirmBet() {
         return;
     }
 
-    // ✅ Minimum ve Maksimum Bahis Kontrolü
     const MIN_BET = 250;
     const MAX_BET = 1000;
     
@@ -903,6 +897,9 @@ async function confirmBet() {
         amount,
         createdAt: Date.now()
     });
+
+    // ✅ YENİ: Bu ladese katılan diğer kullanıcılara bildirim gönder
+    await sendBetNotificationToParticipants(activeMarketId, currentUserEmail, activeChoice, amount, target.title);
 
     alert(`✅ ${amount.toLocaleString("tr-TR")} Token başarıyla yatırıldı!`);
     closeModal();
@@ -988,7 +985,6 @@ async function finalizeLades(marketId, winningChoice) {
         return;
     }
 
-    // ✅ BASİT ORANSAL DAĞITIM
     let totalDistributed = 0;
     const distributionResults = [];
 
@@ -1018,7 +1014,7 @@ async function finalizeLades(marketId, winningChoice) {
     market.status = "Sonuçlandı";
     await fbSet(`customMarkets/${marketId}`, market);
 
-    // ✅ SONUÇ BİLDİRİMİ - Kazanan ve kaybedenlere
+    // ✅ SONUÇ BİLDİRİMİ
     const allParticipants = Object.values(history).filter(h => h.marketId === marketId);
     
     const resultPromises = allParticipants.map(participant => {
@@ -1681,7 +1677,50 @@ async function sendNotificationToAdmins(notificationData) {
 }
 
 // ------------------------------------------------------
-// 2. BİLDİRİM GÖSTERME FONKSİYONLARI
+// 2. BAHİS BİLDİRİMİ - Ladese katılan diğer kullanıcılara
+// ------------------------------------------------------
+async function sendBetNotificationToParticipants(marketId, bettorEmail, choice, amount, marketTitle) {
+    if (typeof db === "undefined" || !db) return;
+    
+    try {
+        const historySnap = await fbGet("betHistory");
+        const history = historySnap || {};
+        
+        const participants = Object.values(history)
+            .filter(h => h.marketId === marketId && h.email !== bettorEmail)
+            .map(h => h.email);
+        
+        const uniqueParticipants = [...new Set(participants)];
+        
+        if (uniqueParticipants.length === 0) {
+            console.log("ℹ️ Bu ladese katılan başka kullanıcı yok, bildirim gönderilmedi.");
+            return;
+        }
+
+        const choiceText = choice === "YES" ? "EVET" : (choice === "NO" ? "HAYIR" : "BERABERLİK");
+        const bettorDisplay = maskUserEmail(bettorEmail);
+
+        const promises = uniqueParticipants.map(email => {
+            return createNotification(email, {
+                title: "💰 Yeni Bahis!",
+                message: `${bettorDisplay}, "${marketTitle}" ladesinde ${choiceText} seçeneğine ${amount.toLocaleString("tr-TR")} Token yatırdı!`,
+                type: "new_bet",
+                marketId: marketId,
+                link: "dashboard.html?tab=mevcut-ladesler",
+                data: { bettor: bettorEmail, choice: choice, amount: amount }
+            });
+        });
+
+        await Promise.all(promises);
+        console.log(`✅ ${uniqueParticipants.length} kullanıcıya bahis bildirimi gönderildi`);
+        
+    } catch (error) {
+        console.error("Bahis bildirimi gönderme hatası:", error);
+    }
+}
+
+// ------------------------------------------------------
+// 3. BİLDİRİM GÖSTERME FONKSİYONLARI
 // ------------------------------------------------------
 
 async function getNotifications(userEmail) {
@@ -1755,6 +1794,7 @@ async function toggleNotificationDropdown() {
 function getNotificationTypeText(type) {
     const types = {
         'new_market': 'Yeni Lades',
+        'new_bet': 'Yeni Bahis',
         'closing': 'Kapanış Uyarısı',
         'result': 'Sonuç',
         'token_request': 'Token Talebi',
