@@ -439,6 +439,7 @@
             min-width: 0;
             flex: 1;
             overflow: hidden;
+            cursor: pointer;
         }
 
         .market-info h3 {
@@ -539,6 +540,40 @@
             background: #f59e0b;
             color: #000;
             box-shadow: 0 0 15px rgba(245, 158, 11, 0.4);
+        }
+
+        /* Lades Detay Alanı */
+        .market-detail-content {
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .market-detail-content::-webkit-scrollbar {
+            width: 3px;
+        }
+
+        .market-detail-content::-webkit-scrollbar-track {
+            background: rgba(3, 8, 20, 0.3);
+            border-radius: 4px;
+        }
+
+        .market-detail-content::-webkit-scrollbar-thumb {
+            background: #1c2541;
+            border-radius: 4px;
+        }
+
+        .market-detail-content::-webkit-scrollbar-thumb:hover {
+            background: #334155;
         }
 
         .create-container {

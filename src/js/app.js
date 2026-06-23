@@ -446,10 +446,7 @@ function generateMarketCardHTML(market, isActive) {
     const isSpor = market.category === "Spor";
     const currentUserEmail = localStorage.getItem("currentUser");
     const isAdmin = currentUserEmail === "tsulhan@gmail.com";
-    
-    // Geçici gösterim (email maskeli), sonra updateCreatorNames ile güncellenecek
-    const creator = market.createdBy || "Bilinmeyen";
-    const creatorDisplay = maskUserEmail(creator);
+    const creatorDisplay = maskUserEmail(market.createdBy || "Bilinmeyen");
     
     let actionContent = "";
 
@@ -473,17 +470,17 @@ function generateMarketCardHTML(market, isActive) {
         }
     } else {
         let winnerText = "BELİRSİZ";
-        let winnerStyle = "width: 330px; margin-left: auto; flex-shrink: 0; text-align: center; padding: 12px; border-radius: 10px; font-weight: 800; font-size: 13px; letter-spacing: 0.5px;";
+        let winnerStyle = "width: 330px; margin-left: auto; flex-shrink: 0; text-align: center; padding: 12px; border-radius: 10px; font-weight: 800; font-size: 13px;";
 
         if (yesPool > 0 && yesPool >= noPool && yesPool >= drawPool) {
             winnerText = `🏆 EVET KAZANDI (%${yesPercent})`;
-            winnerStyle += " background: rgba(34, 197, 94, 0.15); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.4); box-shadow: 0 0 10px rgba(34, 197, 94, 0.1);";
+            winnerStyle += " background: rgba(34, 197, 94, 0.15); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.4);";
         } else if (noPool > 0 && noPool >= yesPool && noPool >= drawPool) {
             winnerText = `🏆 HAYIR KAZANDI (%${noPercent})`;
-            winnerStyle += " background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.4); box-shadow: 0 0 10px rgba(239, 68, 68, 0.1);";
+            winnerStyle += " background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.4);";
         } else if (drawPool > 0 && drawPool >= yesPool && drawPool >= noPool) {
             winnerText = `🏆 BERABERLİK KAZANDI (%${drawPercent})`;
-            winnerStyle += " background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.4); box-shadow: 0 0 10px rgba(245, 158, 11, 0.1);";
+            winnerStyle += " background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.4);";
         } else {
             winnerText = "🔒 SONUÇLANDI (BERABERE DAĞITILDI)";
             winnerStyle += " background: rgba(148, 163, 184, 0.1); color: #94a3b8; border: 1px solid rgba(148, 163, 184, 0.3);";
@@ -506,8 +503,8 @@ function generateMarketCardHTML(market, isActive) {
                                border-radius: 50%; cursor: pointer; display: flex; align-items: center; 
                                justify-content: center; font-size: 14px; transition: 0.3s; z-index: 10;
                                font-weight: 700;"
-                        onmouseover="this.style.background='rgba(239, 68, 68, 0.4)'; this.style.color='white'; this.style.borderColor='#ef4444';"
-                        onmouseout="this.style.background='rgba(239, 68, 68, 0.15)'; this.style.color='#ef4444'; this.style.borderColor='rgba(239, 68, 68, 0.3)';"
+                        onmouseover="this.style.background='rgba(239, 68, 68, 0.4)'; this.style.color='white';"
+                        onmouseout="this.style.background='rgba(239, 68, 68, 0.15)'; this.style.color='#ef4444';"
                         title="Bu ladesi sil ve tokenları iade et">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
@@ -520,8 +517,8 @@ function generateMarketCardHTML(market, isActive) {
                                border-radius: 50%; cursor: pointer; display: flex; align-items: center; 
                                justify-content: center; font-size: 14px; transition: 0.3s; z-index: 10;
                                font-weight: 700;"
-                        onmouseover="this.style.background='rgba(239, 68, 68, 0.3)'; this.style.color='#ef4444'; this.style.borderColor='rgba(239, 68, 68, 0.5)';"
-                        onmouseout="this.style.background='rgba(148, 163, 184, 0.1)'; this.style.color='#94a3b8'; this.style.borderColor='rgba(148, 163, 184, 0.2)';"
+                        onmouseover="this.style.background='rgba(239, 68, 68, 0.3)'; this.style.color='#ef4444';"
+                        onmouseout="this.style.background='rgba(148, 163, 184, 0.1)'; this.style.color='#94a3b8';"
                         title="Bu ladesi geçmişten sil">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
@@ -529,19 +526,71 @@ function generateMarketCardHTML(market, isActive) {
         }
     }
 
+    // ✅ DETAY BUTONU VE DETAY ALANI
+    const detailToggleId = `detail-toggle-${market.id}`;
+    const detailContentId = `detail-content-${market.id}`;
+
     return `
         <div class="market-card" style="position: relative; ${!isActive ? 'opacity: 0.9; border-color: #1c2541; background: #060b19;' : ''}">
             ${adminDeleteHTML}
-            <div class="market-info">
+            <div class="market-info" onclick="toggleMarketDetail('${market.id}')" style="cursor: pointer;">
                 <div style="display:flex; gap:8px; align-items:center; margin-bottom:6px;">
                     <span class="category-badge">${market.category || "Genel"}</span>
-                    ${!isActive ? `<span class="category-badge" style="background:rgba(36,255,255,0.05); color:#24ffff; border-color:rgba(36,255,255,0.2); text-transform:none;"><i class="fa-solid fa-lock"></i> Arşiv</span>` : ''}
+                    ${!isActive ? `<span class="category-badge" style="background:rgba(36,255,255,0.05); color:#24ffff; border-color:rgba(36,255,255,0.2);"><i class="fa-solid fa-lock"></i> Arşiv</span>` : ''}
                 </div>
                 <h3>${market.title || "Başlıksız Lades"}</h3>
                 <p>Bitiş: ${market.date || "-"} • Toplam Hacim: <span style="color:#24ffff; font-weight:700;">${totalVolume.toLocaleString("tr-TR")}</span> Token</p>
                 <p style="font-size:12px; color:#64748b; margin-top:2px;">
                     👤 <span style="color:#ff4aa2; font-weight:600;" id="creator-${market.id}">${creatorDisplay}</span> tarafından açıldı
                 </p>
+                <div style="display:flex; gap:8px; align-items:center; margin-top:6px;">
+                    <button onclick="event.stopPropagation(); openMarketChat('${market.id}', '${safeTitle}')" 
+                            style="background:rgba(36,255,255,0.05); border:1px solid rgba(36,255,255,0.2); 
+                                   color:#24ffff; padding:3px 10px; border-radius:12px; font-size:10px; 
+                                   cursor:pointer; display:flex; align-items:center; gap:4px; transition: 0.2s;"
+                            onmouseover="this.style.background='rgba(36,255,255,0.15)';"
+                            onmouseout="this.style.background='rgba(36,255,255,0.05)';">
+                        <i class="fa-solid fa-comment"></i> Sohbet
+                    </button>
+                    <button onclick="event.stopPropagation(); toggleMarketDetail('${market.id}')" 
+                            style="background:rgba(255,74,162,0.05); border:1px solid rgba(255,74,162,0.2); 
+                                   color:#ff4aa2; padding:3px 10px; border-radius:12px; font-size:10px; 
+                                   cursor:pointer; display:flex; align-items:center; gap:4px; transition: 0.2s;"
+                            onmouseover="this.style.background='rgba(255,74,162,0.15)';"
+                            onmouseout="this.style.background='rgba(255,74,162,0.05)';">
+                        <i class="fa-solid fa-chevron-down" id="${detailToggleId}"></i> Detaylar
+                    </button>
+                </div>
+                <!-- DETAY ALANI -->
+                <div id="${detailContentId}" class="market-detail-content" style="display: none; margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(28,37,65,0.5);">
+                    <div style="font-size: 13px; color: #94a3b8; margin-bottom: 6px;">📊 Bahis Dağılımı</div>
+                    <div id="bet-details-${market.id}" style="font-size: 12px; color: #64748b;">
+                        <div style="display:flex; justify-content:space-between; padding: 4px 0; border-bottom: 1px solid rgba(28,37,65,0.2);">
+                            <span>✅ EVET</span>
+                            <span style="color: #22c55e; font-weight:600;">${yesPool.toLocaleString("tr-TR")} Token (${yesPercent}%)</span>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; padding: 4px 0; border-bottom: 1px solid rgba(28,37,65,0.2);">
+                            <span>❌ HAYIR</span>
+                            <span style="color: #ef4444; font-weight:600;">${noPool.toLocaleString("tr-TR")} Token (${noPercent}%)</span>
+                        </div>
+                        ${isSpor ? `
+                        <div style="display:flex; justify-content:space-between; padding: 4px 0; border-bottom: 1px solid rgba(28,37,65,0.2);">
+                            <span>🤝 BERABERLİK</span>
+                            <span style="color: #f59e0b; font-weight:600;">${drawPool.toLocaleString("tr-TR")} Token (${drawPercent}%)</span>
+                        </div>
+                        ` : ''}
+                        <div style="display:flex; justify-content:space-between; padding: 4px 0; margin-top: 4px; font-weight:700; color:#24ffff;">
+                            <span>💰 TOPLAM</span>
+                            <span>${totalVolume.toLocaleString("tr-TR")} Token</span>
+                        </div>
+                        <div style="margin-top: 8px; font-size: 11px; color: #64748b; text-align: center;">
+                            <i class="fa-solid fa-users"></i> Detayları görmek için tıklayınız
+                        </div>
+                        <div id="bet-participants-${market.id}" style="margin-top: 8px; max-height: 150px; overflow-y: auto; font-size: 11px; color: #94a3b8; background: rgba(3,8,20,0.5); border-radius: 8px; padding: 8px;">
+                            <div style="text-align:center; color:#64748b; padding:4px;">Yükleniyor...</div>
+                        </div>
+                    </div>
+                </div>
             </div>
             ${actionContent}
         </div>
@@ -2227,4 +2276,90 @@ function startChatSystem() {
     setTimeout(() => {
         loadChatMessages('global');
     }, 500);
+}
+// ------------------------------------------------------
+// LADES DETAY GÖSTER/GİZLE
+// ------------------------------------------------------
+function toggleMarketDetail(marketId) {
+    const detailContent = document.getElementById(`detail-content-${marketId}`);
+    const toggleIcon = document.getElementById(`detail-toggle-${marketId}`);
+    
+    if (!detailContent) return;
+    
+    if (detailContent.style.display === "none" || detailContent.style.display === "") {
+        detailContent.style.display = "block";
+        if (toggleIcon) {
+            toggleIcon.className = "fa-solid fa-chevron-up";
+        }
+        // Bahis katılımcılarını yükle
+        loadBetParticipants(marketId);
+    } else {
+        detailContent.style.display = "none";
+        if (toggleIcon) {
+            toggleIcon.className = "fa-solid fa-chevron-down";
+        }
+    }
+}
+
+// ------------------------------------------------------
+// BAHİS KATILIMCILARINI YÜKLE
+// ------------------------------------------------------
+async function loadBetParticipants(marketId) {
+    const container = document.getElementById(`bet-participants-${marketId}`);
+    if (!container) return;
+    
+    if (typeof db === "undefined" || !db) {
+        container.innerHTML = '<div style="text-align:center; color:#64748b; padding:4px;">Veritabanı bağlantısı yok.</div>';
+        return;
+    }
+    
+    try {
+        const historySnap = await fbGet("betHistory");
+        const history = historySnap || {};
+        
+        const marketBets = Object.values(history)
+            .filter(b => b && b.marketId === marketId)
+            .sort((a, b) => (b.amount || 0) - (a.amount || 0));
+        
+        if (marketBets.length === 0) {
+            container.innerHTML = '<div style="text-align:center; color:#64748b; padding:4px;">Henüz bu ladese bahis yapılmamış.</div>';
+            return;
+        }
+        
+        // Kullanıcı nickname'lerini topla
+        const userPromises = marketBets.map(async (bet) => {
+            const nickname = await getUserNickname(bet.email);
+            return {
+                nickname: nickname,
+                choice: bet.choice,
+                amount: bet.amount
+            };
+        });
+        
+        const participants = await Promise.all(userPromises);
+        
+        // En yüksek bahis miktarını bul (oran hesaplama için)
+        const maxAmount = Math.max(...participants.map(p => p.amount));
+        
+        container.innerHTML = participants.map(p => {
+            const choiceText = p.choice === "YES" ? "✅ EVET" : (p.choice === "NO" ? "❌ HAYIR" : "🤝 BERABERLİK");
+            const choiceColor = p.choice === "YES" ? "#22c55e" : (p.choice === "NO" ? "#ef4444" : "#f59e0b");
+            const barWidth = Math.round((p.amount / maxAmount) * 100);
+            
+            return `
+                <div style="display:flex; align-items:center; gap:8px; padding:3px 0; border-bottom: 1px solid rgba(28,37,65,0.1);">
+                    <span style="min-width: 80px; font-weight:600; color:${choiceColor}; font-size:11px;">${choiceText}</span>
+                    <span style="min-width: 80px; color:#94a3b8; font-size:11px;">${p.nickname}</span>
+                    <div style="flex:1; height:4px; background:#1c2541; border-radius:2px; overflow:hidden;">
+                        <div style="height:100%; width:${barWidth}%; background:${choiceColor}; border-radius:2px; transition: width 0.5s;"></div>
+                    </div>
+                    <span style="min-width: 60px; text-align:right; color:#24ffff; font-size:11px; font-weight:600;">${p.amount.toLocaleString("tr-TR")}</span>
+                </div>
+            `;
+        }).join('');
+        
+    } catch (error) {
+        console.error("Bahis katılımcıları yüklenirken hata:", error);
+        container.innerHTML = '<div style="text-align:center; color:#ef4444; padding:4px;">Yüklenirken hata oluştu.</div>';
+    }
 }
