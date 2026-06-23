@@ -94,6 +94,42 @@
             font-size: 14px; 
         }
 
+        /* Uyarı Kutusu */
+        .warning-box {
+            background: rgba(255, 74, 162, 0.05);
+            border: 1px solid rgba(255, 74, 162, 0.15);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .warning-box .warning-title {
+            color: #ff4aa2;
+            font-weight: 700;
+            font-size: 13px;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .warning-box .warning-text {
+            color: #94a3b8;
+            font-size: 11px;
+            line-height: 1.6;
+            margin-bottom: 4px;
+        }
+
+        .warning-box .warning-text:last-child {
+            margin-bottom: 0;
+        }
+
+        .warning-box .highlight {
+            color: #24ffff;
+            font-weight: 600;
+        }
+
         .input-group { 
             margin-bottom: 20px; 
         }
@@ -145,6 +181,48 @@
         
         input.valid { border-color: var(--success); }
         input.invalid { border-color: var(--error); }
+
+        /* Onay Kutusu */
+        .checkbox-group {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 20px;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 10px;
+            border: 1px solid rgba(28, 37, 65, 0.5);
+            transition: 0.3s;
+        }
+
+        .checkbox-group:hover {
+            border-color: rgba(36, 255, 255, 0.2);
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            min-width: 20px;
+            margin-top: 2px;
+            accent-color: #24ffff;
+            cursor: pointer;
+        }
+
+        .checkbox-group label {
+            color: #94a3b8;
+            font-size: 12px;
+            line-height: 1.5;
+            cursor: pointer;
+        }
+
+        .checkbox-group label a {
+            color: #24ffff;
+            text-decoration: none;
+        }
+
+        .checkbox-group label a:hover {
+            text-decoration: underline;
+        }
 
         .btn { 
             padding: 15px; 
@@ -233,6 +311,29 @@
             <p>Eğlence dolu rekabete adım atın</p>
         </div>
 
+        <!-- ✅ UYARI KUTUSU -->
+        <div class="warning-box">
+            <div class="warning-title">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+                ÖNEMLİ UYARI
+            </div>
+            <div class="warning-text">
+                Bu platform <span class="highlight">tamamen eğlence amaçlıdır</span>. Hiçbir şekilde gerçek para, 
+                kumar, iddia veya bahis içeriği barındırmaz.
+            </div>
+            <div class="warning-text">
+                Tüm işlemler <span class="highlight">sanal token</span> (oyun içi jeton) ile yapılmaktadır 
+                ve hiçbir maddi değeri yoktur.
+            </div>
+            <div class="warning-text">
+                18 yaş altı kullanıcıların kaydolması ve platformu kullanması <span class="highlight">yasaktır</span>.
+            </div>
+            <div class="warning-text">
+                Site yöneticileri, kullanıcıların platformu kötüye kullanması durumunda 
+                <span class="highlight">hesap kapatma</span> hakkını saklı tutar.
+            </div>
+        </div>
+
         <div class="input-group">
             <label>Davet Kodu</label>
             <div class="row">
@@ -241,7 +342,6 @@
             </div>
         </div>
 
-        <!-- ✅ YENİ: NICKNAME ALANI -->
         <div class="input-group">
             <label>Kullanıcı Adı (Nickname)</label>
             <input type="text" id="reg-nickname" placeholder="Örn: KralBeto" maxlength="20" autocomplete="off">
@@ -265,7 +365,16 @@
             <input type="password" id="reg-password-confirm" placeholder="••••••••">
         </div>
 
-        <button class="btn btn-primary" id="btnRegister">HESABIMI OLUŞTUR 🚀</button>
+        <!-- ✅ ONAY KUTUSU -->
+        <div class="checkbox-group">
+            <input type="checkbox" id="terms-checkbox">
+            <label for="terms-checkbox">
+                <a href="#" onclick="showTerms(); return false;">Kullanım Koşulları</a>'nı okudum, 
+                anladım ve kabul ediyorum. 18 yaşından büyük olduğumu onaylıyorum.
+            </label>
+        </div>
+
+        <button class="btn btn-primary" id="btnRegister" disabled>HESABIMI OLUŞTUR 🚀</button>
 
         <div class="footer">
             Zaten bir hesabın var mı? <a href="login.html">Giriş Yap</a>
@@ -279,6 +388,15 @@
             
             // KAYIT OL Butonu
             document.getElementById('btnRegister').addEventListener('click', handleRegister);
+
+            // ✅ ONAY KUTUSU KONTROLÜ
+            const termsCheckbox = document.getElementById('terms-checkbox');
+            const registerBtn = document.getElementById('btnRegister');
+            
+            termsCheckbox.addEventListener('change', function() {
+                registerBtn.disabled = !this.checked;
+                registerBtn.style.opacity = this.checked ? '1' : '0.5';
+            });
 
             // ✅ NICKNAME CANLI KONTROL
             const nicknameInput = document.getElementById('reg-nickname');
@@ -308,12 +426,12 @@
 
             // ✅ KAYIT BUTONUNUN DURUMUNU GÜNCELLE
             function updateRegisterButton() {
-                const btn = document.getElementById('btnRegister');
                 const nickname = document.getElementById('reg-nickname').value.trim();
                 const email = document.getElementById('reg-email').value.trim();
                 const pass = document.getElementById('reg-password').value;
                 const passConfirm = document.getElementById('reg-password-confirm').value;
                 const code = document.getElementById('reg-invite-code').value.trim();
+                const isChecked = document.getElementById('terms-checkbox').checked;
                 
                 const isNicknameValid = validateNickname(nickname);
                 const isEmailValid = email.includes('@') && email.length > 5;
@@ -321,12 +439,12 @@
                 const isPassMatch = pass === passConfirm && pass.length > 0;
                 const isCodeValid = code.length > 0;
                 
-                btn.disabled = !(isNicknameValid && isEmailValid && isPassValid && isPassMatch && isCodeValid);
-                btn.style.opacity = btn.disabled ? '0.5' : '1';
+                registerBtn.disabled = !(isNicknameValid && isEmailValid && isPassValid && isPassMatch && isCodeValid && isChecked);
+                registerBtn.style.opacity = registerBtn.disabled ? '0.5' : '1';
             }
 
             // Tüm alanlara event listener ekle
-            document.querySelectorAll('#reg-nickname, #reg-email, #reg-password, #reg-password-confirm, #reg-invite-code')
+            document.querySelectorAll('#reg-nickname, #reg-email, #reg-password, #reg-password-confirm, #reg-invite-code, #terms-checkbox')
                 .forEach(el => {
                     el.addEventListener('input', updateRegisterButton);
                     el.addEventListener('change', updateRegisterButton);
@@ -340,6 +458,22 @@
         function validateNickname(nickname) {
             if (!nickname || nickname.length < 3 || nickname.length > 20) return false;
             return /^[a-zA-Z0-9ğüşıöçĞÜŞİÖÇ]+$/.test(nickname);
+        }
+
+        // ✅ KULLANIM KOŞULLARI
+        function showTerms() {
+            alert(
+                '📜 LADES KULLANIM KOŞULLARI\n\n' +
+                '1. Bu platform tamamen EĞLENCE amaçlıdır.\n' +
+                '2. Hiçbir şekilde gerçek para, kumar, iddia veya bahis içeriği barındırmaz.\n' +
+                '3. Tüm işlemler sanal token (oyun içi jeton) ile yapılır ve maddi değeri yoktur.\n' +
+                '4. 18 yaş altı kullanıcıların kaydolması ve platformu kullanması yasaktır.\n' +
+                '5. Kullanıcılar, platformu kötüye kullanmamayı taahhüt eder.\n' +
+                '6. Site yöneticileri, kurallara uymayan kullanıcıların hesaplarını kapatma hakkını saklı tutar.\n' +
+                '7. Platformda yapılan tüm tahminler tamamen şans ve eğlence amaçlıdır.\n' +
+                '8. Kullanıcılar, platformu kullanarak bu koşulları kabul etmiş sayılır.\n\n' +
+                '✅ Bu koşulları kabul ediyorsanız kayıt olabilirsiniz.'
+            );
         }
 
         // ✅ KOD İSTE FONKSİYONU
@@ -366,7 +500,6 @@
                     createdAt: Date.now()
                 });
 
-                // ✅ Adminlere bildirim gönder
                 if (typeof sendNotificationToAdmins === 'function') {
                     await sendNotificationToAdmins({
                         title: "📩 Davet Kodu Talebi!",
@@ -391,26 +524,28 @@
             const email = document.getElementById('reg-email').value.trim();
             const password = document.getElementById('reg-password').value;
             const passwordConfirm = document.getElementById('reg-password-confirm').value;
+            const termsChecked = document.getElementById('terms-checkbox').checked;
 
-            // 1. Tüm alanlar dolu mu?
             if (!inviteCode || !nickname || !email || !password || !passwordConfirm) {
                 alert("❌ Lütfen tüm alanları doldurun!");
                 return;
             }
 
-            // 2. Nickname valid mi?
+            if (!termsChecked) {
+                alert("❌ Kayıt olmak için Kullanım Koşulları'nı kabul etmelisiniz!");
+                return;
+            }
+
             if (!validateNickname(nickname)) {
                 alert("❌ Kullanıcı adı 3-20 karakter olmalı ve sadece harf/rakam içermelidir!");
                 return;
             }
 
-            // 3. Şifre eşleşiyor mu?
             if (password !== passwordConfirm) {
                 alert("❌ Şifreler birbiriyle uyuşmuyor!");
                 return;
             }
 
-            // 4. Şifre uzunluğu
             if (password.length < 4) {
                 alert("❌ Şifre en az 4 karakter olmalıdır!");
                 return;
@@ -422,55 +557,48 @@
             }
 
             try {
-                // 5. Davet kodunu kontrol et
-                const inviteCodesSnap = await fbGet("inviteCodes");
+                const [inviteCodesSnap, usersSnap] = await Promise.all([
+                    fbGet("inviteCodes"),
+                    fbGet("ladesUsers")
+                ]);
+
                 const inviteCodes = inviteCodesSnap || {};
+                const users = usersSnap || {};
                 
                 let foundKey = null;
                 Object.keys(inviteCodes).forEach(key => {
-                    if (inviteCodes[key] === inviteCode) {
-                        foundKey = key;
-                    }
+                    if (inviteCodes[key] === inviteCode) foundKey = key;
                 });
 
                 if (!foundKey) {
-                    alert("❌ Geçersiz davet kodu! Lütfen doğru kodu girdiğinizden emin olun.");
+                    alert("❌ Geçersiz davet kodu!");
                     return;
                 }
 
-                // 6. Kullanıcı zaten var mı?
-                const usersSnap = await fbGet("ladesUsers");
-                const users = usersSnap || {};
                 const userKey = email.replace(/\./g, ',');
-                
                 if (users[userKey]) {
-                    alert("❌ Bu e-posta adresi zaten kayıtlı! Lütfen giriş yapın.");
+                    alert("❌ Bu e-posta adresi zaten kayıtlı!");
                     return;
                 }
 
-                // 7. Nickname daha önce alınmış mı?
-                const existingNickname = Object.values(users).find(u => u.nickname === nickname);
-                if (existingNickname) {
-                    alert("❌ Bu kullanıcı adı zaten alınmış! Lütfen başka bir nickname seçin.");
+                if (Object.values(users).some(u => u.nickname === nickname)) {
+                    alert("❌ Bu kullanıcı adı zaten alınmış!");
                     return;
                 }
 
-                // 8. Yeni kullanıcıyı oluştur
                 await fbSet(`ladesUsers/${userKey}`, {
-                    email: email,
-                    password: password,
-                    nickname: nickname,  // ✅ NICKNAME KAYDEDİLDİ
+                    email,
+                    password,
+                    nickname,
                     balance: 0,
                     isAdmin: false,
                     createdAt: Date.now()
                 });
 
-                // 9. Kullanılan davet kodunu sil
                 await fbRemove(`inviteCodes/${foundKey}`);
 
                 alert(`✅ Kayıt başarılı, ${nickname}! 🎉\n\nBaşlangıç bakiyeniz: 0 TOKEN\nToken talebi oluşturabilirsiniz.`);
                 
-                // 10. Giriş sayfasına yönlendir
                 window.location.href = "login.html";
 
             } catch (error) {
