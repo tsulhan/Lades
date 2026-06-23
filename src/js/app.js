@@ -1,5 +1,5 @@
 // ======================================================
-// LADES APP.JS - TÜM İŞ MANTIĞI VE GÜVENLİ YÖNETİCİ ÖZELLİKLERİ
+// LADES APP.JS - ANA DOSYA (BAŞLANGIÇ VE DİNLEYİCİLER)
 // ======================================================
 
 // GLOBAL DURUM
