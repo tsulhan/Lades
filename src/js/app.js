@@ -7,7 +7,6 @@ let activeMarketId = "";
 let activeMarketTitle = "";
 let activeChoice = "";
 let selectedCategoryFilter = "Tümü";
-let creatorNamesCache = {};
 
 // ------------------------------------------------------
 // GERÇEK ZAMANLI DİNLEYİCİLER
@@ -81,9 +80,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     
     startRealtimeListeners();
     startChatSystem();
-    startLiveFeed(); // ✅ CANLI BAHİS AKIŞI BAŞLAT
+    startLiveFeed();
     
-    // Tab geçişleri için switchTab fonksiyonunu global yap
     window.switchTab = function(tabId) {
         document.querySelectorAll(".tab-content").forEach(content => content.classList.remove("active"));
         document.querySelectorAll(".tab-button").forEach(button => button.classList.remove("active"));
