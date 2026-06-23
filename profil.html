@@ -124,7 +124,6 @@
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
 
-        /* YENİ ÜST HİZALAMA ALANI */
         .profile-top-bar {
             display: flex;
             justify-content: space-between;
@@ -160,7 +159,6 @@
             color: #fff;
         }
 
-        /* İŞARETLEDİĞİNİZ YERE EKLENEN YENİ BUTON STİLİ */
         .btn-back-header {
             display: flex;
             align-items: center;
@@ -294,51 +292,17 @@
         .result-lose { color: #f87171; font-weight: 700; }
 
         @media (max-width: 768px) {
-            header {
-                padding: 15px 20px;
-            }
-            .user-email-badge {
-                display: none;
-            }
-            main {
-                padding: 15px 10px;
-            }
-            .profile-container {
-                padding: 20px 15px;
-                border-radius: 16px;
-            }
-            .profile-top-bar {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 15px;
-            }
-            .btn-back-header {
-                width: 100%;
-                justify-content: center;
-            }
-            .tabs-content {
-                padding: 12px;
-            }
-            .user-bet-card {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 15px;
-                padding: 16px;
-            }
-            .bet-stats {
-                width: 100%;
-                justify-content: space-between;
-                text-align: left;
-                border-top: 1px solid #1c2541;
-                padding-top: 12px;
-                gap: 10px;
-            }
-            .stat-box {
-                flex: 1;
-            }
-            .stat-box:last-child {
-                text-align: right;
-            }
+            header { padding: 15px 20px; }
+            .user-email-badge { display: none; }
+            main { padding: 15px 10px; }
+            .profile-container { padding: 20px 15px; border-radius: 16px; }
+            .profile-top-bar { flex-direction: column; align-items: flex-start; gap: 15px; }
+            .btn-back-header { width: 100%; justify-content: center; }
+            .tabs-content { padding: 12px; }
+            .user-bet-card { flex-direction: column; align-items: flex-start; gap: 15px; padding: 16px; }
+            .bet-stats { width: 100%; justify-content: space-between; text-align: left; border-top: 1px solid #1c2541; padding-top: 12px; gap: 10px; }
+            .stat-box { flex: 1; }
+            .stat-box:last-child { text-align: right; }
         }
     </style>
 </head>
@@ -381,28 +345,39 @@
 
             <div id="profile-past-bets" class="tabs-content" style="display: none;">
                 <div style="text-align:center; color:#64748b; padding:30px; font-size:14px;">
-                    Henüz sonuçlanan lades geçmişiniz yok.
+                    <i class="fa-solid fa-spinner fa-spin"></i> Veriler yükleniyor...
                 </div>
             </div>
 
         </div>
     </main>
 
+    <!-- ✅ DOĞRU SIRA: Önce core.js, sonra app-functions.js, sonra app.js -->
     <script src="src/js/core.js"></script>
+    <script src="src/js/app-functions.js"></script>
     <script src="src/js/app.js"></script>
 
     <script>
-        document.addEventListener("DOMContentLoaded", () => {
+        // ✅ Profil sayfası özel başlatma
+        document.addEventListener("DOMContentLoaded", function() {
+            console.log("📋 Profil sayfası başlatılıyor...");
+            
+            // Kullanıcı adını göster
             const currentUser = localStorage.getItem('currentUser');
-            if (!currentUser) return;
-
-            document.getElementById('user-email-badge').innerText = currentUser;
-            document.getElementById('profile-username').innerText = currentUser;
-
-            const userCleanKey = currentUser.replace(/\./g, ',');
-
-            if (typeof db !== 'undefined') {
-                // Üst Bar Bakiye Takibi
+            if (currentUser) {
+                document.getElementById('user-email-badge').innerText = currentUser;
+                
+                // Nickname'i al ve göster
+                if (typeof getUserNickname === 'function') {
+                    getUserNickname(currentUser).then(nickname => {
+                        document.getElementById('profile-username').innerText = nickname || currentUser;
+                    });
+                }
+            }
+            
+            // Token bakiyesini güncelle
+            if (typeof db !== 'undefined' && currentUser) {
+                const userCleanKey = currentUser.replace(/\./g, ',');
                 fbRef(`ladesUsers/${userCleanKey}`).on("value", (snapshot) => {
                     const userVal = snapshot.val();
                     if (userVal) {
@@ -411,9 +386,11 @@
                 });
             }
 
-            // app.js'teki orijinal veri motorunu çalıştır
+            // Profil bahislerini yükle
             if (typeof initProfilePage === 'function') {
                 initProfilePage();
+            } else {
+                console.error("❌ initProfilePage fonksiyonu bulunamadı!");
             }
         });
 
