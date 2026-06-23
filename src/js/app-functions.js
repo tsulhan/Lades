@@ -3,6 +3,11 @@
 // ======================================================
 
 // ------------------------------------------------------
+// GLOBAL DEĞİŞKENLER
+// ------------------------------------------------------
+let creatorNamesCache = {};
+
+// ------------------------------------------------------
 // YARDIMCI FONKSİYONLAR
 // ------------------------------------------------------
 async function getUserNickname(email) {
@@ -55,11 +60,6 @@ async function handleLogin() {
     }
 
     try {
-        if (typeof fbGet !== "function") {
-            alert("Altyapı fonksiyonları (core.js) yüklenemedi.");
-            return;
-        }
-
         const usersSnap = await fbGet("ladesUsers");
         const users = usersSnap || {};
 
@@ -433,7 +433,6 @@ function generateMarketCardHTML(market, isActive) {
                         <i class="fa-solid fa-chevron-down" id="${detailToggleId}"></i> Detaylar
                     </button>
                 </div>
-                <!-- DETAY ALANI -->
                 <div id="${detailContentId}" class="market-detail-content" style="display: none; margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(28,37,65,0.5);">
                     <div style="font-size: 13px; color: #94a3b8; margin-bottom: 6px;">📊 Bahis Dağılımı</div>
                     <div id="bet-details-${market.id}" style="font-size: 12px; color: #64748b;">
@@ -505,7 +504,7 @@ function renderMarketGrid(marketsObj) {
         if (pastMarkets.length === 0) {
             pastMarketGrid.innerHTML = `
                 <div style="text-align:center; color:#64748b; padding:40px; width:100%;">
-                    Henüz sonuçlanmış bir lades bulunmuyo.
+                    Henüz sonuçlanmış bir lades bulunmuyor.
                 </div>
             `;
         } else {
@@ -730,8 +729,15 @@ async function createNewMarket() {
         createdAt: Date.now()
     });
 
+    // ✅ YENİ LADES BİLDİRİMİ - CANLI AKIŞ
+    await addNewMarketNotification(
+        currentUser.nickname || maskUserEmail(currentUserEmail),
+        title,
+        marketId
+    );
+
+    // ✅ YENİ LADES BİLDİRİMİ - Tüm kullanıcılara
     const creatorNickname = currentUser.nickname || maskUserEmail(currentUserEmail);
-    
     await sendNotificationToAllUsers({
         title: "📢 Yeni Lades!",
         message: `${creatorNickname}, "${title}" ladesini oluşturdu! Kapanış: ${formattedDateTime}`,
@@ -871,6 +877,16 @@ async function confirmBet() {
         createdAt: Date.now()
     });
 
+    // ✅ CANLI BAHİS AKIŞINA EKLE
+    await addLiveBet(
+        currentUser.nickname || maskUserEmail(currentUserEmail),
+        target.title,
+        activeChoice,
+        amount,
+        activeMarketId
+    );
+
+    // ✅ BAHİS BİLDİRİMİ
     const bettorNickname = currentUser.nickname || maskUserEmail(currentUserEmail);
     await sendBetNotificationToParticipants(activeMarketId, currentUserEmail, activeChoice, amount, target.title, bettorNickname);
 
@@ -1003,7 +1019,6 @@ async function finalizeLades(marketId, winningChoice) {
           `✅ Basit oransal dağıtım yapıldı!`);
 }
 
-// [DEVAM EDİYOR...]
 // ------------------------------------------------------
 // ADMIN PANELİ
 // ------------------------------------------------------
@@ -2283,6 +2298,186 @@ function renderProfileBets(currentUserEmail, markets, history) {
 }
 
 // ------------------------------------------------------
+// CANLI BAHİS AKIŞI (LIVE FEED)
+// ------------------------------------------------------
+let liveBetHistory = [];
+let liveBetListener = null;
+const MAX_LIVE_BETS = 20;
+
+function startLiveFeed() {
+    console.log("🔥 Canlı bahis akışı başlatılıyor...");
+    
+    if (typeof db === "undefined" || !db) {
+        console.warn("⚠️ Firebase bağlantısı yok, canlı akış başlatılamadı.");
+        return;
+    }
+    
+    if (liveBetListener) {
+        liveBetListener();
+        liveBetListener = null;
+    }
+    
+    liveBetListener = fbRef("liveBets").on("value", (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+            const bets = Object.values(data)
+                .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0))
+                .slice(0, MAX_LIVE_BETS);
+            liveBetHistory = bets;
+            renderLiveFeed();
+        } else {
+            liveBetHistory = [];
+            renderLiveFeed();
+        }
+    });
+}
+
+function renderLiveFeed() {
+    const container = document.getElementById('live-feed-container');
+    const countElement = document.getElementById('live-feed-count');
+    
+    if (!container) return;
+    
+    if (liveBetHistory.length === 0) {
+        container.innerHTML = `
+            <div style="text-align:center; color:#64748b; padding:15px; font-size:12px;">
+                💤 Henüz bahis yapılmamış.
+            </div>
+        `;
+        if (countElement) countElement.textContent = "0";
+        return;
+    }
+    
+    if (countElement) countElement.textContent = liveBetHistory.length;
+    
+    container.innerHTML = liveBetHistory.map((bet, index) => {
+        const timeAgo = getTimeAgo(bet.timestamp);
+        const isBig = bet.amount >= 500;
+        const isNew = index < 3;
+        
+        const choiceColor = bet.choice === "EVET" ? "#22c55e" : 
+                           (bet.choice === "HAYIR" ? "#ef4444" : "#f59e0b");
+        
+        let icon = "🔥";
+        let iconColor = "#f59e0b";
+        if (isBig) {
+            icon = "💰";
+            iconColor = "#ff4aa2";
+        } else if (bet.type === "new_market") {
+            icon = "🆕";
+            iconColor = "#24ffff";
+        } else if (isNew) {
+            icon = "⚡";
+            iconColor = "#24ffff";
+        }
+        
+        const borderColor = isBig ? "#ff4aa2" : (isNew ? "#24ffff" : "transparent");
+        
+        return `
+            <div style="
+                background: rgba(255,255,255,0.02);
+                border-left: 2px solid ${borderColor};
+                border-radius: 6px;
+                padding: 6px 10px;
+                font-size: 11px;
+                animation: fadeInFeed 0.3s ease;
+                transition: all 0.2s;
+                cursor: default;
+            "
+            onmouseover="this.style.background='rgba(255,255,255,0.05)'"
+            onmouseout="this.style.background='rgba(255,255,255,0.02)'">
+                <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                    <span style="color:${iconColor}; font-size:12px;">${icon}</span>
+                    <span style="font-weight:600; color:#94a3b8; font-size:11px;">${bet.userName}</span>
+                    <span style="color:#64748b; font-size:10px;">•</span>
+                    <span style="color:#64748b; font-size:10px; max-width:80px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">"${bet.marketTitle}"</span>
+                    <span style="color:${choiceColor}; font-weight:700; font-size:11px;">${bet.choice}</span>
+                    <span style="color:#24ffff; font-weight:600; font-size:11px;">${bet.amount.toLocaleString("tr-TR")}</span>
+                    <span style="color:#64748b; font-size:9px; margin-left:auto;">${timeAgo}</span>
+                </div>
+            </div>
+        `;
+    }).join('');
+    
+    container.scrollTop = 0;
+}
+
+async function addLiveBet(userName, marketTitle, choice, amount, marketId) {
+    if (typeof db === "undefined" || !db) return;
+    
+    try {
+        const betId = uniqueId("live");
+        const choiceText = choice === "YES" ? "EVET" : (choice === "NO" ? "HAYIR" : "BERABERLİK");
+        
+        await fbSet(`liveBets/${betId}`, {
+            id: betId,
+            userName: userName,
+            marketTitle: marketTitle,
+            choice: choiceText,
+            amount: amount,
+            timestamp: Date.now(),
+            marketId: marketId,
+            type: "bet"
+        });
+        
+        const snapshot = await fbRef("liveBets").once("value");
+        const data = snapshot.val();
+        if (data) {
+            const keys = Object.keys(data);
+            if (keys.length > MAX_LIVE_BETS) {
+                const sortedKeys = keys.sort((a, b) => (data[b].timestamp || 0) - (data[a].timestamp || 0));
+                const keysToRemove = sortedKeys.slice(MAX_LIVE_BETS);
+                const removePromises = keysToRemove.map(key => fbRemove(`liveBets/${key}`));
+                await Promise.all(removePromises);
+            }
+        }
+    } catch (error) {
+        console.error("Canlı bahis ekleme hatası:", error);
+    }
+}
+
+async function addNewMarketNotification(userName, marketTitle, marketId) {
+    if (typeof db === "undefined" || !db) return;
+    
+    try {
+        const betId = uniqueId("live");
+        
+        await fbSet(`liveBets/${betId}`, {
+            id: betId,
+            userName: userName,
+            marketTitle: marketTitle,
+            choice: "🆕 Yeni Lades!",
+            amount: 0,
+            timestamp: Date.now(),
+            marketId: marketId,
+            type: "new_market"
+        });
+        
+        const snapshot = await fbRef("liveBets").once("value");
+        const data = snapshot.val();
+        if (data) {
+            const keys = Object.keys(data);
+            if (keys.length > MAX_LIVE_BETS) {
+                const sortedKeys = keys.sort((a, b) => (data[b].timestamp || 0) - (data[a].timestamp || 0));
+                const keysToRemove = sortedKeys.slice(MAX_LIVE_BETS);
+                const removePromises = keysToRemove.map(key => fbRemove(`liveBets/${key}`));
+                await Promise.all(removePromises);
+            }
+        }
+    } catch (error) {
+        console.error("Yeni lades bildirimi ekleme hatası:", error);
+    }
+}
+
+function stopLiveFeed() {
+    if (liveBetListener) {
+        liveBetListener();
+        liveBetListener = null;
+    }
+    console.log("⏹️ Canlı bahis akışı durduruldu.");
+}
+
+// ------------------------------------------------------
 // OTOMATİK LADES KAPATMA (ZAMANLAYICI)
 // ------------------------------------------------------
 async function checkAndCloseMarkets() {
@@ -2318,5 +2513,4 @@ async function checkAndCloseMarkets() {
     }
 }
 
-// Her 30 saniyede bir kontrol et
 setInterval(checkAndCloseMarkets, 30 * 1000);

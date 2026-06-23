@@ -156,14 +156,8 @@ header {
 }
 
 @keyframes slideDown {
-    from {
-        opacity: 0;
-        transform: translateY(-10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
 .notification-header {
@@ -405,6 +399,43 @@ main {
 }
 
 /* ======================================================
+   CANLI BAHİS AKIŞI
+   ====================================================== */
+#live-feed-container {
+    scrollbar-width: thin;
+    scrollbar-color: #1c2541 transparent;
+}
+
+#live-feed-container::-webkit-scrollbar {
+    width: 3px;
+}
+
+#live-feed-container::-webkit-scrollbar-track {
+    background: transparent;
+    border-radius: 4px;
+}
+
+#live-feed-container::-webkit-scrollbar-thumb {
+    background: #1c2541;
+    border-radius: 4px;
+}
+
+#live-feed-container::-webkit-scrollbar-thumb:hover {
+    background: #334155;
+}
+
+@keyframes fadeInFeed {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ======================================================
    MARKET GRID
    ====================================================== */
 .market-grid {
@@ -550,14 +581,8 @@ main {
 }
 
 @keyframes slideDown {
-    from {
-        opacity: 0;
-        transform: translateY(-8px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
 /* ======================================================
@@ -770,7 +795,8 @@ main {
     z-index: 999;
 }
 
-.modal-overlay[style*="display: flex"], .modal-overlay[style*="display:flex"] {
+.modal-overlay[style*="display: flex"],
+.modal-overlay[style*="display:flex"] {
     display: flex !important;
 }
 

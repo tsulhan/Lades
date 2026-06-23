@@ -81,6 +81,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     
     startRealtimeListeners();
     startChatSystem();
+    startLiveFeed(); // ✅ CANLI BAHİS AKIŞI BAŞLAT
     
     // Tab geçişleri için switchTab fonksiyonunu global yap
     window.switchTab = function(tabId) {
