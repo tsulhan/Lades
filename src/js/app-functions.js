@@ -304,7 +304,7 @@ function generateMarketCardHTML(market, isActive) {
         ? (yesPool + noPool + drawPool)
         : (yesPool + noPool);
 
-    // ✅ OTOMATİK ORAN HESAPLAMA (0'a bölünme hatasını engelle)
+    // OTOMATİK ORAN HESAPLAMA (0'a bölünme hatasını engelle)
     const odds = {
         YES: totalVolume > 0 ? (totalVolume / (yesPool || 1)) : 1,
         NO: totalVolume > 0 ? (totalVolume / (noPool || 1)) : 1,
@@ -335,35 +335,36 @@ function generateMarketCardHTML(market, isActive) {
         if (isSpor) {
             actionContent = `
                 <div class="market-actions ${colsClass}">
-                    <button class="btn-bet btn-yes" onclick="openBetModal('${market.id}', '${safeTitle}', 'YES')">
-                        EVET %${yesPercent}
+                    <button class="btn-bet btn-yes" onclick="openBetModal('${market.id}', '${safeTitle}', 'YES')" 
+                            style="display:flex; flex-direction:column; align-items:center; gap:2px; padding:8px 6px;">
+                        <span>EVET %${yesPercent}</span>
+                        <span style="font-size:9px; opacity:0.6; font-weight:400;">${odds.YES.toFixed(2)}x</span>
                     </button>
-                    <button class="btn-bet btn-draw" onclick="openBetModal('${market.id}', '${safeTitle}', 'DRAW')">
-                        BERABERLİK %${drawPercent}
+                    <button class="btn-bet btn-draw" onclick="openBetModal('${market.id}', '${safeTitle}', 'DRAW')" 
+                            style="display:flex; flex-direction:column; align-items:center; gap:2px; padding:8px 6px;">
+                        <span>BERABERLİK %${drawPercent}</span>
+                        <span style="font-size:9px; opacity:0.6; font-weight:400;">${odds.DRAW.toFixed(2)}x</span>
                     </button>
-                    <button class="btn-bet btn-no" onclick="openBetModal('${market.id}', '${safeTitle}', 'NO')">
-                        HAYIR %${noPercent}
+                    <button class="btn-bet btn-no" onclick="openBetModal('${market.id}', '${safeTitle}', 'NO')" 
+                            style="display:flex; flex-direction:column; align-items:center; gap:2px; padding:8px 6px;">
+                        <span>HAYIR %${noPercent}</span>
+                        <span style="font-size:9px; opacity:0.6; font-weight:400;">${odds.NO.toFixed(2)}x</span>
                     </button>
-                </div>
-                <div style="display:flex; justify-content:space-between; margin-top:4px; font-size:10px; color:#64748b; gap:8px;">
-                    <span style="text-align:center; flex:1;">📈 ${odds.YES.toFixed(2)}x</span>
-                    <span style="text-align:center; flex:1;">📈 ${odds.DRAW.toFixed(2)}x</span>
-                    <span style="text-align:center; flex:1;">📈 ${odds.NO.toFixed(2)}x</span>
                 </div>
             `;
         } else {
             actionContent = `
                 <div class="market-actions ${colsClass}">
-                    <button class="btn-bet btn-yes" onclick="openBetModal('${market.id}', '${safeTitle}', 'YES')">
-                        EVET %${yesPercent}
+                    <button class="btn-bet btn-yes" onclick="openBetModal('${market.id}', '${safeTitle}', 'YES')" 
+                            style="display:flex; flex-direction:column; align-items:center; gap:2px; padding:8px 6px;">
+                        <span>EVET %${yesPercent}</span>
+                        <span style="font-size:9px; opacity:0.6; font-weight:400;">${odds.YES.toFixed(2)}x</span>
                     </button>
-                    <button class="btn-bet btn-no" onclick="openBetModal('${market.id}', '${safeTitle}', 'NO')">
-                        HAYIR %${noPercent}
+                    <button class="btn-bet btn-no" onclick="openBetModal('${market.id}', '${safeTitle}', 'NO')" 
+                            style="display:flex; flex-direction:column; align-items:center; gap:2px; padding:8px 6px;">
+                        <span>HAYIR %${noPercent}</span>
+                        <span style="font-size:9px; opacity:0.6; font-weight:400;">${odds.NO.toFixed(2)}x</span>
                     </button>
-                </div>
-                <div style="display:flex; justify-content:space-between; margin-top:4px; font-size:10px; color:#64748b; gap:8px;">
-                    <span style="text-align:center; flex:1;">📈 ${odds.YES.toFixed(2)}x</span>
-                    <span style="text-align:center; flex:1;">📈 ${odds.NO.toFixed(2)}x</span>
                 </div>
             `;
         }
@@ -755,14 +756,14 @@ async function createNewMarket() {
         createdAt: Date.now()
     });
 
-    // ✅ YENİ LADES BİLDİRİMİ - CANLI AKIŞ
+    // YENİ LADES BİLDİRİMİ - CANLI AKIŞ
     await addNewMarketNotification(
         currentUser.nickname || maskUserEmail(currentUserEmail),
         title,
         marketId
     );
 
-    // ✅ YENİ LADES BİLDİRİMİ - Tüm kullanıcılara
+    // YENİ LADES BİLDİRİMİ - Tüm kullanıcılara
     const creatorNickname = currentUser.nickname || maskUserEmail(currentUserEmail);
     await sendNotificationToAllUsers({
         title: "📢 Yeni Lades!",
@@ -903,7 +904,7 @@ async function confirmBet() {
         createdAt: Date.now()
     });
 
-    // ✅ CANLI BAHİS AKIŞINA EKLE
+    // CANLI BAHİS AKIŞINA EKLE
     await addLiveBet(
         currentUser.nickname || maskUserEmail(currentUserEmail),
         target.title,
@@ -912,7 +913,7 @@ async function confirmBet() {
         activeMarketId
     );
 
-    // ✅ BAHİS BİLDİRİMİ
+    // BAHİS BİLDİRİMİ
     const bettorNickname = currentUser.nickname || maskUserEmail(currentUserEmail);
     await sendBetNotificationToParticipants(activeMarketId, currentUserEmail, activeChoice, amount, target.title, bettorNickname);
 
@@ -939,10 +940,10 @@ async function finalizeLades(marketId, winningChoice) {
     const noPool = market.noPool || 0;
     const drawPool = market.drawPool || 0;
 
-    // ✅ TOPLAM HAVUZ
+    // TOPLAM HAVUZ
     const totalPool = market.category === "Spor" ? (yesPool + noPool + drawPool) : (yesPool + noPool);
     
-    // ✅ KOMİSYON (%5)
+    // KOMİSYON (%5)
     const COMMISSION_RATE = 0.05;
     const commission = Math.floor(totalPool * COMMISSION_RATE);
     const distributedPool = totalPool - commission;
@@ -982,14 +983,14 @@ async function finalizeLades(marketId, winningChoice) {
         return;
     }
 
-    // ✅ OTOMATİK ORAN HESAPLAMA (Polymarket Stili)
+    // OTOMATİK ORAN HESAPLAMA (Polymarket Stili)
     const odds = {
         YES: totalPool / (yesPool || 1),
         NO: totalPool / (noPool || 1),
         DRAW: totalPool / (drawPool || 1)
     };
 
-    // ✅ KAZANAN ORAN
+    // KAZANAN ORAN
     const winningOdds = odds[winningChoice] || 1;
 
     let totalDistributed = 0;
@@ -1001,9 +1002,9 @@ async function finalizeLades(marketId, winningChoice) {
 
         const [userKey, userObj] = userEntry;
         
-        // ✅ ORAN İLE HESAPLAMA
+        // ORAN İLE HESAPLAMA
         const rawReward = Math.floor(winner.amount * winningOdds);
-        const rewardAmount = Math.min(rawReward, distributedPool); // Havuzdan fazla olmasın
+        const rewardAmount = Math.min(rawReward, distributedPool);
 
         userObj.balance = (userObj.balance || 0) + rewardAmount;
         users[userKey] = userObj;
@@ -1019,14 +1020,14 @@ async function finalizeLades(marketId, winningChoice) {
         });
     });
 
-    // ✅ KOMİSYONU SİSTEM HAVUZUNA EKLE
+    // KOMİSYONU SİSTEM HAVUZUNA EKLE
     await addToSystemPool(commission);
 
     await fbSet("ladesUsers", users);
     market.status = "Sonuçlandı";
     await fbSet(`customMarkets/${marketId}`, market);
 
-    // ✅ SONUÇ BİLDİRİMLERİ
+    // SONUÇ BİLDİRİMLERİ
     const allParticipants = Object.values(history).filter(h => h.marketId === marketId);
     
     const resultPromises = allParticipants.map(async (participant) => {
