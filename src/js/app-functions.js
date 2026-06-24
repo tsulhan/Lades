@@ -2514,3 +2514,93 @@ async function checkAndCloseMarkets() {
 }
 
 setInterval(checkAndCloseMarkets, 30 * 1000);
+
+// ======================================================
+// CHAT KÜÇÜLT/BÜYÜT VE TEMİZLEME (EKLENECEK FONKSİYONLAR)
+// ======================================================
+
+// ------------------------------------------------------
+// CHAT KÜÇÜLT/BÜYÜT
+// ------------------------------------------------------
+let chatMinimized = false;
+
+function toggleChatMinimize() {
+    const panel = document.getElementById('chat-panel');
+    const icon = document.getElementById('chat-minimize-icon');
+    
+    if (!panel) return;
+    
+    chatMinimized = !chatMinimized;
+    
+    if (chatMinimized) {
+        panel.classList.add('minimized');
+        if (icon) icon.className = 'fa-solid fa-plus';
+    } else {
+        panel.classList.remove('minimized');
+        if (icon) icon.className = 'fa-solid fa-minus';
+    }
+}
+
+// ------------------------------------------------------
+// CHAT GEÇMİŞİNİ TEMİZLE (SADECE ADMIN)
+// ------------------------------------------------------
+async function clearChatHistory() {
+    const currentUserEmail = localStorage.getItem("currentUser");
+    
+    // Admin kontrolü
+    if (currentUserEmail !== "tsulhan@gmail.com") {
+        alert("❌ Bu işlem sadece yönetici tarafından yapılabilir!");
+        return;
+    }
+    
+    // Hangi chat'in temizleneceğini sor
+    const chatType = confirm(
+        "🔄 Chat Geçmişi Temizleme\n\n" +
+        "Hangi chat odasını temizlemek istiyorsunuz?\n" +
+        "• 'Tamam' → Tüm chatleri temizle\n" +
+        "• 'İptal' → Sadece aktif chat'i temizle"
+    );
+    
+    const confirmMessage = chatType ?
+        "⚠️ TÜM CHAT GEÇMİŞİNİ (Global + Tüm Lades Chati) silmek istediğinize emin misiniz?\n\nBu işlem geri alınamaz!" :
+        `⚠️ "${currentChatTab === 'global' ? 'Global Chat' : 'Lades Chat'}" odasını silmek istediğinize emin misiniz?\n\nBu işlem geri alınamaz!`;
+    
+    if (!confirm(confirmMessage)) return;
+    
+    if (typeof db === "undefined" || !db) {
+        alert("Firebase bağlantısı yok!");
+        return;
+    }
+    
+    try {
+        const loadingMsg = document.createElement('div');
+        loadingMsg.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#0b132b; padding:20px 40px; border-radius:12px; border:1px solid #24ffff; color:#24ffff; font-weight:bold; z-index:9999;';
+        loadingMsg.innerHTML = '⏳ Chat geçmişi temizleniyor...';
+        document.body.appendChild(loadingMsg);
+        
+        if (chatType) {
+            // Tüm chat'leri temizle
+            await fbRemove("chats");
+            alert("✅ Tüm chat geçmişi başarıyla temizlendi!");
+        } else {
+            // Sadece aktif chat'i temizle
+            let chatPath = 'chats/global';
+            if (currentChatTab === 'market' && currentMarketIdForChat) {
+                chatPath = `chats/market_${currentMarketIdForChat}`;
+            }
+            await fbRemove(chatPath);
+            alert(`✅ "${currentChatTab === 'global' ? 'Global Chat' : 'Lades Chat'}" başarıyla temizlendi!`);
+        }
+        
+        document.body.removeChild(loadingMsg);
+        
+        // Chat mesajlarını yeniden yükle
+        loadChatMessages(currentChatTab);
+        
+    } catch (error) {
+        console.error("Chat temizleme hatası:", error);
+        alert("❌ Chat temizlenirken bir hata oluştu: " + error.message);
+        const loadingMsg = document.querySelector('div[style*="position:fixed"]');
+        if (loadingMsg) document.body.removeChild(loadingMsg);
+    }
+}
