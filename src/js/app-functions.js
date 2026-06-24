@@ -913,7 +913,14 @@ async function finalizeLades(marketId, winningChoice) {
     const noPool = market.noPool || 0;
     const drawPool = market.drawPool || 0;
 
+    // ✅ TOPLAM HAVUZ
     const totalPool = market.category === "Spor" ? (yesPool + noPool + drawPool) : (yesPool + noPool);
+    
+    // ✅ KOMİSYON (%5)
+    const COMMISSION_RATE = 0.05;
+    const commission = Math.floor(totalPool * COMMISSION_RATE);
+    const distributedPool = totalPool - commission;
+
     let winningPool = 0;
     let winningChoiceName = "";
     
@@ -929,7 +936,7 @@ async function finalizeLades(marketId, winningChoice) {
     }
 
     if (totalPool === 0 || winningPool === 0) {
-        alert(`⚠️ ${winningChoiceName} havuzu boş veya toplam havuz 0. Lades kapatıldı ama dağıtım yapılmadı.`);
+        alert(`⚠️ ${winningChoiceName} havuzu boş veya toplam havuz 0. Lades kapatıldı.`);
         market.status = "Sonuçlandı";
         await fbSet(`customMarkets/${marketId}`, market);
         return;
@@ -949,6 +956,16 @@ async function finalizeLades(marketId, winningChoice) {
         return;
     }
 
+    // ✅ ORAN HESAPLAMA
+    const odds = {
+        YES: totalPool / (yesPool || 1),
+        NO: totalPool / (noPool || 1),
+        DRAW: totalPool / (drawPool || 1)
+    };
+
+    // ✅ KAZANAN ORAN
+    const winningOdds = odds[winningChoice] || 1;
+
     let totalDistributed = 0;
     const distributionResults = [];
 
@@ -957,9 +974,10 @@ async function finalizeLades(marketId, winningChoice) {
         if (!userEntry) return;
 
         const [userKey, userObj] = userEntry;
-        const userShare = winner.amount / winningPool;
-        let rewardAmount = Math.floor(userShare * totalPool);
-        if (rewardAmount === 0) rewardAmount = 1;
+        
+        // ✅ ORAN İLE HESAPLAMA
+        const rawReward = Math.floor(winner.amount * winningOdds);
+        const rewardAmount = Math.min(rawReward, distributedPool); // Havuzdan fazla olmasın
 
         userObj.balance = (userObj.balance || 0) + rewardAmount;
         users[userKey] = userObj;
@@ -969,54 +987,50 @@ async function finalizeLades(marketId, winningChoice) {
             email: winner.email,
             nickname: userObj.nickname || maskUserEmail(winner.email),
             amount: winner.amount,
+            odds: winningOdds.toFixed(2) + 'x',
             reward: rewardAmount,
-            share: (userShare * 100).toFixed(2) + '%'
+            share: ((winner.amount / winningPool) * 100).toFixed(2) + '%'
         });
     });
+
+    // ✅ KOMİSYONU SİSTEM HAVUZUNA EKLE
+    await addToSystemPool(commission);
 
     await fbSet("ladesUsers", users);
     market.status = "Sonuçlandı";
     await fbSet(`customMarkets/${marketId}`, market);
 
-    const allParticipants = Object.values(history).filter(h => h.marketId === marketId);
-    
-    const resultPromises = allParticipants.map(async (participant) => {
-        const isWinner = winners.some(w => w.email === participant.email);
-        const winAmount = isWinner ? 
-            distributionResults.find(r => r.email === participant.email)?.reward || 0 : 0;
-        
-        const userEntry = Object.entries(users).find(([key, u]) => u.email === participant.email);
-        const displayName = userEntry ? userEntry[1].nickname || maskUserEmail(participant.email) : maskUserEmail(participant.email);
-        
-        let title = isWinner ? "🎉 Kazandınız!" : "😔 Kaybettiniz";
-        let message = isWinner ? 
-            `${market.title} ladesinde ${winAmount.toLocaleString("tr-TR")} Token kazandınız! 🏆` :
-            `${market.title} ladesinde ${participant.amount.toLocaleString("tr-TR")} Token kaybettiniz.`;
-
-        return createNotification(participant.email, {
-            title: title,
-            message: message,
-            type: "result",
-            marketId: marketId,
-            link: "profil.html",
-            data: { isWinner, winAmount, lostAmount: participant.amount }
-        });
-    });
-    await Promise.all(resultPromises);
-
-    const remainingTokens = totalPool - totalDistributed;
+    // ✅ SONUÇ MESAJI
+    const remainingTokens = distributedPool - totalDistributed;
     
     let distributionDetails = distributionResults.map(r => 
-        `  • ${r.nickname}: ${r.amount} Token → ${r.reward} Token kazandı (${r.share})`
+        `  • ${r.nickname}: ${r.amount} Token × ${r.odds} = ${r.reward} Token kazandı (${r.share})`
     ).join('\n');
 
     alert(`🎉 ${winningChoiceName} KAZANDI!\n\n` +
           `📊 Toplam Havuz: ${totalPool.toLocaleString("tr-TR")} Token\n` +
-          `💰 Dağıtılan: ${totalDistributed.toLocaleString("tr-TR")} Token\n` +
-          `📦 Kalan: ${remainingTokens.toLocaleString("tr-TR")} Token (küsürat)\n` +
-          `👥 Kazanan Sayısı: ${winners.length}\n\n` +
+          `💰 Komisyon (%5): ${commission.toLocaleString("tr-TR")} Token (Sistem Havuzu)\n` +
+          `💵 Dağıtılan: ${totalDistributed.toLocaleString("tr-TR")} Token\n` +
+          `📦 Kalan: ${remainingTokens.toLocaleString("tr-TR")} Token\n` +
+          `👥 Kazanan Sayısı: ${winners.length}\n` +
+          `📈 Kazanan Oran: ${winningOdds.toFixed(2)}x\n\n` +
           `📋 DAĞITIM DETAYLARI:\n${distributionDetails}\n\n` +
-          `✅ Basit oransal dağıtım yapıldı!`);
+          `✅ Oran bazlı + %5 komisyon sistemi ile dağıtım yapıldı!`);
+}
+
+// ------------------------------------------------------
+// SİSTEM HAVUZUNA EKLE
+// ------------------------------------------------------
+async function addToSystemPool(amount) {
+    if (typeof db === "undefined" || !db || amount <= 0) return;
+    
+    try {
+        const currentPool = await fbGet("systemPool") || 0;
+        await fbSet("systemPool", currentPool + amount);
+        console.log(`💰 Sistem havuzuna ${amount} Token eklendi. Toplam: ${currentPool + amount}`);
+    } catch (error) {
+        console.error("Sistem havuzu güncelleme hatası:", error);
+    }
 }
 
 // ------------------------------------------------------
