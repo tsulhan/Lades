@@ -304,11 +304,11 @@ function generateMarketCardHTML(market, isActive) {
         ? (yesPool + noPool + drawPool)
         : (yesPool + noPool);
 
-    // OTOMATİK ORAN HESAPLAMA
+    // ✅ OTOMATİK ORAN HESAPLAMA (0'a bölünme hatasını engelle)
     const odds = {
-        YES: totalVolume / (yesPool || 1),
-        NO: totalVolume / (noPool || 1),
-        DRAW: totalVolume / (drawPool || 1)
+        YES: totalVolume > 0 ? (totalVolume / (yesPool || 1)) : 1,
+        NO: totalVolume > 0 ? (totalVolume / (noPool || 1)) : 1,
+        DRAW: totalVolume > 0 ? (totalVolume / (drawPool || 1)) : 1
     };
 
     let yesPercent = 50, noPercent = 50, drawPercent = 0;
@@ -368,7 +368,6 @@ function generateMarketCardHTML(market, isActive) {
             `;
         }
     } else {
-        // ... Geçmiş lades kısmı aynı kalacak ...
         let winnerText = "BELİRSİZ";
         let winnerStyle = "width: 330px; margin-left: auto; flex-shrink: 0; text-align: center; padding: 12px; border-radius: 10px; font-weight: 800; font-size: 13px;";
 
@@ -393,7 +392,106 @@ function generateMarketCardHTML(market, isActive) {
         `;
     }
 
-    // ... devamı (adminDeleteHTML, detail alanı, return) aynı kalacak ...
+    let adminDeleteHTML = "";
+    if (isAdmin) {
+        if (isActive) {
+            adminDeleteHTML = `
+                <button onclick="deleteMarketCompletely('${market.id}', '${safeTitle}')" 
+                        style="position: absolute; top: 12px; right: 12px; background: rgba(239, 68, 68, 0.15); 
+                               border: 1px solid rgba(239, 68, 68, 0.3); color: #ef4444; width: 28px; height: 28px; 
+                               border-radius: 50%; cursor: pointer; display: flex; align-items: center; 
+                               justify-content: center; font-size: 14px; transition: 0.3s; z-index: 10;
+                               font-weight: 700;"
+                        onmouseover="this.style.background='rgba(239, 68, 68, 0.4)'; this.style.color='white';"
+                        onmouseout="this.style.background='rgba(239, 68, 68, 0.15)'; this.style.color='#ef4444';"
+                        title="Bu ladesi sil ve tokenları iade et">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            `;
+        } else {
+            adminDeleteHTML = `
+                <button onclick="deleteMarketFromHistory('${market.id}', '${safeTitle}')" 
+                        style="position: absolute; top: 12px; right: 12px; background: rgba(148, 163, 184, 0.1); 
+                               border: 1px solid rgba(148, 163, 184, 0.2); color: #94a3b8; width: 28px; height: 28px; 
+                               border-radius: 50%; cursor: pointer; display: flex; align-items: center; 
+                               justify-content: center; font-size: 14px; transition: 0.3s; z-index: 10;
+                               font-weight: 700;"
+                        onmouseover="this.style.background='rgba(239, 68, 68, 0.3)'; this.style.color='#ef4444';"
+                        onmouseout="this.style.background='rgba(148, 163, 184, 0.1)'; this.style.color='#94a3b8';"
+                        title="Bu ladesi geçmişten sil">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            `;
+        }
+    }
+
+    const detailToggleId = `detail-toggle-${market.id}`;
+    const detailContentId = `detail-content-${market.id}`;
+
+    return `
+        <div class="market-card" style="position: relative; ${!isActive ? 'opacity: 0.9; border-color: #1c2541; background: #060b19;' : ''}">
+            ${adminDeleteHTML}
+            <div class="market-info" onclick="toggleMarketDetail('${market.id}')" style="cursor: pointer;">
+                <div style="display:flex; gap:8px; align-items:center; margin-bottom:6px;">
+                    <span class="category-badge">${market.category || "Genel"}</span>
+                    ${!isActive ? `<span class="category-badge" style="background:rgba(36,255,255,0.05); color:#24ffff; border-color:rgba(36,255,255,0.2);"><i class="fa-solid fa-lock"></i> Arşiv</span>` : ''}
+                </div>
+                <h3>${market.title || "Başlıksız Lades"}</h3>
+                <p>Bitiş: ${market.date || "-"} • Toplam Hacim: <span style="color:#24ffff; font-weight:700;">${totalVolume.toLocaleString("tr-TR")}</span> Token</p>
+                <p style="font-size:12px; color:#64748b; margin-top:2px;">
+                    👤 <span style="color:#ff4aa2; font-weight:600;" id="creator-${market.id}">${creatorDisplay}</span> tarafından açıldı
+                </p>
+                <div style="display:flex; gap:8px; align-items:center; margin-top:6px;">
+                    <button onclick="event.stopPropagation(); openMarketChat('${market.id}', '${safeTitle}')" 
+                            style="background:rgba(36,255,255,0.05); border:1px solid rgba(36,255,255,0.2); 
+                                   color:#24ffff; padding:3px 10px; border-radius:12px; font-size:10px; 
+                                   cursor:pointer; display:flex; align-items:center; gap:4px; transition: 0.2s;"
+                            onmouseover="this.style.background='rgba(36,255,255,0.15)';"
+                            onmouseout="this.style.background='rgba(36,255,255,0.05)';">
+                        <i class="fa-solid fa-comment"></i> Sohbet
+                    </button>
+                    <button onclick="event.stopPropagation(); toggleMarketDetail('${market.id}')" 
+                            style="background:rgba(255,74,162,0.05); border:1px solid rgba(255,74,162,0.2); 
+                                   color:#ff4aa2; padding:3px 10px; border-radius:12px; font-size:10px; 
+                                   cursor:pointer; display:flex; align-items:center; gap:4px; transition: 0.2s;"
+                            onmouseover="this.style.background='rgba(255,74,162,0.15)';"
+                            onmouseout="this.style.background='rgba(255,74,162,0.05)';">
+                        <i class="fa-solid fa-chevron-down" id="${detailToggleId}"></i> Detaylar
+                    </button>
+                </div>
+                <div id="${detailContentId}" class="market-detail-content" style="display: none; margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(28,37,65,0.5);">
+                    <div style="font-size: 13px; color: #94a3b8; margin-bottom: 6px;">📊 Bahis Dağılımı & Oranlar</div>
+                    <div id="bet-details-${market.id}" style="font-size: 12px; color: #64748b;">
+                        <div style="display:flex; justify-content:space-between; padding: 4px 0; border-bottom: 1px solid rgba(28,37,65,0.2);">
+                            <span>✅ EVET</span>
+                            <span style="color: #22c55e; font-weight:600;">${yesPool.toLocaleString("tr-TR")} Token (${yesPercent}%) - ${odds.YES.toFixed(2)}x</span>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; padding: 4px 0; border-bottom: 1px solid rgba(28,37,65,0.2);">
+                            <span>❌ HAYIR</span>
+                            <span style="color: #ef4444; font-weight:600;">${noPool.toLocaleString("tr-TR")} Token (${noPercent}%) - ${odds.NO.toFixed(2)}x</span>
+                        </div>
+                        ${isSpor ? `
+                        <div style="display:flex; justify-content:space-between; padding: 4px 0; border-bottom: 1px solid rgba(28,37,65,0.2);">
+                            <span>🤝 BERABERLİK</span>
+                            <span style="color: #f59e0b; font-weight:600;">${drawPool.toLocaleString("tr-TR")} Token (${drawPercent}%) - ${odds.DRAW.toFixed(2)}x</span>
+                        </div>
+                        ` : ''}
+                        <div style="display:flex; justify-content:space-between; padding: 4px 0; margin-top: 4px; font-weight:700; color:#24ffff;">
+                            <span>💰 TOPLAM</span>
+                            <span>${totalVolume.toLocaleString("tr-TR")} Token</span>
+                        </div>
+                        <div style="margin-top: 8px; font-size: 11px; color: #64748b; text-align: center;">
+                            <i class="fa-solid fa-users"></i> Katılımcılar
+                        </div>
+                        <div id="bet-participants-${market.id}" style="margin-top: 8px; max-height: 150px; overflow-y: auto; font-size: 11px; color: #94a3b8; background: rgba(3,8,20,0.5); border-radius: 8px; padding: 8px;">
+                            <div style="text-align:center; color:#64748b; padding:4px;">Yükleniyor...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            ${actionContent}
+        </div>
+    `;
 }
 
 function renderMarketGrid(marketsObj) {
