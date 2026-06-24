@@ -1378,21 +1378,13 @@ async function sendChatMessage() {
 }
 
 function openMarketChat(marketId, marketTitle) {
-    currentMarketIdForChat = marketId;
-    activeMarketTitle = marketTitle;
-    
-    const panel = document.getElementById('chat-panel');
-    if (!panel || !panel.classList.contains('open')) {
-        toggleChatPanel();
-    }
-    
-    const marketTab = document.getElementById('market-chat-tab');
-    if (marketTab) {
-        marketTab.style.display = 'block';
-        marketTab.textContent = `📊 ${marketTitle}`;
-    }
-    
-    switchChatTab('market');
+    // Bu özellik devre dışı bırakıldı. Sadece genel chat kullanılabilir.
+    console.log("ℹ️ Lades özel chat devre dışı bırakıldı.");
+}
+
+function closeMarketChat() {
+    // Bu özellik devre dışı bırakıldı.
+    console.log("ℹ️ Lades özel chat devre dışı bırakıldı.");
 }
 
 function closeMarketChat() {

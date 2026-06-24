@@ -106,7 +106,7 @@ function renderLeaderboard(usersObj) {
 }
 
 // ------------------------------------------------------
-// LADES KARTLARI VE RENDER
+// LADES KARTLARI VE RENDER (Sohbet Butonu Kaldırıldı)
 // ------------------------------------------------------
 function generateMarketCardHTML(market, isActive) {
     const yesPool = market.yesPool || 0;
@@ -254,15 +254,8 @@ function generateMarketCardHTML(market, isActive) {
                 <p style="font-size:12px; color:#64748b; margin-top:2px;">
                     👤 <span style="color:#ff4aa2; font-weight:600;" id="creator-${market.id}">${creatorDisplay}</span> tarafından açıldı
                 </p>
+                <!-- SADECE DETAYLAR BUTONU (Sohbet Butonu KALDIRILDI) -->
                 <div style="display:flex; gap:8px; align-items:center; margin-top:6px;">
-                    <button onclick="event.stopPropagation(); openMarketChat('${market.id}', '${safeTitle}')" 
-                            style="background:rgba(36,255,255,0.05); border:1px solid rgba(36,255,255,0.2); 
-                                   color:#24ffff; padding:3px 10px; border-radius:12px; font-size:10px; 
-                                   cursor:pointer; display:flex; align-items:center; gap:4px; transition: 0.2s;"
-                            onmouseover="this.style.background='rgba(36,255,255,0.15)';"
-                            onmouseout="this.style.background='rgba(36,255,255,0.05)';">
-                        <i class="fa-solid fa-comment"></i> Sohbet
-                    </button>
                     <button onclick="event.stopPropagation(); toggleMarketDetail('${market.id}')" 
                             style="background:rgba(255,74,162,0.05); border:1px solid rgba(255,74,162,0.2); 
                                    color:#ff4aa2; padding:3px 10px; border-radius:12px; font-size:10px; 
