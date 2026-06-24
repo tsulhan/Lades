@@ -131,6 +131,5 @@ window.openMarketChat = openMarketChat;
 window.closeMarketChat = closeMarketChat;
 window.initProfilePage = initProfilePage;
 window.toggleMarketDetail = toggleMarketDetail;
-// Window tanımlamaları (mevcut olanların sonuna ekleyin)
-window.toggleChatMinimize = toggleChatMinimize;
-window.clearChatHistory = clearChatHistory;
+window.toggleChatMinimize = toggleChatMinimize;   // ✅ EKLENDİ
+window.clearChatHistory = clearChatHistory;       // ✅ EKLENDİ

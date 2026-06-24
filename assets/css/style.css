@@ -886,9 +886,9 @@ main {
 .chat-panel {
     position: fixed;
     right: 20px;
-    top: 80px; /* LADES logosunun altından başlar */
+    top: 80px;
     width: 320px;
-    height: calc(100vh - 160px); /* Alt ve üst boşluk bırakır */
+    height: calc(100vh - 160px);
     background: #0b132b;
     border: 1px solid #1c2541;
     border-radius: 16px;
@@ -899,6 +899,23 @@ main {
     transition: all 0.3s ease;
     opacity: 1;
     transform: none;
+}
+
+.chat-panel.minimized {
+    height: 50px;
+    top: auto;
+    bottom: 80px;
+    overflow: hidden;
+}
+
+.chat-panel.minimized .chat-messages,
+.chat-panel.minimized .chat-input-area,
+.chat-panel.minimized .chat-tabs {
+    display: none;
+}
+
+.chat-panel.minimized .chat-header {
+    border-radius: 16px;
 }
 
 .chat-panel.minimized {
