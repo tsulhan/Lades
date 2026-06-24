@@ -304,6 +304,13 @@ function generateMarketCardHTML(market, isActive) {
         ? (yesPool + noPool + drawPool)
         : (yesPool + noPool);
 
+    // ✅ OTOMATİK ORAN HESAPLAMA
+    const odds = {
+        YES: totalVolume / (yesPool || 1),
+        NO: totalVolume / (noPool || 1),
+        DRAW: totalVolume / (drawPool || 1)
+    };
+
     let yesPercent = 50, noPercent = 50, drawPercent = 0;
     if (totalVolume > 0) {
         yesPercent = Math.round((yesPool / totalVolume) * 100);
@@ -328,16 +335,26 @@ function generateMarketCardHTML(market, isActive) {
         if (isSpor) {
             actionContent = `
                 <div class="market-actions ${colsClass}">
-                    <button class="btn-bet btn-yes" onclick="openBetModal('${market.id}', '${safeTitle}', 'YES')">EVET %${yesPercent}</button>
-                    <button class="btn-bet btn-draw" onclick="openBetModal('${market.id}', '${safeTitle}', 'DRAW')">BERABERLİK %${drawPercent}</button>
-                    <button class="btn-bet btn-no" onclick="openBetModal('${market.id}', '${safeTitle}', 'NO')">HAYIR %${noPercent}</button>
+                    <button class="btn-bet btn-yes" onclick="openBetModal('${market.id}', '${safeTitle}', 'YES')">
+                        EVET %${yesPercent} <span style="font-size:9px; opacity:0.7;">(${odds.YES.toFixed(2)}x)</span>
+                    </button>
+                    <button class="btn-bet btn-draw" onclick="openBetModal('${market.id}', '${safeTitle}', 'DRAW')">
+                        BERABERLİK %${drawPercent} <span style="font-size:9px; opacity:0.7;">(${odds.DRAW.toFixed(2)}x)</span>
+                    </button>
+                    <button class="btn-bet btn-no" onclick="openBetModal('${market.id}', '${safeTitle}', 'NO')">
+                        HAYIR %${noPercent} <span style="font-size:9px; opacity:0.7;">(${odds.NO.toFixed(2)}x)</span>
+                    </button>
                 </div>
             `;
         } else {
             actionContent = `
                 <div class="market-actions ${colsClass}">
-                    <button class="btn-bet btn-yes" onclick="openBetModal('${market.id}', '${safeTitle}', 'YES')">EVET %${yesPercent}</button>
-                    <button class="btn-bet btn-no" onclick="openBetModal('${market.id}', '${safeTitle}', 'NO')">HAYIR %${noPercent}</button>
+                    <button class="btn-bet btn-yes" onclick="openBetModal('${market.id}', '${safeTitle}', 'YES')">
+                        EVET %${yesPercent} <span style="font-size:9px; opacity:0.7;">(${odds.YES.toFixed(2)}x)</span>
+                    </button>
+                    <button class="btn-bet btn-no" onclick="openBetModal('${market.id}', '${safeTitle}', 'NO')">
+                        HAYIR %${noPercent} <span style="font-size:9px; opacity:0.7;">(${odds.NO.toFixed(2)}x)</span>
+                    </button>
                 </div>
             `;
         }
@@ -434,20 +451,20 @@ function generateMarketCardHTML(market, isActive) {
                     </button>
                 </div>
                 <div id="${detailContentId}" class="market-detail-content" style="display: none; margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(28,37,65,0.5);">
-                    <div style="font-size: 13px; color: #94a3b8; margin-bottom: 6px;">📊 Bahis Dağılımı</div>
+                    <div style="font-size: 13px; color: #94a3b8; margin-bottom: 6px;">📊 Bahis Dağılımı & Oranlar</div>
                     <div id="bet-details-${market.id}" style="font-size: 12px; color: #64748b;">
                         <div style="display:flex; justify-content:space-between; padding: 4px 0; border-bottom: 1px solid rgba(28,37,65,0.2);">
                             <span>✅ EVET</span>
-                            <span style="color: #22c55e; font-weight:600;">${yesPool.toLocaleString("tr-TR")} Token (${yesPercent}%)</span>
+                            <span style="color: #22c55e; font-weight:600;">${yesPool.toLocaleString("tr-TR")} Token (${yesPercent}%) - ${odds.YES.toFixed(2)}x</span>
                         </div>
                         <div style="display:flex; justify-content:space-between; padding: 4px 0; border-bottom: 1px solid rgba(28,37,65,0.2);">
                             <span>❌ HAYIR</span>
-                            <span style="color: #ef4444; font-weight:600;">${noPool.toLocaleString("tr-TR")} Token (${noPercent}%)</span>
+                            <span style="color: #ef4444; font-weight:600;">${noPool.toLocaleString("tr-TR")} Token (${noPercent}%) - ${odds.NO.toFixed(2)}x</span>
                         </div>
                         ${isSpor ? `
                         <div style="display:flex; justify-content:space-between; padding: 4px 0; border-bottom: 1px solid rgba(28,37,65,0.2);">
                             <span>🤝 BERABERLİK</span>
-                            <span style="color: #f59e0b; font-weight:600;">${drawPool.toLocaleString("tr-TR")} Token (${drawPercent}%)</span>
+                            <span style="color: #f59e0b; font-weight:600;">${drawPool.toLocaleString("tr-TR")} Token (${drawPercent}%) - ${odds.DRAW.toFixed(2)}x</span>
                         </div>
                         ` : ''}
                         <div style="display:flex; justify-content:space-between; padding: 4px 0; margin-top: 4px; font-weight:700; color:#24ffff;">
@@ -455,7 +472,7 @@ function generateMarketCardHTML(market, isActive) {
                             <span>${totalVolume.toLocaleString("tr-TR")} Token</span>
                         </div>
                         <div style="margin-top: 8px; font-size: 11px; color: #64748b; text-align: center;">
-                            <i class="fa-solid fa-users"></i> Detayları görmek için tıklayınız
+                            <i class="fa-solid fa-users"></i> Katılımcılar
                         </div>
                         <div id="bet-participants-${market.id}" style="margin-top: 8px; max-height: 150px; overflow-y: auto; font-size: 11px; color: #94a3b8; background: rgba(3,8,20,0.5); border-radius: 8px; padding: 8px;">
                             <div style="text-align:center; color:#64748b; padding:4px;">Yükleniyor...</div>
@@ -747,7 +764,7 @@ async function createNewMarket() {
         data: { creator: currentUserEmail, creatorNickname: creatorNickname }
     });
 
-    alert(`⚡ Lades Başarıyla Yaratıldı!\n\n💰 Yatırılan: ${initialBet.toLocaleString("tr-TR")} Token\n⏰ Kapanış: ${formattedDateTime}`);
+    alert(`⚡ Lades Başarıyla Yaratıldı!\n\n💰 Yatırılan: ${initialBet.toLocaleString("tr-TR")} Token\n⏰ Kapanış: ${formattedDateTime}\n📈 Oranlar dinamik olarak belirlenecek!`);
 
     document.getElementById("market-question").value = "";
     document.getElementById("market-date").value = "";
@@ -895,7 +912,7 @@ async function confirmBet() {
 }
 
 // ------------------------------------------------------
-// LADES SONUÇLANDIRMA VE SİLME
+// LADES SONUÇLANDIRMA (KOMİSYON + OTOMATİK ORAN)
 // ------------------------------------------------------
 async function finalizeLades(marketId, winningChoice) {
     if (typeof db === "undefined" || !db) return;
@@ -956,7 +973,7 @@ async function finalizeLades(marketId, winningChoice) {
         return;
     }
 
-    // ✅ ORAN HESAPLAMA
+    // ✅ OTOMATİK ORAN HESAPLAMA (Polymarket Stili)
     const odds = {
         YES: totalPool / (yesPool || 1),
         NO: totalPool / (noPool || 1),
@@ -1000,7 +1017,33 @@ async function finalizeLades(marketId, winningChoice) {
     market.status = "Sonuçlandı";
     await fbSet(`customMarkets/${marketId}`, market);
 
-    // ✅ SONUÇ MESAJI
+    // ✅ SONUÇ BİLDİRİMLERİ
+    const allParticipants = Object.values(history).filter(h => h.marketId === marketId);
+    
+    const resultPromises = allParticipants.map(async (participant) => {
+        const isWinner = winners.some(w => w.email === participant.email);
+        const winAmount = isWinner ? 
+            distributionResults.find(r => r.email === participant.email)?.reward || 0 : 0;
+        
+        const userEntry = Object.entries(users).find(([key, u]) => u.email === participant.email);
+        const displayName = userEntry ? userEntry[1].nickname || maskUserEmail(participant.email) : maskUserEmail(participant.email);
+        
+        let title = isWinner ? "🎉 Kazandınız!" : "😔 Kaybettiniz";
+        let message = isWinner ? 
+            `${market.title} ladesinde ${winAmount.toLocaleString("tr-TR")} Token kazandınız! 🏆` :
+            `${market.title} ladesinde ${participant.amount.toLocaleString("tr-TR")} Token kaybettiniz.`;
+
+        return createNotification(participant.email, {
+            title: title,
+            message: message,
+            type: "result",
+            marketId: marketId,
+            link: "profil.html",
+            data: { isWinner, winAmount, lostAmount: participant.amount }
+        });
+    });
+    await Promise.all(resultPromises);
+
     const remainingTokens = distributedPool - totalDistributed;
     
     let distributionDetails = distributionResults.map(r => 
@@ -1779,6 +1822,79 @@ let currentChatTab = 'global';
 let currentMarketIdForChat = null;
 let chatMessageListener = null;
 let chatUnreadCount = 0;
+let chatMinimized = false;
+
+function toggleChatMinimize() {
+    const panel = document.getElementById('chat-panel');
+    const icon = document.getElementById('chat-minimize-icon');
+    
+    if (!panel) return;
+    
+    chatMinimized = !chatMinimized;
+    
+    if (chatMinimized) {
+        panel.classList.add('minimized');
+        if (icon) icon.className = 'fa-solid fa-plus';
+    } else {
+        panel.classList.remove('minimized');
+        if (icon) icon.className = 'fa-solid fa-minus';
+    }
+}
+
+async function clearChatHistory() {
+    const currentUserEmail = localStorage.getItem("currentUser");
+    
+    if (currentUserEmail !== "tsulhan@gmail.com") {
+        alert("❌ Bu işlem sadece yönetici tarafından yapılabilir!");
+        return;
+    }
+    
+    const chatType = confirm(
+        "🔄 Chat Geçmişi Temizleme\n\n" +
+        "Hangi chat odasını temizlemek istiyorsunuz?\n" +
+        "• 'Tamam' → Tüm chatleri temizle\n" +
+        "• 'İptal' → Sadece aktif chat'i temizle"
+    );
+    
+    const confirmMessage = chatType ?
+        "⚠️ TÜM CHAT GEÇMİŞİNİ (Global + Tüm Lades Chati) silmek istediğinize emin misiniz?\n\nBu işlem geri alınamaz!" :
+        `⚠️ "${currentChatTab === 'global' ? 'Global Chat' : 'Lades Chat'}" odasını silmek istediğinize emin misiniz?\n\nBu işlem geri alınamaz!`;
+    
+    if (!confirm(confirmMessage)) return;
+    
+    if (typeof db === "undefined" || !db) {
+        alert("Firebase bağlantısı yok!");
+        return;
+    }
+    
+    try {
+        const loadingMsg = document.createElement('div');
+        loadingMsg.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#0b132b; padding:20px 40px; border-radius:12px; border:1px solid #24ffff; color:#24ffff; font-weight:bold; z-index:9999;';
+        loadingMsg.innerHTML = '⏳ Chat geçmişi temizleniyor...';
+        document.body.appendChild(loadingMsg);
+        
+        if (chatType) {
+            await fbRemove("chats");
+            alert("✅ Tüm chat geçmişi başarıyla temizlendi!");
+        } else {
+            let chatPath = 'chats/global';
+            if (currentChatTab === 'market' && currentMarketIdForChat) {
+                chatPath = `chats/market_${currentMarketIdForChat}`;
+            }
+            await fbRemove(chatPath);
+            alert(`✅ "${currentChatTab === 'global' ? 'Global Chat' : 'Lades Chat'}" başarıyla temizlendi!`);
+        }
+        
+        document.body.removeChild(loadingMsg);
+        loadChatMessages(currentChatTab);
+        
+    } catch (error) {
+        console.error("Chat temizleme hatası:", error);
+        alert("❌ Chat temizlenirken bir hata oluştu: " + error.message);
+        const loadingMsg = document.querySelector('div[style*="position:fixed"]');
+        if (loadingMsg) document.body.removeChild(loadingMsg);
+    }
+}
 
 function toggleChatPanel() {
     const panel = document.getElementById('chat-panel');
@@ -1977,14 +2093,14 @@ function startChatSystem() {
         });
     }
     
-    const panel = document.getElementById('chat-panel');
-    if (panel) {
-        panel.addEventListener('transitionend', () => {
-            if (panel.classList.contains('open')) {
-                const input = document.getElementById('chat-input');
-                if (input) input.focus();
-            }
-        });
+    const currentUserEmail = localStorage.getItem('currentUser');
+    const clearBtn = document.getElementById('chat-clear-btn');
+    if (clearBtn) {
+        if (currentUserEmail === "tsulhan@gmail.com") {
+            clearBtn.style.display = 'inline-block';
+        } else {
+            clearBtn.style.display = 'none';
+        }
     }
     
     setTimeout(() => {
@@ -2528,93 +2644,3 @@ async function checkAndCloseMarkets() {
 }
 
 setInterval(checkAndCloseMarkets, 30 * 1000);
-
-// ======================================================
-// CHAT KÜÇÜLT/BÜYÜT VE TEMİZLEME (EKLENECEK FONKSİYONLAR)
-// ======================================================
-
-// ------------------------------------------------------
-// CHAT KÜÇÜLT/BÜYÜT
-// ------------------------------------------------------
-let chatMinimized = false;
-
-function toggleChatMinimize() {
-    const panel = document.getElementById('chat-panel');
-    const icon = document.getElementById('chat-minimize-icon');
-    
-    if (!panel) return;
-    
-    chatMinimized = !chatMinimized;
-    
-    if (chatMinimized) {
-        panel.classList.add('minimized');
-        if (icon) icon.className = 'fa-solid fa-plus';
-    } else {
-        panel.classList.remove('minimized');
-        if (icon) icon.className = 'fa-solid fa-minus';
-    }
-}
-
-// ------------------------------------------------------
-// CHAT GEÇMİŞİNİ TEMİZLE (SADECE ADMIN)
-// ------------------------------------------------------
-async function clearChatHistory() {
-    const currentUserEmail = localStorage.getItem("currentUser");
-    
-    // Admin kontrolü
-    if (currentUserEmail !== "tsulhan@gmail.com") {
-        alert("❌ Bu işlem sadece yönetici tarafından yapılabilir!");
-        return;
-    }
-    
-    // Hangi chat'in temizleneceğini sor
-    const chatType = confirm(
-        "🔄 Chat Geçmişi Temizleme\n\n" +
-        "Hangi chat odasını temizlemek istiyorsunuz?\n" +
-        "• 'Tamam' → Tüm chatleri temizle\n" +
-        "• 'İptal' → Sadece aktif chat'i temizle"
-    );
-    
-    const confirmMessage = chatType ?
-        "⚠️ TÜM CHAT GEÇMİŞİNİ (Global + Tüm Lades Chati) silmek istediğinize emin misiniz?\n\nBu işlem geri alınamaz!" :
-        `⚠️ "${currentChatTab === 'global' ? 'Global Chat' : 'Lades Chat'}" odasını silmek istediğinize emin misiniz?\n\nBu işlem geri alınamaz!`;
-    
-    if (!confirm(confirmMessage)) return;
-    
-    if (typeof db === "undefined" || !db) {
-        alert("Firebase bağlantısı yok!");
-        return;
-    }
-    
-    try {
-        const loadingMsg = document.createElement('div');
-        loadingMsg.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#0b132b; padding:20px 40px; border-radius:12px; border:1px solid #24ffff; color:#24ffff; font-weight:bold; z-index:9999;';
-        loadingMsg.innerHTML = '⏳ Chat geçmişi temizleniyor...';
-        document.body.appendChild(loadingMsg);
-        
-        if (chatType) {
-            // Tüm chat'leri temizle
-            await fbRemove("chats");
-            alert("✅ Tüm chat geçmişi başarıyla temizlendi!");
-        } else {
-            // Sadece aktif chat'i temizle
-            let chatPath = 'chats/global';
-            if (currentChatTab === 'market' && currentMarketIdForChat) {
-                chatPath = `chats/market_${currentMarketIdForChat}`;
-            }
-            await fbRemove(chatPath);
-            alert(`✅ "${currentChatTab === 'global' ? 'Global Chat' : 'Lades Chat'}" başarıyla temizlendi!`);
-        }
-        
-        document.body.removeChild(loadingMsg);
-        
-        // Chat mesajlarını yeniden yükle
-        loadChatMessages(currentChatTab);
-        
-    } catch (error) {
-        console.error("Chat temizleme hatası:", error);
-        alert("❌ Chat temizlenirken bir hata oluştu: " + error.message);
-        const loadingMsg = document.querySelector('div[style*="position:fixed"]');
-        if (loadingMsg) document.body.removeChild(loadingMsg);
-    }
-}
