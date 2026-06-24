@@ -68,6 +68,16 @@ function startRealtimeListeners() {
 document.addEventListener("DOMContentLoaded", async () => {
     console.log("🚀 LADES uygulaması başlatılıyor...");
     
+    // İstatistikleri başlat
+    if (typeof loadStats === 'function') {
+        setTimeout(() => {
+            loadStats();
+        }, 500);
+        if (typeof startStatsListener === 'function') {
+            startStatsListener();
+        }
+    }
+
     if (typeof bootstrapFirebase === "function") {
         await bootstrapFirebase();
     }
@@ -141,3 +151,4 @@ window.approveToken = approveToken;
 window.deleteInviteCode = deleteInviteCode;
 window.deleteUserCompletely = deleteUserCompletely;
 window.setTokensManual = setTokensManual;
+window.loadStats = loadStats;
