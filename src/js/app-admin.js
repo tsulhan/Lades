@@ -19,6 +19,19 @@ async function closeAdminPanel() {
 async function renderAdminPanel() {
     if (typeof db === "undefined" || !db) return;
 
+    // ✅ SİSTEM HAVUZU GERÇEK ZAMANLI GÜNCELLEME
+    const poolDisplay = document.getElementById('system-pool-display');
+    const poolAmount = document.getElementById('system-pool-amount');
+    
+    if (poolDisplay && poolAmount) {
+        poolDisplay.style.display = 'block';
+        fbRef("systemPool").on("value", (snapshot) => {
+            const value = snapshot.val() || 0;
+            poolAmount.textContent = value.toLocaleString("tr-TR");
+        });
+    }
+
+    // 1. BEKLEYEN İSTEKLER
     fbRef("adminRequests").on("value", (snapshot) => {
         const requestsList = document.getElementById("admin-requests-list");
         if (!requestsList) return;
@@ -97,6 +110,7 @@ async function renderAdminPanel() {
         }
     });
 
+    // 2. DAVET KODLARI
     fbRef("inviteCodes").on("value", (snapshot) => {
         const codesList = document.getElementById("admin-codes-list");
         if (!codesList) return;
@@ -127,6 +141,7 @@ async function renderAdminPanel() {
         });
     });
 
+    // 3. AKTİF LADESLER
     fbRef("customMarkets").on("value", (snapshot) => {
         const adminActiveMarkets = document.getElementById("admin-active-markets");
         if (!adminActiveMarkets) return;
@@ -192,6 +207,7 @@ async function renderAdminPanel() {
         }
     });
 
+    // 4. KAYITLI KULLANICILAR
     fbRef("ladesUsers").on("value", (snapshot) => {
         const usersTable = document.getElementById("admin-users-list");
         if (!usersTable) return;
