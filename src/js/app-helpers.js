@@ -306,12 +306,28 @@ function renderMarketGrid(marketsObj) {
     
     const allMarkets = objectValuesToArray(marketsObj).filter(m => m);
 
-    let activeMarkets = allMarkets.filter(m => m.status === "Aktif");
+    // ✅ AKTİF LADESLER - Kapanış tarihine göre sırala (yakından uzağa)
+    let activeMarkets = allMarkets
+        .filter(m => m.status === "Aktif")
+        .sort((a, b) => {
+            const dateA = a.dateRaw ? new Date(a.dateRaw) : new Date(a.date);
+            const dateB = b.dateRaw ? new Date(b.dateRaw) : new Date(b.date);
+            return dateA - dateB;
+        });
+
     if (selectedCategoryFilter !== "Tümü") {
         activeMarkets = activeMarkets.filter(m => m.category === selectedCategoryFilter);
     }
 
-    let pastMarkets = allMarkets.filter(m => m.status === "Sonuçlandı" || m.status === "Kapatıldı");
+    // ✅ GEÇMİŞ LADESLER - Kapanış tarihine göre sırala (en son kapanan en üstte)
+    let pastMarkets = allMarkets
+        .filter(m => m.status === "Sonuçlandı" || m.status === "Kapatıldı")
+        .sort((a, b) => {
+            const dateA = a.dateRaw ? new Date(a.dateRaw) : new Date(a.date);
+            const dateB = b.dateRaw ? new Date(b.dateRaw) : new Date(b.date);
+            return dateB - dateA;
+        });
+
     if (selectedCategoryFilter !== "Tümü") {
         pastMarkets = pastMarkets.filter(m => m.category === selectedCategoryFilter);
     }
