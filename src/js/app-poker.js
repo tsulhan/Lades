@@ -1,5 +1,5 @@
 // ======================================================
-// LADES APP-POKER.JS - POKER OYUNU FONKSİYONLARI
+// LADES APP-POKER.JS - TEXAS HOLD'EM (SADELEŞTİRİLMİŞ)
 // ======================================================
 
 let currentPokerRoom = null;
@@ -10,7 +10,6 @@ let pokerListener = null;
 // ------------------------------------------------------
 function getPlayerKey(email) {
     if (!email) return 'unknown';
-    // Email'in @ öncesini al ve geçersiz karakterleri temizle
     return email.split('@')[0].replace(/[.#$\/\[\]]/g, '_');
 }
 
@@ -46,7 +45,7 @@ async function loadPokerRooms() {
 
     if (typeof db === "undefined" || !db) {
         container.innerHTML = `
-            <div style="text-align:center; color:#ef4444; padding:30px; grid-column: 1/-1;">
+            <div style="text-align:center; color:#ef4444; padding:30px;">
                 ❌ Firebase bağlantısı yok.
             </div>
         `;
@@ -60,40 +59,50 @@ async function loadPokerRooms() {
 
         if (roomList.length === 0) {
             container.innerHTML = `
-                <div style="text-align:center; color:#64748b; padding:30px; grid-column: 1/-1;">
-                    🃏 Henüz masa oluşturulmamış. İlk masayı sen oluştur!
+                <div style="text-align:center; padding:60px 20px; background:#030814; border:1px solid #1c2541; border-radius:16px;">
+                    <div style="font-size:64px; margin-bottom:16px;">🃏</div>
+                    <div style="color:#94a3b8; font-size:18px; margin-bottom:8px;">Henüz masa oluşturulmamış</div>
+                    <div style="color:#64748b; font-size:14px; margin-bottom:20px;">İlk masayı sen oluştur!</div>
+                    <button onclick="createPokerRoom()" style="background: #24ffff; color: #030814; border: none; padding: 14px 32px; border-radius: 10px; font-weight: 700; cursor: pointer; font-size: 16px;">
+                        🎯 Hemen Masa Oluştur
+                    </button>
                 </div>
             `;
             return;
         }
 
         const currentUser = localStorage.getItem('currentUser');
-        const userNickname = await getUserNickname(currentUser);
         const playerKey = currentUser ? getPlayerKey(currentUser) : null;
 
         container.innerHTML = roomList.map(([roomId, room]) => {
             const playerCount = room.players ? Object.keys(room.players).length : 0;
-            const maxPlayers = room.maxPlayers || 6;
+            const maxPlayers = room.maxPlayers || 10;
             const isFull = playerCount >= maxPlayers;
             const isPlayer = room.players && playerKey && room.players[playerKey] !== undefined;
 
             return `
-                <div class="poker-room-card" style="${isFull && !isPlayer ? 'opacity:0.5;' : ''}">
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div style="background:#030814; border:1px solid ${isPlayer ? '#24ffff' : '#1c2541'}; border-radius:12px; padding:20px; transition: all 0.3s;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
                         <div>
-                            <div class="room-name">${room.name || 'İsimsiz Masa'}</div>
-                            <div class="room-detail">👤 ${room.host || 'Bilinmeyen'} tarafından oluşturuldu</div>
-                            <div class="room-players">
+                            <div style="font-size:20px; font-weight:700; color:#fff;">♠️ ${room.name || 'Texas Hold\'em'}</div>
+                            <div style="color:#94a3b8; font-size:14px; margin-top:4px;">
+                                👤 ${room.host || 'Bilinmeyen'} oluşturdu
+                            </div>
+                            <div style="color:#64748b; font-size:13px; margin-top:4px;">
                                 👥 ${playerCount}/${maxPlayers} oyuncu
-                                ${room.status === 'playing' ? ' • 🔴 Oyun devam ediyor' : ' • 🟢 Bekliyor'}
+                                ${room.status === 'playing' ? ' 🔴 Oyun devam ediyor' : ' 🟢 Bekliyor'}
                             </div>
                         </div>
                         <div>
                             ${isPlayer ? 
-                                `<button onclick="joinPokerRoom('${roomId}')" class="room-join-btn" style="background:#f59e0b;">Devam Et</button>` :
+                                `<button onclick="joinPokerRoom('${roomId}')" style="background:#f59e0b; color:#fff; border:none; padding:10px 24px; border-radius:8px; font-weight:600; cursor:pointer;">
+                                    🎯 Masaya Dön
+                                </button>` :
                                 (isFull ? 
-                                    `<span style="color:#ef4444; font-size:12px;">Masa Dolu</span>` :
-                                    `<button onclick="joinPokerRoom('${roomId}')" class="room-join-btn">Katıl</button>`
+                                    `<span style="color:#ef4444; font-weight:600;">❌ Masa Dolu</span>` :
+                                    `<button onclick="joinPokerRoom('${roomId}')" style="background:#24ffff; color:#030814; border:none; padding:10px 24px; border-radius:8px; font-weight:700; cursor:pointer;">
+                                        💺 Katıl
+                                    </button>`
                                 )
                             }
                         </div>
@@ -105,7 +114,7 @@ async function loadPokerRooms() {
     } catch (error) {
         console.error("Poker odaları yüklenirken hata:", error);
         container.innerHTML = `
-            <div style="text-align:center; color:#ef4444; padding:30px; grid-column: 1/-1;">
+            <div style="text-align:center; color:#ef4444; padding:30px;">
                 ❌ Odalar yüklenirken hata oluştu.
             </div>
         `;
@@ -122,10 +131,8 @@ async function createPokerRoom() {
         return;
     }
 
-    const roomName = prompt('Masa adı ne olsun?', 'Kral Masası');
+    const roomName = prompt('Masa adı ne olsun? (Örn: VIP Masası)', 'Texas Hold\'em');
     if (!roomName) return;
-
-    const maxPlayers = parseInt(prompt('Kaç oyuncu olsun? (2-6)', '4')) || 4;
 
     if (typeof db === "undefined" || !db) {
         alert('Firebase bağlantısı yok!');
@@ -135,20 +142,20 @@ async function createPokerRoom() {
     try {
         const userNickname = await getUserNickname(currentUser);
         const roomId = uniqueId('poker');
-        const playerKey = getPlayerKey(currentUser); // ✅ Güvenli key
+        const playerKey = getPlayerKey(currentUser);
         
         await fbSet(`pokerRooms/${roomId}`, {
             id: roomId,
             name: roomName,
             host: userNickname,
             hostEmail: currentUser,
-            maxPlayers: Math.min(6, Math.max(2, maxPlayers)),
+            maxPlayers: 10, // ✅ 10 sandalye
             status: 'waiting',
             createdAt: Date.now(),
             players: {
-                [playerKey]: {  // ✅ Email yerine güvenli key
+                [playerKey]: {
                     name: userNickname,
-                    email: currentUser,  // Email değer olarak saklanıyor
+                    email: currentUser,
                     chips: 1000,
                     cards: [],
                     folded: false,
@@ -192,9 +199,8 @@ async function joinPokerRoom(roomId) {
             return;
         }
 
-        const playerKey = getPlayerKey(currentUser); // ✅ Güvenli key
+        const playerKey = getPlayerKey(currentUser);
 
-        // Zaten masada mı?
         if (room.players && room.players[playerKey] !== undefined) {
             currentPokerRoom = roomId;
             renderPokerTable(roomId);
@@ -203,16 +209,15 @@ async function joinPokerRoom(roomId) {
 
         const playerCount = room.players ? Object.keys(room.players).length : 0;
         if (playerCount >= room.maxPlayers) {
-            alert('❌ Masa dolu!');
+            alert('❌ Masa dolu! (10/10)');
             return;
         }
 
         const userNickname = await getUserNickname(currentUser);
         
-        // ✅ Güvenli key ile ekle
         await fbSet(`pokerRooms/${roomId}/players/${playerKey}`, {
             name: userNickname,
-            email: currentUser,  // Email değer olarak saklanıyor
+            email: currentUser,
             chips: 1000,
             cards: [],
             folded: false,
@@ -237,23 +242,17 @@ function renderPokerTable(roomId) {
 
     tableContainer.style.display = 'block';
     tableContainer.innerHTML = `
-        <div style="text-align: center; padding: 20px;">
-            <div style="font-size: 14px; color: #64748b;">
+        <div style="text-align: center; padding: 40px;">
+            <div style="font-size: 20px; color: #24ffff; margin-bottom: 12px;">
                 <i class="fa-solid fa-spinner fa-spin"></i> 
-                Poker masası başlatılıyor...
+                Poker masası yükleniyor...
             </div>
-            <div style="font-size: 12px; color: #64748b; margin-top: 8px;">
+            <div style="font-size: 14px; color: #64748b;">
                 Oda ID: ${roomId}
             </div>
-            <button onclick="leavePokerRoom()" 
-                    style="margin-top: 16px; background:rgba(239,68,68,0.15); color:#ef4444; border:1px solid rgba(239,68,68,0.3); 
-                           padding:8px 16px; border-radius:6px; cursor:pointer; font-weight:600;">
-                Masadan Ayrıl
-            </button>
         </div>
     `;
 
-    // Gerçek zamanlı dinleyici
     if (pokerListener) {
         pokerListener();
         pokerListener = null;
@@ -268,14 +267,14 @@ function renderPokerTable(roomId) {
 }
 
 // ------------------------------------------------------
-// POKER TABLO İÇERİĞİNİ RENDER ET
+// POKER TABLO İÇERİĞİNİ RENDER ET (10 Sandalye)
 // ------------------------------------------------------
 function renderPokerTableContent(room) {
     const tableContainer = document.getElementById('poker-table');
     if (!tableContainer) return;
 
     const currentUser = localStorage.getItem('currentUser');
-    const playerKey = currentUser ? getPlayerKey(currentUser) : null; // ✅ Güvenli key
+    const playerKey = currentUser ? getPlayerKey(currentUser) : null;
     const players = room.players || {};
     const playerCount = Object.keys(players).length;
     const isPlayer = playerKey && players[playerKey] !== undefined;
@@ -283,75 +282,117 @@ function renderPokerTableContent(room) {
     if (!isPlayer) {
         tableContainer.innerHTML = `
             <div style="text-align: center; padding: 40px;">
-                <div style="font-size: 16px; color: #94a3b8;">Artık bu masada değilsin.</div>
-                <button onclick="loadPokerRooms()" style="margin-top:16px; background:#24ffff; color:#030814; border:none; padding:10px 20px; border-radius:8px; font-weight:700; cursor:pointer;">
-                    Masalara Dön
+                <div style="font-size: 18px; color: #94a3b8; margin-bottom: 16px;">Artık bu masada değilsin.</div>
+                <button onclick="loadPokerRooms()" style="background:#24ffff; color:#030814; border:none; padding:12px 28px; border-radius:8px; font-weight:700; cursor:pointer;">
+                    📋 Masalara Dön
                 </button>
             </div>
         `;
         return;
     }
 
+    // 10 sandalye için oyuncu listesi
     const playerList = Object.entries(players).map(([key, data]) => ({
         key,
         name: data.name || 'Bilinmeyen',
         chips: data.chips || 0,
-        isCurrent: key === playerKey
+        isCurrent: key === playerKey,
+        email: data.email || key
     }));
 
-    const currentPlayer = players[playerKey];
+    // Boş sandalyeler (10 - mevcut oyuncu sayısı)
+    const emptySeats = Math.max(0, 10 - playerList.length);
 
     tableContainer.innerHTML = `
         <div style="padding: 20px;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-                <div style="font-size:18px; font-weight:700; color:#fff;">♠️ ${room.name || 'Poker Masası'}</div>
-                <div style="font-size:13px; color:#64748b;">
-                    👥 ${playerCount}/${room.maxPlayers} oyuncu
-                    ${room.status === 'playing' ? '🔴 Oyun devam ediyor' : '🟢 Bekliyor'}
+            <!-- Masa Başlığı -->
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; flex-wrap:wrap; gap:12px;">
+                <div>
+                    <div style="font-size:24px; font-weight:700; color:#fff;">♠️ ${room.name || 'Texas Hold\'em'}</div>
+                    <div style="color:#94a3b8; font-size:14px; margin-top:4px;">
+                        👑 ${room.host || 'Bilinmeyen'} | 👥 ${playerCount}/10 oyuncu
+                        ${room.status === 'playing' ? ' 🔴 Oyun devam ediyor' : ' 🟢 Bekliyor'}
+                    </div>
                 </div>
+                <button onclick="leavePokerRoom()" 
+                        style="background:rgba(239,68,68,0.15); color:#ef4444; border:1px solid rgba(239,68,68,0.3); 
+                               padding:10px 20px; border-radius:8px; cursor:pointer; font-weight:600;">
+                    🚪 Masadan Ayrıl
+                </button>
             </div>
 
-            <!-- Oyuncular -->
-            <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap:12px; margin-bottom:20px;">
-                ${playerList.map(p => `
-                    <div style="background:#030814; border:1px solid ${p.isCurrent ? '#24ffff' : '#1c2541'}; border-radius:10px; padding:12px;">
-                        <div style="display:flex; justify-content:space-between; align-items:center;">
-                            <span style="font-weight:600; color:${p.isCurrent ? '#24ffff' : '#94a3b8'}">${p.name} ${p.isCurrent ? '👈' : ''}</span>
-                            <span style="color:#24ffff; font-weight:700;">${p.chips}</span>
+            <!-- 10 Sandalyeli Masa -->
+            <div style="background:#0b132b; border:2px solid #1c2541; border-radius:20px; padding:30px; margin-bottom:24px;">
+                
+                <!-- Oyuncular (Grid: 5 sütun x 2 satır) -->
+                <div style="display:grid; grid-template-columns: repeat(5, 1fr); gap:12px;">
+                    ${playerList.map(p => `
+                        <div style="background:${p.isCurrent ? '#1a2a4a' : '#030814'}; 
+                                    border:2px solid ${p.isCurrent ? '#24ffff' : '#1c2541'}; 
+                                    border-radius:12px; padding:16px; text-align:center; 
+                                    transition: all 0.3s;
+                                    ${p.isCurrent ? 'box-shadow: 0 0 20px rgba(36,255,255,0.2);' : ''}">
+                            <div style="font-size:28px; margin-bottom:4px;">${p.isCurrent ? '👤' : '🃏'}</div>
+                            <div style="font-weight:700; color:${p.isCurrent ? '#24ffff' : '#94a3b8'}; font-size:14px;">
+                                ${p.name}
+                                ${p.isCurrent ? ' 👈' : ''}
+                            </div>
+                            <div style="color:#24ffff; font-weight:700; font-size:16px; margin-top:4px;">
+                                🪙 ${p.chips}
+                            </div>
+                            <div style="font-size:11px; color:#64748b; margin-top:4px;">
+                                ${p.isCurrent ? 'Sizsiniz' : 'Oyuncu'}
+                            </div>
                         </div>
-                        <div style="font-size:11px; color:#64748b; margin-top:4px;">
-                            ${p.isCurrent ? 'Sizsiniz' : 'Oyuncu'}
+                    `).join('')}
+                    
+                    <!-- Boş Sandalyeler -->
+                    ${Array.from({ length: emptySeats }).map((_, i) => `
+                        <div style="background:#030814; border:2px dashed #1c2541; border-radius:12px; padding:16px; text-align:center; opacity:0.5;">
+                            <div style="font-size:28px; margin-bottom:4px;">💺</div>
+                            <div style="color:#64748b; font-size:12px;">Boş Sandalye</div>
+                        </div>
+                    `).join('')}
+                </div>
+
+                <!-- Kasa ve Community Kartları -->
+                <div style="margin-top:24px; padding-top:20px; border-top:1px solid #1c2541;">
+                    <div style="display:flex; justify-content:center; align-items:center; gap:20px; flex-wrap:wrap;">
+                        <div style="text-align:center;">
+                            <div style="color:#64748b; font-size:12px;">KASA</div>
+                            <div style="color:#24ffff; font-size:24px; font-weight:700;">🪙 ${room.pot || 0}</div>
+                        </div>
+                        <div style="text-align:center;">
+                            <div style="color:#64748b; font-size:12px;">KARTLAR</div>
+                            <div style="display:flex; gap:8px; justify-content:center; margin-top:4px;">
+                                ${(room.communityCards || []).length > 0 ? 
+                                    room.communityCards.map(card => `
+                                        <span style="background:#0b132b; border:1px solid #1c2541; border-radius:6px; padding:8px 14px; font-size:18px;">${card}</span>
+                                    `).join('') : 
+                                    '<span style="color:#64748b; font-size:13px;">Kart bekleniyor...</span>'
+                                }
+                            </div>
                         </div>
                     </div>
-                `).join('')}
-            </div>
-
-            <!-- Oyun Alanı -->
-            ${room.status === 'playing' ? `
-            <div style="background:#030814; border:1px solid #1c2541; border-radius:12px; padding:20px; margin-bottom:20px;">
-                <div style="text-align:center; color:#64748b; font-size:13px; margin-bottom:12px;">
-                    🃏 Kasa: <span style="color:#24ffff; font-weight:700;">${room.pot || 0}</span> Token
-                </div>
-                <div style="display:flex; justify-content:center; gap:8px; flex-wrap:wrap;">
-                    ${(room.communityCards || []).map(card => `
-                        <span style="background:#0b132b; border:1px solid #1c2541; border-radius:6px; padding:10px 14px; font-size:20px; min-width:50px; text-align:center;">${card}</span>
-                    `).join('') || '<span style="color:#64748b; font-size:13px;">Henüz kart açılmadı</span>'}
                 </div>
             </div>
-            ` : `
-            <div style="background:#030814; border:1px solid #1c2541; border-radius:12px; padding:20px; margin-bottom:20px; text-align:center; color:#64748b;">
-                🕐 Oyun başlamak için bekleniyor...
-            </div>
-            `}
 
-            <!-- İşlem Butonları -->
-            <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:center;">
+            <!-- Oyun Butonları -->
+            <div style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
                 ${room.status === 'playing' && room.currentTurn === playerKey ? `
-                    <button class="btn-modal btn-confirm" onclick="pokerAction('fold')">Pas Geç</button>
-                    <button class="btn-modal btn-confirm" onclick="pokerAction('call')">Gör</button>
-                    <button class="btn-modal btn-confirm" onclick="pokerAction('raise')">Yükselt</button>
+                    <button onclick="pokerAction('fold')" style="background:#ef4444; color:#fff; border:none; padding:12px 24px; border-radius:8px; font-weight:600; cursor:pointer;">
+                        🙅 Pas Geç
+                    </button>
+                    <button onclick="pokerAction('call')" style="background:#3b82f6; color:#fff; border:none; padding:12px 24px; border-radius:8px; font-weight:600; cursor:pointer;">
+                        👀 Gör
+                    </button>
+                    <button onclick="pokerAction('raise')" style="background:#f59e0b; color:#fff; border:none; padding:12px 24px; border-radius:8px; font-weight:600; cursor:pointer;">
+                        📈 Yükselt
+                    </button>
                 ` : `
-                    <span style="color:#64748b; font-size:13px;">Sıra bekleniyor...</span>
+                    <span style="color:#64748b; font-size:15px; padding:12px 24px; background:#030814; border-radius:8px;">
+                        ${room.status === 'playing' ? '⏳ Sıra bekleniyor...' : '🕐 Oyun başlamak için bekleniyor...'}
+                    </span>
                 `}
             </div>
         </div>
@@ -368,17 +409,15 @@ async function pokerAction(action) {
     if (!currentUser) return;
 
     try {
-        const playerKey = getPlayerKey(currentUser); // ✅ Güvenli key
+        const playerKey = getPlayerKey(currentUser);
         const roomSnap = await fbGet(`pokerRooms/${currentPokerRoom}`);
         const room = roomSnap;
         if (!room) return;
 
-        const player = room.players[playerKey]; // ✅ Güvenli key ile
+        const player = room.players[playerKey];
         if (!player) return;
 
-        // Basit oyun mantığı (genişletilecek)
         if (action === 'fold') {
-            player.folded = true;
             await fbSet(`pokerRooms/${currentPokerRoom}/players/${playerKey}/folded`, true);
             alert('✅ Pas geçtiniz.');
         } else if (action === 'call') {
@@ -424,7 +463,7 @@ async function leavePokerRoom() {
     if (typeof db === "undefined" || !db) return;
 
     try {
-        const playerKey = getPlayerKey(currentUser); // ✅ Güvenli key
+        const playerKey = getPlayerKey(currentUser);
         await fbRemove(`pokerRooms/${currentPokerRoom}/players/${playerKey}`);
         const roomSnap = await fbGet(`pokerRooms/${currentPokerRoom}`);
         const room = roomSnap;
