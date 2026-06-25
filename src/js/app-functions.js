@@ -345,11 +345,7 @@ async function createNewMarket() {
         return;
     }
 
-    const hourDiff = (closingDateTime - now) / (1000 * 60 * 60);
-    if (hourDiff < 1) {
-        alert("❌ Kapanış saati en az 1 saat sonra olmalıdır!");
-        return;
-    }
+    
 
     if (category !== "Spor" && choice === "DRAW") {
         alert("Beraberlik seçeneği yalnızca Spor kategorisinde kullanılabilir.");
