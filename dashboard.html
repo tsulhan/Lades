@@ -80,7 +80,6 @@
         <button id="tab-btn-lades-yarat" class="tab-button" onclick="switchTab('lades-yarat')">✨ Yeni Lades</button>
         <button id="tab-btn-liderlik-tablosu" class="tab-button" onclick="switchTab('liderlik-tablosu')">🏆 Liderlik Tablosu</button>
         <button id="tab-btn-istatistikler" class="tab-button" onclick="switchTab('istatistikler')">📊 İstatistikler</button>
-        <button id="tab-btn-diger-oyunlar" class="tab-button" onclick="switchTab('diger-oyunlar')">🎮 Diğer Oyunlar</button>
     </div>
 
     <main>
@@ -281,116 +280,127 @@
                 </div>
             </div>
         </div>
-
-        <!-- DİĞER OYUNLAR -->
-        <div id="diger-oyunlar" class="tab-content">
-            <div class="games-container">
-                <h2>🎮 Diğer Oyunlar</h2>
-                <p style="color: #64748b; font-size: 14px; margin-bottom: 25px;">LADES Token'larınla farklı oyunlar oyna!</p>
-                
-                <div class="games-grid">
-                    <!-- Texas Hold'em -->
-                    <div class="game-card" onclick="openPoker()" style="cursor: pointer;">
-                        <div class="game-card-icon">♠️</div>
-                        <div class="game-card-title">Texas Hold'em</div>
-                        <div class="game-card-desc">Klasik poker oyunu. Arkadaşlarınla masaya otur!</div>
-                        <div class="game-card-status">
-                            <span style="color: #22c55e;">●</span> Aktif
-                        </div>
-                    </div>
-
-                    <div class="game-card" style="opacity: 0.5;">
-                        <div class="game-card-icon">🎯</div>
-                        <div class="game-card-title">Blackjack</div>
-                        <div class="game-card-desc">Yakında geliyor...</div>
-                        <div class="game-card-status">
-                            <span style="color: #f59e0b;">●</span> Geliştiriliyor
-                        </div>
-                    </div>
-
-                    <div class="game-card" style="opacity: 0.5;">
-                        <div class="game-card-icon">🎲</div>
-                        <div class="game-card-title">Zar Oyunu</div>
-                        <div class="game-card-desc">Yakında geliyor...</div>
-                        <div class="game-card-status">
-                            <span style="color: #f59e0b;">●</span> Geliştiriliyor
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Texas Hold'em Oyun Alanı -->
-                <div id="poker-area" style="display: none; margin-top: 30px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                        <h3>♠️ Texas Hold'em</h3>
-                        <button onclick="closePoker()" style="background:transparent; border:none; color:#888; font-size:20px; cursor:pointer;">✕</button>
-                    </div>
-                    
-                    <div id="poker-rooms">
-                        <div style="display:flex; gap:12px; margin-bottom:20px; flex-wrap:wrap;">
-                            <button onclick="createPokerRoom()" style="background:#ff4aa2; color:white; border:none; padding:10px 20px; border-radius:8px; font-weight:700; cursor:pointer;">
-                                + Yeni Masa Oluştur
-                            </button>
-                        </div>
-                        <div id="poker-rooms-list" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap:16px;">
-                            <div style="text-align:center; color:#64748b; padding:30px; grid-column: 1/-1;">
-                                <i class="fa-solid fa-spinner fa-spin"></i> Masalar yükleniyor...
-                            </div>
-                        </div>
-                    </div>
-
-                    <div id="poker-table" style="display: none; background: #0b132b; border-radius: 20px; padding: 30px; border: 1px solid #1c2541;">
-                        <div style="text-align: center; color: #64748b; padding: 40px;">
-                            <i class="fa-solid fa-spinner fa-spin"></i> Oyun yükleniyor...
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
     </main>
 
     <!-- CHAT PANELİ -->
-    <div class="chat-panel" id="chat-panel">
-        <div class="chat-header">
-            <span>💬 Sohbet</span>
-            <div style="display:flex; align-items:center; gap:8px;">
-                <button onclick="toggleChatMinimize()" 
-                        style="background:transparent; border:none; color:#888; font-size:16px; cursor:pointer; padding:4px 6px; border-radius:4px;"
-                        onmouseover="this.style.color='#24ffff';"
-                        onmouseout="this.style.color='#888';"
-                        title="Küçült/Büyüt">
-                    <i class="fa-solid fa-minus" id="chat-minimize-icon"></i>
-                </button>
-                <button id="chat-clear-btn" onclick="clearChatHistory()" 
-                        style="display:none; background:rgba(239,68,68,0.15); border:1px solid rgba(239,68,68,0.3); 
-                               color:#ef4444; padding:3px 10px; border-radius:6px; font-size:10px; cursor:pointer; 
-                               font-weight:600; transition:0.2s;"
-                        onmouseover="this.style.background='rgba(239,68,68,0.3)';"
-                        onmouseout="this.style.background='rgba(239,68,68,0.15)';"
-                        title="Chat geçmişini temizle">
-                    <i class="fa-solid fa-trash"></i>
-                </button>
-            </div>
-        </div>
-        
-        <div class="chat-tabs">
-            <button class="chat-tab active" data-chat="global" onclick="switchChatTab('global')">🌍 Genel Sohbet</button>
-        </div>
-        
-        <div class="chat-messages" id="chat-messages">
-            <div style="text-align:center; color:#64748b; padding:30px; font-size:13px;">
-                💬 Yükleniyor...
-            </div>
-        </div>
-        
-        <div class="chat-input-area">
-            <input type="text" id="chat-input" placeholder="Mesajını yaz..." maxlength="200">
-            <button onclick="sendChatMessage()" id="chat-send-btn">
-                <i class="fa-solid fa-paper-plane"></i>
+    <!-- CHAT PANELİ -->
+<div class="chat-panel" id="chat-panel">
+    <div class="chat-header">
+        <span>💬 Sohbet</span>
+        <div style="display:flex; align-items:center; gap:8px;">
+            <button onclick="toggleChatMinimize()" 
+                    style="background:transparent; border:none; color:#888; font-size:16px; cursor:pointer; padding:4px 6px; border-radius:4px;"
+                    onmouseover="this.style.color='#24ffff';"
+                    onmouseout="this.style.color='#888';"
+                    title="Küçült/Büyüt">
+                <i class="fa-solid fa-minus" id="chat-minimize-icon"></i>
+            </button>
+            <button id="chat-clear-btn" onclick="clearChatHistory()" 
+                    style="display:none; background:rgba(239,68,68,0.15); border:1px solid rgba(239,68,68,0.3); 
+                           color:#ef4444; padding:3px 10px; border-radius:6px; font-size:10px; cursor:pointer; 
+                           font-weight:600; transition:0.2s;"
+                    onmouseover="this.style.background='rgba(239,68,68,0.3)';"
+                    onmouseout="this.style.background='rgba(239,68,68,0.15)';"
+                    title="Chat geçmişini temizle">
+                <i class="fa-solid fa-trash"></i>
             </button>
         </div>
     </div>
+    
+    <div class="chat-tabs">
+        <button class="chat-tab active" data-chat="global" onclick="switchChatTab('global')">🌍 Genel Sohbet</button>
+    </div>
+    
+    <div class="chat-messages" id="chat-messages">
+        <div style="text-align:center; color:#64748b; padding:30px; font-size:13px;">
+            💬 Yükleniyor...
+        </div>
+    </div>
+    
+    <div class="chat-input-area">
+        <input type="text" id="chat-input" placeholder="Mesajını yaz..." maxlength="200">
+        <button onclick="sendChatMessage()" id="chat-send-btn">
+            <i class="fa-solid fa-paper-plane"></i>
+        </button>
+    </div>
+</div>
 
     <!-- ADMIN MODAL -->
+    <!-- ADMIN MODAL -->
+<div id="admin-modal" class="admin-modal-overlay">
+    <div class="admin-box">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+            <h2 style="color:#24ffff;">
+                <i class="fa-solid fa-user-shield"></i> Lades Yönetim Paneli
+            </h2>
+            <button onclick="closeAdminPanel()" style="background:transparent; border:none; color:#888; font-size:24px; cursor:pointer;">
+                &times;
+            </button>
+        </div>
+
+        <!-- SİSTEM HAVUZU -->
+        <div id="system-pool-display" style="display: none; background: linear-gradient(135deg, rgba(36,255,255,0.1), rgba(255,74,162,0.1)); border: 1px solid rgba(36,255,255,0.2); border-radius: 12px; padding: 16px 20px; margin-bottom: 20px;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <span style="font-size:24px;">🏦</span>
+                    <div>
+                        <div style="font-size:13px; color:#94a3b8; font-weight:600;">SİSTEM HAVUZU</div>
+                        <div style="font-size:11px; color:#64748b;">Tüm ladeslerden toplanan %5 komisyon</div>
+                    </div>
+                </div>
+                <div style="text-align:right;">
+                    <div id="system-pool-amount" style="font-size:22px; font-weight:800; color:#24ffff;">0</div>
+                    <div style="font-size:11px; color:#64748b;">Token</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ✅ KAPANAN LADESLER (YENİ BÖLÜM) -->
+        <div class="admin-section" style="border-top:none; margin-top:0; padding-top:0;">
+            <h4>⏰ Kapanış Tarihi Geçen Ladesler</h4>
+            <div id="admin-expired-markets" style="background: rgba(245,158,11,0.02); border:1px dashed rgba(245,158,11,0.3); padding:15px; border-radius:12px;">
+                <div style="text-align:center; color:#64748b; padding:15px; font-size:13px;">
+                    <i class="fa-solid fa-spinner fa-spin"></i> Yükleniyor...
+                </div>
+            </div>
+        </div>
+
+        <div class="admin-section">
+            <h4>📥 Bekleyen İstekler (Davet &amp; Token)</h4>
+            <div id="admin-requests-list" style="min-height:60px;"></div>
+        </div>
+
+        <div class="admin-section">
+            <h4>🔑 Davet Kodu Yönetimi</h4>
+            <button onclick="generateInviteCode()" style="background:#24ffff; color:#030814; border:none; padding:10px 18px; border-radius:8px; font-weight:800; cursor:pointer; margin-bottom:12px;">
+                + Yeni Davet Kodu Üret
+            </button>
+            <div id="admin-codes-list" style="display:flex; flex-wrap:wrap; gap:8px; background:#030814; padding:12px; border-radius:12px; min-height:40px;"></div>
+        </div>
+
+        <div class="admin-section">
+            <h4>🎯 Aktif Ladesleri Sonuçlandır</h4>
+            <div id="admin-active-markets" style="background: rgba(36,255,255,0.02); border:1px dashed #1c2541; padding:15px; border-radius:12px;"></div>
+        </div>
+
+        <div class="admin-section">
+            <h4>👥 Kayıtlı Kullanıcılar</h4>
+            <div style="overflow-x:auto;">
+                <table style="width:100%; border-collapse:collapse; text-align:left;">
+                    <thead>
+                        <tr style="border-bottom:2px solid #1c2541; color:#64748b; font-size:12px;">
+                            <th style="padding-bottom:8px;">Kullanıcı</th>
+                            <th style="padding-bottom:8px;">Şifre</th>
+                            <th style="padding-bottom:8px;">Bakiye</th>
+                            <th style="padding-bottom:8px; text-align:right;">İşlemler</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-users-list"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
     <div id="admin-modal" class="admin-modal-overlay">
         <div class="admin-box">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
@@ -402,7 +412,7 @@
                 </button>
             </div>
 
-            <!-- SİSTEM HAVUZU -->
+            <!-- SİSTEM HAVUZU GÖSTERGESİ -->
             <div id="system-pool-display" style="display: none; background: linear-gradient(135deg, rgba(36,255,255,0.1), rgba(255,74,162,0.1)); border: 1px solid rgba(36,255,255,0.2); border-radius: 12px; padding: 16px 20px; margin-bottom: 20px;">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
                     <div style="display:flex; align-items:center; gap:12px;">
@@ -419,17 +429,7 @@
                 </div>
             </div>
 
-            <!-- KAPANAN LADESLER -->
             <div class="admin-section" style="border-top:none; margin-top:0; padding-top:0;">
-                <h4>⏰ Kapanış Tarihi Geçen Ladesler</h4>
-                <div id="admin-expired-markets" style="background: rgba(245,158,11,0.02); border:1px dashed rgba(245,158,11,0.3); padding:15px; border-radius:12px;">
-                    <div style="text-align:center; color:#64748b; padding:15px; font-size:13px;">
-                        <i class="fa-solid fa-spinner fa-spin"></i> Yükleniyor...
-                    </div>
-                </div>
-            </div>
-
-            <div class="admin-section">
                 <h4>📥 Bekleyen İstekler (Davet &amp; Token)</h4>
                 <div id="admin-requests-list" style="min-height:60px;"></div>
             </div>
@@ -489,7 +489,6 @@
     <script src="src/js/app-helpers.js"></script>
     <script src="src/js/app-admin.js"></script>
     <script src="src/js/app-stats.js"></script>
-    <script src="src/js/app-poker.js"></script>
     <script src="src/js/app-functions.js"></script>
     <script src="src/js/app.js"></script>
 
