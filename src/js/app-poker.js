@@ -6,6 +6,15 @@ let currentPokerRoom = null;
 let pokerListener = null;
 
 // ------------------------------------------------------
+// YARDIMCI FONKSİYON: Email'i güvenli Firebase key'e çevir
+// ------------------------------------------------------
+function getPlayerKey(email) {
+    if (!email) return 'unknown';
+    // Email'in @ öncesini al ve geçersiz karakterleri temizle
+    return email.split('@')[0].replace(/[.#$\/\[\]]/g, '_');
+}
+
+// ------------------------------------------------------
 // POKER SAYFASINI AÇ
 // ------------------------------------------------------
 function openPoker() {
@@ -60,12 +69,13 @@ async function loadPokerRooms() {
 
         const currentUser = localStorage.getItem('currentUser');
         const userNickname = await getUserNickname(currentUser);
+        const playerKey = currentUser ? getPlayerKey(currentUser) : null;
 
         container.innerHTML = roomList.map(([roomId, room]) => {
             const playerCount = room.players ? Object.keys(room.players).length : 0;
             const maxPlayers = room.maxPlayers || 6;
             const isFull = playerCount >= maxPlayers;
-            const isPlayer = room.players && room.players[currentUser];
+            const isPlayer = room.players && playerKey && room.players[playerKey] !== undefined;
 
             return `
                 <div class="poker-room-card" style="${isFull && !isPlayer ? 'opacity:0.5;' : ''}">
@@ -125,6 +135,7 @@ async function createPokerRoom() {
     try {
         const userNickname = await getUserNickname(currentUser);
         const roomId = uniqueId('poker');
+        const playerKey = getPlayerKey(currentUser); // ✅ Güvenli key
         
         await fbSet(`pokerRooms/${roomId}`, {
             id: roomId,
@@ -135,8 +146,9 @@ async function createPokerRoom() {
             status: 'waiting',
             createdAt: Date.now(),
             players: {
-                [currentUser]: {
+                [playerKey]: {  // ✅ Email yerine güvenli key
                     name: userNickname,
+                    email: currentUser,  // Email değer olarak saklanıyor
                     chips: 1000,
                     cards: [],
                     folded: false,
@@ -144,7 +156,7 @@ async function createPokerRoom() {
                 }
             },
             pot: 0,
-            currentTurn: currentUser,
+            currentTurn: playerKey,
             deck: [],
             communityCards: []
         });
@@ -180,8 +192,10 @@ async function joinPokerRoom(roomId) {
             return;
         }
 
-        if (room.players && room.players[currentUser]) {
-            // Zaten masada
+        const playerKey = getPlayerKey(currentUser); // ✅ Güvenli key
+
+        // Zaten masada mı?
+        if (room.players && room.players[playerKey] !== undefined) {
             currentPokerRoom = roomId;
             renderPokerTable(roomId);
             return;
@@ -195,8 +209,10 @@ async function joinPokerRoom(roomId) {
 
         const userNickname = await getUserNickname(currentUser);
         
-        await fbSet(`pokerRooms/${roomId}/players/${currentUser}`, {
+        // ✅ Güvenli key ile ekle
+        await fbSet(`pokerRooms/${roomId}/players/${playerKey}`, {
             name: userNickname,
+            email: currentUser,  // Email değer olarak saklanıyor
             chips: 1000,
             cards: [],
             folded: false,
@@ -259,9 +275,10 @@ function renderPokerTableContent(room) {
     if (!tableContainer) return;
 
     const currentUser = localStorage.getItem('currentUser');
+    const playerKey = currentUser ? getPlayerKey(currentUser) : null; // ✅ Güvenli key
     const players = room.players || {};
     const playerCount = Object.keys(players).length;
-    const isPlayer = players[currentUser] !== undefined;
+    const isPlayer = playerKey && players[playerKey] !== undefined;
 
     if (!isPlayer) {
         tableContainer.innerHTML = `
@@ -275,14 +292,14 @@ function renderPokerTableContent(room) {
         return;
     }
 
-    const playerList = Object.entries(players).map(([email, data]) => ({
-        email,
+    const playerList = Object.entries(players).map(([key, data]) => ({
+        key,
         name: data.name || 'Bilinmeyen',
         chips: data.chips || 0,
-        isCurrent: email === currentUser
+        isCurrent: key === playerKey
     }));
 
-    const currentPlayer = players[currentUser];
+    const currentPlayer = players[playerKey];
 
     tableContainer.innerHTML = `
         <div style="padding: 20px;">
@@ -329,7 +346,7 @@ function renderPokerTableContent(room) {
 
             <!-- İşlem Butonları -->
             <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:center;">
-                ${room.status === 'playing' && room.currentTurn === currentUser ? `
+                ${room.status === 'playing' && room.currentTurn === playerKey ? `
                     <button class="btn-modal btn-confirm" onclick="pokerAction('fold')">Pas Geç</button>
                     <button class="btn-modal btn-confirm" onclick="pokerAction('call')">Gör</button>
                     <button class="btn-modal btn-confirm" onclick="pokerAction('raise')">Yükselt</button>
@@ -351,17 +368,18 @@ async function pokerAction(action) {
     if (!currentUser) return;
 
     try {
+        const playerKey = getPlayerKey(currentUser); // ✅ Güvenli key
         const roomSnap = await fbGet(`pokerRooms/${currentPokerRoom}`);
         const room = roomSnap;
         if (!room) return;
 
-        const player = room.players[currentUser];
+        const player = room.players[playerKey]; // ✅ Güvenli key ile
         if (!player) return;
 
         // Basit oyun mantığı (genişletilecek)
         if (action === 'fold') {
             player.folded = true;
-            await fbSet(`pokerRooms/${currentPokerRoom}/players/${currentUser}/folded`, true);
+            await fbSet(`pokerRooms/${currentPokerRoom}/players/${playerKey}/folded`, true);
             alert('✅ Pas geçtiniz.');
         } else if (action === 'call') {
             const callAmount = 50;
@@ -371,7 +389,7 @@ async function pokerAction(action) {
             }
             player.chips -= callAmount;
             room.pot += callAmount;
-            await fbSet(`pokerRooms/${currentPokerRoom}/players/${currentUser}/chips`, player.chips);
+            await fbSet(`pokerRooms/${currentPokerRoom}/players/${playerKey}/chips`, player.chips);
             await fbSet(`pokerRooms/${currentPokerRoom}/pot`, room.pot);
             alert(`✅ ${callAmount} Token ile görüldü.`);
         } else if (action === 'raise') {
@@ -383,7 +401,7 @@ async function pokerAction(action) {
             }
             player.chips -= raiseAmount;
             room.pot += raiseAmount;
-            await fbSet(`pokerRooms/${currentPokerRoom}/players/${currentUser}/chips`, player.chips);
+            await fbSet(`pokerRooms/${currentPokerRoom}/players/${playerKey}/chips`, player.chips);
             await fbSet(`pokerRooms/${currentPokerRoom}/pot`, room.pot);
             alert(`✅ ${raiseAmount} Token yükseltildi.`);
         }
@@ -406,7 +424,8 @@ async function leavePokerRoom() {
     if (typeof db === "undefined" || !db) return;
 
     try {
-        await fbRemove(`pokerRooms/${currentPokerRoom}/players/${currentUser}`);
+        const playerKey = getPlayerKey(currentUser); // ✅ Güvenli key
+        await fbRemove(`pokerRooms/${currentPokerRoom}/players/${playerKey}`);
         const roomSnap = await fbGet(`pokerRooms/${currentPokerRoom}`);
         const room = roomSnap;
         
