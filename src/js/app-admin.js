@@ -19,7 +19,7 @@ async function closeAdminPanel() {
 async function renderAdminPanel() {
     if (typeof db === "undefined" || !db) return;
 
-    // ✅ SİSTEM HAVUZU GERÇEK ZAMANLI GÜNCELLEME
+    // ✅ SİSTEM HAVUZU
     const poolDisplay = document.getElementById('system-pool-display');
     const poolAmount = document.getElementById('system-pool-amount');
     
@@ -29,6 +29,65 @@ async function renderAdminPanel() {
             const value = snapshot.val() || 0;
             poolAmount.textContent = value.toLocaleString("tr-TR");
         });
+    }
+
+    // ✅ KAPANAN LADESLER (YENİ)
+    try {
+        const marketsSnap = await fbGet("customMarkets");
+        const markets = marketsSnap || {};
+        const now = new Date();
+        
+        const expiredMarkets = Object.entries(markets)
+            .filter(([key, m]) => {
+                if (m.status !== "Aktif") return false;
+                if (!m.dateRaw) return false;
+                const closingDate = new Date(m.dateRaw);
+                return now > closingDate;
+            })
+            .map(([key, m]) => ({ id: key, ...m }));
+
+        const expiredContainer = document.getElementById("admin-expired-markets");
+        if (expiredContainer) {
+            if (expiredMarkets.length === 0) {
+                expiredContainer.innerHTML = `
+                    <div style="text-align:center; color:#64748b; padding:15px; font-size:13px;">
+                        ✅ Kapanış tarihi geçmiş lades bulunmuyor.
+                    </div>
+                `;
+            } else {
+                expiredContainer.innerHTML = expiredMarkets.map(m => `
+                    <div style="background:#030814; padding:12px 15px; border-radius:8px; margin-bottom:8px; 
+                                display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;
+                                border-left: 3px solid #f59e0b;">
+                        <div style="font-size:13px; min-width:200px;">
+                            <b style="color:white;">${m.title}</b><br>
+                            <span style="color:#64748b; font-size:12px;">
+                                Kapanış: ${m.date} • Havuz: ${(m.yesPool + m.noPool + m.drawPool).toLocaleString("tr-TR")} Token
+                            </span>
+                            <br>
+                            <span style="color:#f59e0b; font-size:11px;">⏰ Kapanış tarihi geçti! Sonuçlandırılmayı bekliyor.</span>
+                        </div>
+                        <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                            <button onclick="finalizeLades('${m.id}', 'YES')" 
+                                    style="background:#22c55e; color:black; border:none; padding:5px 12px; border-radius:5px; font-weight:bold; font-size:11px; cursor:pointer;">
+                                EVET
+                            </button>
+                            <button onclick="finalizeLades('${m.id}', 'NO')" 
+                                    style="background:#ef4444; color:white; border:none; padding:5px 12px; border-radius:5px; font-weight:bold; font-size:11px; cursor:pointer;">
+                                HAYIR
+                            </button>
+                            ${m.category === "Spor" ? `
+                            <button onclick="finalizeLades('${m.id}', 'DRAW')" 
+                                    style="background:#f59e0b; color:black; border:none; padding:5px 12px; border-radius:5px; font-weight:bold; font-size:11px; cursor:pointer;">
+                                BERABERLİK
+                            </button>` : ''}
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+    } catch (error) {
+        console.error("Kapanan ladesler yüklenirken hata:", error);
     }
 
     // 1. BEKLEYEN İSTEKLER
@@ -141,7 +200,7 @@ async function renderAdminPanel() {
         });
     });
 
-    // 3. AKTİF LADESLER
+    // 3. AKTİF LADESLER (Normal sonuçlandırma)
     fbRef("customMarkets").on("value", (snapshot) => {
         const adminActiveMarkets = document.getElementById("admin-active-markets");
         if (!adminActiveMarkets) return;
@@ -166,11 +225,11 @@ async function renderAdminPanel() {
                 let buttons = `
                     <button onclick="finalizeLades('${m.id}', 'YES')" 
                             style="background:#22c55e; color:black; border:none; padding:5px 12px; border-radius:5px; font-weight:bold; font-size:11px; cursor:pointer;">
-                        EVET Kazandı
+                        EVET
                     </button>
                     <button onclick="finalizeLades('${m.id}', 'NO')" 
                             style="background:#ef4444; color:white; border:none; padding:5px 12px; border-radius:5px; font-weight:bold; font-size:11px; cursor:pointer;">
-                        HAYIR Kazandı
+                        HAYIR
                     </button>
                 `;
 

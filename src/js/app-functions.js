@@ -3,6 +3,14 @@
 // ======================================================
 
 // ------------------------------------------------------
+// GLOBAL DEĞİŞKENLER (app-helpers.js'den alınanlar)
+// ------------------------------------------------------
+let currentChatTab = 'global';
+let chatMessageListener = null;
+let chatUnreadCount = 0;
+let chatMinimized = false;
+
+// ------------------------------------------------------
 // GİRİŞ / KAYIT / DAVET / TOKEN TALEBİ
 // ------------------------------------------------------
 async function handleLogin() {
@@ -497,6 +505,13 @@ async function confirmBet() {
         return;
     }
 
+    // ✅ LADES AKTİF Mİ KONTROL ET
+    if (target.status !== "Aktif") {
+        alert(`❌ Bu lades artık aktif değil! (Durum: ${target.status})`);
+        closeModal();
+        return;
+    }
+
     const closingDate = target.dateRaw ? new Date(target.dateRaw) : new Date(target.date);
     const now = new Date();
 
@@ -565,6 +580,12 @@ async function finalizeLades(marketId, winningChoice) {
         return;
     }
 
+    // Zaten sonuçlanmış mı kontrol et
+    if (market.status === "Sonuçlandı") {
+        alert("⚠️ Bu lades zaten sonuçlandırılmış!");
+        return;
+    }
+
     const yesPool = market.yesPool || 0;
     const noPool = market.noPool || 0;
     const drawPool = market.drawPool || 0;
@@ -590,7 +611,7 @@ async function finalizeLades(marketId, winningChoice) {
     }
 
     if (totalPool === 0 || winningPool === 0) {
-        alert(`⚠️ ${winningChoiceName} havuzu boş veya toplam havuz 0. Lades kapatıldı.`);
+        alert(`⚠️ ${winningChoiceName} havuzu boş veya toplam havuz 0. Lades sonuçlandırıldı ama dağıtım yapılmadı.`);
         market.status = "Sonuçlandı";
         await fbSet(`customMarkets/${marketId}`, market);
         return;
@@ -604,7 +625,7 @@ async function finalizeLades(marketId, winningChoice) {
     const winners = Object.values(history).filter(h => h.marketId === marketId && h.choice === winningChoice);
 
     if (winners.length === 0) {
-        alert(`⚠️ ${winningChoiceName} seçeneğine bahis yapan kimse yok. Lades kapatıldı.`);
+        alert(`⚠️ ${winningChoiceName} seçeneğine bahis yapan kimse yok. Lades sonuçlandırıldı.`);
         market.status = "Sonuçlandı";
         await fbSet(`customMarkets/${marketId}`, market);
         return;
@@ -650,6 +671,7 @@ async function finalizeLades(marketId, winningChoice) {
     market.status = "Sonuçlandı";
     await fbSet(`customMarkets/${marketId}`, market);
 
+    // Sonuç bildirimleri
     const allParticipants = Object.values(history).filter(h => h.marketId === marketId);
     
     const resultPromises = allParticipants.map(async (participant) => {
@@ -1143,12 +1165,6 @@ function startNotificationListener() {
 // ------------------------------------------------------
 // CHAT SİSTEMİ
 // ------------------------------------------------------
-let currentChatTab = 'global';
-let currentMarketIdForChat = null;
-let chatMessageListener = null;
-let chatUnreadCount = 0;
-let chatMinimized = false;
-
 function toggleChatMinimize() {
     const panel = document.getElementById('chat-panel');
     const icon = document.getElementById('chat-minimize-icon');
@@ -1252,16 +1268,6 @@ function switchChatTab(tab) {
     });
     const activeTab = document.querySelector(`.chat-tab[data-chat="${tab}"]`);
     if (activeTab) activeTab.classList.add('active');
-    
-    const marketTab = document.getElementById('market-chat-tab');
-    if (tab === 'market' && currentMarketIdForChat) {
-        if (marketTab) {
-            marketTab.style.display = 'block';
-            marketTab.textContent = `📊 ${activeMarketTitle || 'Lades'}`;
-        }
-    } else {
-        if (marketTab) marketTab.style.display = 'none';
-    }
     
     loadChatMessages(tab);
 }
@@ -1383,15 +1389,7 @@ function openMarketChat(marketId, marketTitle) {
 }
 
 function closeMarketChat() {
-    // Bu özellik devre dışı bırakıldı.
     console.log("ℹ️ Lades özel chat devre dışı bırakıldı.");
-}
-
-function closeMarketChat() {
-    currentMarketIdForChat = null;
-    switchChatTab('global');
-    const marketTab = document.getElementById('market-chat-tab');
-    if (marketTab) marketTab.style.display = 'none';
 }
 
 function startChatSystem() {
@@ -1568,7 +1566,7 @@ function renderProfileBets(currentUserEmail, markets, history) {
 }
 
 // ------------------------------------------------------
-// OTOMATİK LADES KAPATMA (ZAMANLAYICI)
+// LADES KAPANMA KONTROLÜ (SADECE BAHİS ENGELLEME + BİLDİRİM)
 // ------------------------------------------------------
 async function checkAndCloseMarkets() {
     if (typeof db === "undefined" || !db) return;
@@ -1583,24 +1581,29 @@ async function checkAndCloseMarkets() {
             if (market.status === "Aktif" && market.dateRaw) {
                 const closingDate = new Date(market.dateRaw);
                 if (now > closingDate) {
-                    market.status = "Kapatıldı";
-                    await fbSet(`customMarkets/${key}`, market);
+                    // ❌ Ladesi KAPATMA, sadece yöneticiye bildirim gönder
+                    await sendNotificationToAdmins({
+                        title: "⏰ Lades Kapanış Zamanı Geldi!",
+                        message: `"${market.title}" ladesinin kapanış tarihi geldi. Lütfen sonuçlandırın!`,
+                        type: "closing",
+                        marketId: key,
+                        link: "dashboard.html?tab=admin",
+                        data: { marketId: key, marketTitle: market.title }
+                    });
+                    
                     closedCount++;
-                    console.log(`✅ "${market.title}" ladesi otomatik kapatıldı.`);
+                    console.log(`⏰ "${market.title}" ladesinin kapanış zamanı geldi. Yöneticiye bildirim gönderildi.`);
                 }
             }
         }
         
         if (closedCount > 0) {
-            console.log(`📊 ${closedCount} lades otomatik kapatıldı.`);
-            const marketsSnap2 = await fbGet("customMarkets");
-            if (typeof renderMarketGrid === 'function') {
-                renderMarketGrid(marketsSnap2 || {});
-            }
+            console.log(`📊 ${closedCount} lades için bildirim gönderildi.`);
         }
     } catch (error) {
-        console.error("Otomatik kapatma hatası:", error);
+        console.error("Lades kapanma kontrol hatası:", error);
     }
 }
 
+// ✅ ZAMANLAYICIYI ÇALIŞTIR (30 saniyede bir kontrol et)
 setInterval(checkAndCloseMarkets, 30 * 1000);
