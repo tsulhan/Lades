@@ -462,3 +462,191 @@ async function setTokensManual(email, currentBalance) {
         alert(`Başarılı! Bakiyesi ${targetBalance.toLocaleString("tr-TR")} Token olarak güncellendi.`);
     }
 }
+
+// ======================================================
+// LADES SONUÇLANDIRMA (KOMİSYON + OTOMATİK SİLME)
+// ======================================================
+async function finalizeLades(marketId, winningChoice) {
+    if (typeof db === "undefined" || !db) return;
+
+    const marketsSnap = await fbGet("customMarkets");
+    const markets = marketsSnap || {};
+    const market = markets[marketId];
+
+    if (!market) {
+        alert("❌ Lades bulunamadı!");
+        return;
+    }
+
+    // Zaten sonuçlanmış mı kontrol et
+    if (market.status === "Sonuçlandı") {
+        alert("⚠️ Bu lades zaten sonuçlandırılmış!");
+        return;
+    }
+
+    // İKİLİ ONAY
+    if (!confirm(`"${market.title}" ladesini SONUÇLANDIRMAK ve SİLMEK istediğinize emin misiniz?`)) return;
+    if (!confirm(`⚠️ BU İŞLEM GERİ ALINAMAZ! Devam etmek istiyor musunuz?`)) return;
+
+    const yesPool = market.yesPool || 0;
+    const noPool = market.noPool || 0;
+    const drawPool = market.drawPool || 0;
+
+    const totalPool = market.category === "Spor" ? (yesPool + noPool + drawPool) : (yesPool + noPool);
+    
+    const COMMISSION_RATE = 0.05;
+    const commission = Math.floor(totalPool * COMMISSION_RATE);
+    const distributedPool = totalPool - commission;
+
+    let winningPool = 0;
+    let winningChoiceName = "";
+    
+    if (winningChoice === "YES") {
+        winningPool = yesPool;
+        winningChoiceName = "EVET";
+    } else if (winningChoice === "NO") {
+        winningPool = noPool;
+        winningChoiceName = "HAYIR";
+    } else if (winningChoice === "DRAW") {
+        winningPool = drawPool;
+        winningChoiceName = "BERABERLİK";
+    }
+
+    // ⚠️ HAVUZ KONTROLÜ
+    if (totalPool === 0) {
+        alert(`⚠️ Toplam havuz 0. Lades siliniyor ama dağıtım yapılmadı.`);
+        await fbRemove(`customMarkets/${marketId}`);
+        alert(`✅ "${market.title}" silindi.`);
+        return;
+    }
+
+    if (winningPool === 0) {
+        alert(`⚠️ ${winningChoiceName} havuzu boş. Lades siliniyor ama dağıtım yapılmadı.`);
+        await fbRemove(`customMarkets/${marketId}`);
+        alert(`✅ "${market.title}" silindi.`);
+        return;
+    }
+
+    const historySnap = await fbGet("betHistory");
+    const history = historySnap || {};
+    const usersSnap = await fbGet("ladesUsers");
+    const users = usersSnap || {};
+
+    const winners = Object.values(history).filter(h => h.marketId === marketId && h.choice === winningChoice);
+
+    if (winners.length === 0) {
+        alert(`⚠️ ${winningChoiceName} seçeneğine bahis yapan kimse yok. Lades siliniyor.`);
+        await fbRemove(`customMarkets/${marketId}`);
+        alert(`✅ "${market.title}" silindi.`);
+        return;
+    }
+
+    const odds = {
+        YES: totalPool / (yesPool || 1),
+        NO: totalPool / (noPool || 1),
+        DRAW: totalPool / (drawPool || 1)
+    };
+
+    const winningOdds = odds[winningChoice] || 1;
+
+    let totalDistributed = 0;
+    const distributionResults = [];
+
+    // ✅ KAZANANLARA DAĞIT
+    for (const winner of winners) {
+        const userEntry = Object.entries(users).find(([key, u]) => u.email === winner.email);
+        if (!userEntry) continue;
+
+        const [userKey, userObj] = userEntry;
+        
+        const rawReward = Math.floor(winner.amount * winningOdds);
+        const rewardAmount = Math.min(rawReward, distributedPool);
+
+        userObj.balance = (userObj.balance || 0) + rewardAmount;
+        users[userKey] = userObj;
+        totalDistributed += rewardAmount;
+
+        distributionResults.push({
+            email: winner.email,
+            nickname: userObj.nickname || maskUserEmail(winner.email),
+            amount: winner.amount,
+            odds: winningOdds.toFixed(2) + 'x',
+            reward: rewardAmount,
+            share: ((winner.amount / winningPool) * 100).toFixed(2) + '%'
+        });
+    }
+
+    // ✅ SİSTEM HAVUZUNA EKLE
+    await addToSystemPool(commission);
+
+    // ✅ KULLANICILARI GÜNCELLE
+    await fbSet("ladesUsers", users);
+
+    // ✅ MARKETİ SİL (OTOMATİK)
+    await fbRemove(`customMarkets/${marketId}`);
+
+    // ✅ BİLDİRİMLER
+    const allParticipants = Object.values(history).filter(h => h.marketId === marketId);
+    
+    const resultPromises = allParticipants.map(async (participant) => {
+        const isWinner = winners.some(w => w.email === participant.email);
+        const winAmount = isWinner ? 
+            distributionResults.find(r => r.email === participant.email)?.reward || 0 : 0;
+        
+        const userEntry = Object.entries(users).find(([key, u]) => u.email === participant.email);
+        const displayName = userEntry ? userEntry[1].nickname || maskUserEmail(participant.email) : maskUserEmail(participant.email);
+        
+        let title = isWinner ? "🎉 Kazandınız!" : "😔 Kaybettiniz";
+        let message = isWinner ? 
+            `${market.title} ladesinde ${winAmount.toLocaleString("tr-TR")} Token kazandınız! 🏆` :
+            `${market.title} ladesinde ${participant.amount.toLocaleString("tr-TR")} Token kaybettiniz.`;
+
+        return createNotification(participant.email, {
+            title: title,
+            message: message,
+            type: "result",
+            marketId: marketId,
+            link: "profil.html",
+            data: { isWinner, winAmount, lostAmount: participant.amount }
+        });
+    });
+    await Promise.all(resultPromises);
+
+    const remainingTokens = distributedPool - totalDistributed;
+    
+    let distributionDetails = distributionResults.map(r => 
+        `  • ${r.nickname}: ${r.amount} Token × ${r.odds} = ${r.reward} Token kazandı (${r.share})`
+    ).join('\n');
+
+    alert(`🎉 ${winningChoiceName} KAZANDI!\n\n` +
+          `📊 Toplam Havuz: ${totalPool.toLocaleString("tr-TR")} Token\n` +
+          `💰 Komisyon (%5): ${commission.toLocaleString("tr-TR")} Token (Sistem Havuzu)\n` +
+          `💵 Dağıtılan: ${totalDistributed.toLocaleString("tr-TR")} Token\n` +
+          `📦 Kalan: ${remainingTokens.toLocaleString("tr-TR")} Token\n` +
+          `👥 Kazanan Sayısı: ${winners.length}\n` +
+          `📈 Kazanan Oran: ${winningOdds.toFixed(2)}x\n\n` +
+          `📋 DAĞITIM DETAYLARI:\n${distributionDetails}\n\n` +
+          `✅ Lades SİLİNDİ!`);
+
+    // ✅ LİSTEYİ YENİLE
+    if (typeof renderAdminPanel === 'function') {
+        setTimeout(() => {
+            renderAdminPanel();
+        }, 500);
+    }
+}
+
+// ======================================================
+// SİSTEM HAVUZU
+// ======================================================
+async function addToSystemPool(amount) {
+    if (typeof db === "undefined" || !db || amount <= 0) return;
+    
+    try {
+        const currentPool = await fbGet("systemPool") || 0;
+        await fbSet("systemPool", currentPool + amount);
+        console.log(`💰 Sistem havuzuna ${amount} Token eklendi. Toplam: ${currentPool + amount}`);
+    } catch (error) {
+        console.error("Sistem havuzu güncelleme hatası:", error);
+    }
+}
